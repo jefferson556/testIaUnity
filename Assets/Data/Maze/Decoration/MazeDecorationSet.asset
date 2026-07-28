@@ -15,17 +15,17 @@ MonoBehaviour:
   pathBackPatterns:
   - {fileID: 11400000, guid: d7d0375f35669c94da870685eb979769, type: 2}
   - {fileID: 11400000, guid: 346801ccae9e8f648961dec52137abb8, type: 2}
-  pathBackProbability: 0.877
+  pathBackProbability: 0.866
   wallBackPatterns:
   - {fileID: 11400000, guid: eabaa96aff7b9d64692dca7066810916, type: 2}
-  wallBackProbability: 0.94
+  wallBackProbability: 0.822
   wallFrontPatterns:
   - {fileID: 11400000, guid: 08dc8092661795f48a1c934b7574f7e5, type: 2}
   - {fileID: 11400000, guid: 96bdbc72de0f5b8479862ff479b62b88, type: 2}
-  wallFrontProbability: 0.943
+  wallFrontProbability: 0.841
   borderBackPatterns:
   - {fileID: 11400000, guid: 08dc8092661795f48a1c934b7574f7e5, type: 2}
-  borderBackProbability: 0.963
+  borderBackProbability: 0.778
   borderFrontPatterns:
   - {fileID: 11400000, guid: eabaa96aff7b9d64692dca7066810916, type: 2}
-  borderFrontProbability: 0.922
+  borderFrontProbability: 0.772
