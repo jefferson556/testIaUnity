@@ -1,0 +1,429 @@
+fileFormatVersion: 2
+guid: 6a9f3f3b62e58ec42ba6ff12f65d93e6
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3416454151943064057
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_0
+  - first:
+      213: -4752094526767860522
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_1
+  - first:
+      213: 1602786979893845666
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_2
+  - first:
+      213: 1177734915608353398
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_3
+  - first:
+      213: -7434176775397538325
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_4
+  - first:
+      213: 8741010185974557993
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_5
+  - first:
+      213: -3813292647169335679
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_6
+  - first:
+      213: 5748470245457148732
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_7
+  - first:
+      213: 1283095327254003360
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_8
+  - first:
+      213: -5454290447370236467
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_9
+  - first:
+      213: -3085074559644986156
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_10
+  - first:
+      213: -6726401319961301421
+    second: 11_Alternative_Colour_Cat_Long_Roll-Sheet_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 3
+        width: 16
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f989f533fea96f20800000000000000
+      internalID: 3416454151943064057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 3
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d47ce0a43b2d0eb0800000000000000
+      internalID: -4752094526767860522
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 4
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ae913b244e3e3610800000000000000
+      internalID: 1602786979893845666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 4
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67a19647aa7285010800000000000000
+      internalID: 1177734915608353398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_4
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 3
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be588f85c9f74d890800000000000000
+      internalID: -7434176775397538325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_5
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 3
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92da519c37e4e4970800000000000000
+      internalID: 8741010185974557993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_6
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 3
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18edcd48a86741bc0800000000000000
+      internalID: -3813292647169335679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_7
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 3
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3b30664b3ba6cf40800000000000000
+      internalID: 5748470245457148732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_8
+      rect:
+        serializedVersion: 2
+        x: 266
+        y: 3
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ae30f9e6687ec110800000000000000
+      internalID: 1283095327254003360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_9
+      rect:
+        serializedVersion: 2
+        x: 298
+        y: 3
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcdc0b67cb77e44b0800000000000000
+      internalID: -5454290447370236467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_10
+      rect:
+        serializedVersion: 2
+        x: 329
+        y: 3
+        width: 14
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d414ce880d9f25d0800000000000000
+      internalID: -3085074559644986156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 11_Alternative_Colour_Cat_Long_Roll-Sheet_11
+      rect:
+        serializedVersion: 2
+        x: 362
+        y: 3
+        width: 12
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35eecf233a507a2a0800000000000000
+      internalID: -6726401319961301421
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_0: 3416454151943064057
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_1: -4752094526767860522
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_10: -3085074559644986156
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_11: -6726401319961301421
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_2: 1602786979893845666
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_3: 1177734915608353398
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_4: -7434176775397538325
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_5: 8741010185974557993
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_6: -3813292647169335679
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_7: 5748470245457148732
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_8: 1283095327254003360
+      11_Alternative_Colour_Cat_Long_Roll-Sheet_9: -5454290447370236467
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

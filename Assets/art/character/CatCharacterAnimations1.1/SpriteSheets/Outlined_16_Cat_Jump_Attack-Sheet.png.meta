@@ -1,0 +1,403 @@
+fileFormatVersion: 2
+guid: afe188808457ec549a4c2d69e611b16c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8635424191166707659
+    second: Outlined_16_Cat_Jump_Attack-Sheet_0
+  - first:
+      213: -2791432853746732957
+    second: Outlined_16_Cat_Jump_Attack-Sheet_1
+  - first:
+      213: 6234869814412562285
+    second: Outlined_16_Cat_Jump_Attack-Sheet_2
+  - first:
+      213: -4865228152102851872
+    second: Outlined_16_Cat_Jump_Attack-Sheet_3
+  - first:
+      213: -4598484188387395784
+    second: Outlined_16_Cat_Jump_Attack-Sheet_4
+  - first:
+      213: -8136536409389862530
+    second: Outlined_16_Cat_Jump_Attack-Sheet_5
+  - first:
+      213: -4346120147784592338
+    second: Outlined_16_Cat_Jump_Attack-Sheet_6
+  - first:
+      213: 114336031403855277
+    second: Outlined_16_Cat_Jump_Attack-Sheet_7
+  - first:
+      213: -6178408783284433245
+    second: Outlined_16_Cat_Jump_Attack-Sheet_8
+  - first:
+      213: -4817019448183171173
+    second: Outlined_16_Cat_Jump_Attack-Sheet_9
+  - first:
+      213: -5432708121079932395
+    second: Outlined_16_Cat_Jump_Attack-Sheet_10
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 4
+        width: 18
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc77e47ac8037d770800000000000000
+      internalID: 8635424191166707659
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 3
+        width: 31
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3603212fb96d249d0800000000000000
+      internalID: -2791432853746732957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 152
+        y: 3
+        width: 25
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6fcddcff05b68650800000000000000
+      internalID: 6234869814412562285
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 12
+        width: 14
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0eaeda2d5cc3b7cb0800000000000000
+      internalID: -4865228152102851872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_4
+      rect:
+        serializedVersion: 2
+        x: 172
+        y: 4
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8373be59ef6ee20c0800000000000000
+      internalID: -4598484188387395784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_5
+      rect:
+        serializedVersion: 2
+        x: 217
+        y: 3
+        width: 14
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e71f840be37351f80800000000000000
+      internalID: -8136536409389862530
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_6
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 3
+        width: 14
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e24912890ca7fa3c0800000000000000
+      internalID: -4346120147784592338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_7
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 12
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dadcad8c304369100800000000000000
+      internalID: 114336031403855277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_8
+      rect:
+        serializedVersion: 2
+        x: 236
+        y: 4
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ae8d2b32f1e14aa0800000000000000
+      internalID: -6178408783284433245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_9
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 4
+        width: 14
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b97d4e26552862db0800000000000000
+      internalID: -4817019448183171173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Outlined_16_Cat_Jump_Attack-Sheet_10
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 3
+        width: 15
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51a96a26fb42b94b0800000000000000
+      internalID: -5432708121079932395
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Outlined_16_Cat_Jump_Attack-Sheet_0: 8635424191166707659
+      Outlined_16_Cat_Jump_Attack-Sheet_1: -2791432853746732957
+      Outlined_16_Cat_Jump_Attack-Sheet_10: -5432708121079932395
+      Outlined_16_Cat_Jump_Attack-Sheet_2: 6234869814412562285
+      Outlined_16_Cat_Jump_Attack-Sheet_3: -4865228152102851872
+      Outlined_16_Cat_Jump_Attack-Sheet_4: -4598484188387395784
+      Outlined_16_Cat_Jump_Attack-Sheet_5: -8136536409389862530
+      Outlined_16_Cat_Jump_Attack-Sheet_6: -4346120147784592338
+      Outlined_16_Cat_Jump_Attack-Sheet_7: 114336031403855277
+      Outlined_16_Cat_Jump_Attack-Sheet_8: -6178408783284433245
+      Outlined_16_Cat_Jump_Attack-Sheet_9: -4817019448183171173
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

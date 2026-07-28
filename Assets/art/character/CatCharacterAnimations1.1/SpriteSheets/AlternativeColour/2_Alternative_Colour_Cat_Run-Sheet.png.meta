@@ -1,0 +1,377 @@
+fileFormatVersion: 2
+guid: ef9bc7d47bd141d4fb37135c6340bc1d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -974603530539325861
+    second: 2_Alternative_Colour_Cat_Run-Sheet_0
+  - first:
+      213: 7460189104120920350
+    second: 2_Alternative_Colour_Cat_Run-Sheet_1
+  - first:
+      213: 884324762746753172
+    second: 2_Alternative_Colour_Cat_Run-Sheet_2
+  - first:
+      213: 2468562185530216855
+    second: 2_Alternative_Colour_Cat_Run-Sheet_3
+  - first:
+      213: -3977849625301913670
+    second: 2_Alternative_Colour_Cat_Run-Sheet_4
+  - first:
+      213: -6660175111837868024
+    second: 2_Alternative_Colour_Cat_Run-Sheet_5
+  - first:
+      213: 3878786668289224616
+    second: 2_Alternative_Colour_Cat_Run-Sheet_6
+  - first:
+      213: -353869698257187070
+    second: 2_Alternative_Colour_Cat_Run-Sheet_7
+  - first:
+      213: -1517983397055411726
+    second: 2_Alternative_Colour_Cat_Run-Sheet_8
+  - first:
+      213: -5565170974241136941
+    second: 2_Alternative_Colour_Cat_Run-Sheet_9
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 3
+        width: 18
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b56ac5da0438972f0800000000000000
+      internalID: -974603530539325861
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 5
+        width: 19
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e19fd54e67ae78760800000000000000
+      internalID: 7460189104120920350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 4
+        width: 18
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4901a95bfa0c54c00800000000000000
+      internalID: 884324762746753172
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 103
+        y: 3
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7919d7e8a38124220800000000000000
+      internalID: 2468562185530216855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_4
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 3
+        width: 19
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: abf65f167d6dbc8c0800000000000000
+      internalID: -3977849625301913670
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_5
+      rect:
+        serializedVersion: 2
+        x: 167
+        y: 3
+        width: 18
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 800a10dd50e4293a0800000000000000
+      internalID: -6660175111837868024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_6
+      rect:
+        serializedVersion: 2
+        x: 199
+        y: 5
+        width: 19
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8af66e29ce734d530800000000000000
+      internalID: 3878786668289224616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_7
+      rect:
+        serializedVersion: 2
+        x: 232
+        y: 4
+        width: 18
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20f0b92626dc61bf0800000000000000
+      internalID: -353869698257187070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_8
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 3
+        width: 18
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f9429b942a0feae0800000000000000
+      internalID: -1517983397055411726
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 2_Alternative_Colour_Cat_Run-Sheet_9
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 3
+        width: 19
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3deda060c7a84c2b0800000000000000
+      internalID: -5565170974241136941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      2_Alternative_Colour_Cat_Run-Sheet_0: -974603530539325861
+      2_Alternative_Colour_Cat_Run-Sheet_1: 7460189104120920350
+      2_Alternative_Colour_Cat_Run-Sheet_2: 884324762746753172
+      2_Alternative_Colour_Cat_Run-Sheet_3: 2468562185530216855
+      2_Alternative_Colour_Cat_Run-Sheet_4: -3977849625301913670
+      2_Alternative_Colour_Cat_Run-Sheet_5: -6660175111837868024
+      2_Alternative_Colour_Cat_Run-Sheet_6: 3878786668289224616
+      2_Alternative_Colour_Cat_Run-Sheet_7: -353869698257187070
+      2_Alternative_Colour_Cat_Run-Sheet_8: -1517983397055411726
+      2_Alternative_Colour_Cat_Run-Sheet_9: -5565170974241136941
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

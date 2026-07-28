@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d01a7580c9bfa04c911937631999145, type: 3}
+  m_Name: DefaultMazeTileSet
+  m_EditorClassIdentifier: Assembly-CSharp::MazeTileSet
+  groundTile: {fileID: 11400000, guid: e7c65ca664743f849829f9e29c7dfc4c, type: 2}
+  pathTile: {fileID: 11400000, guid: 2876df1ef44b7dd438132944779d631d, type: 2}
+  wallTile: {fileID: 11400000, guid: 753b11c051424aa429adc2bf51c09278, type: 2}
+  additionalGroundTiles: []
+  additionalPathTiles: []
+  additionalWallTiles: []
+  wallPatterns:
+  - {fileID: 11400000, guid: 0413acd2f1c2e224f8be74b50550effb, type: 2}
+  - {fileID: 11400000, guid: 7a0368d0f82fb8d4191e6c4195188293, type: 2}
+  wallPatternProbability: 0.266
+  pathDecorationTiles:
+  - {fileID: 0}
+  pathDecorationProbability: 0.06
+  wallDecorationTiles: []
+  wallDecorationProbability: 0

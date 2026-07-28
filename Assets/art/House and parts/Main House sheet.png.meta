@@ -1,0 +1,611 @@
+fileFormatVersion: 2
+guid: 92ea1ab0a4f169d45bf3f46b1c3e42e6
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6675889050500266592
+    second: Main House sheet_0
+  - first:
+      213: 8973207268077259329
+    second: Main House sheet_1
+  - first:
+      213: 3518548234415226200
+    second: Main House sheet_2
+  - first:
+      213: 3442017646101236253
+    second: Main House sheet_3
+  - first:
+      213: 2618548879096492003
+    second: Main House sheet_4
+  - first:
+      213: 2036220706592241179
+    second: Main House sheet_5
+  - first:
+      213: 1451015238269118461
+    second: Main House sheet_6
+  - first:
+      213: 741544471841971699
+    second: Main House sheet_7
+  - first:
+      213: 1558867498870857195
+    second: Main House sheet_8
+  - first:
+      213: 1588650048147391292
+    second: Main House sheet_9
+  - first:
+      213: 3926748870364094206
+    second: Main House sheet_10
+  - first:
+      213: 7792497884983503175
+    second: Main House sheet_11
+  - first:
+      213: -4424245063113161716
+    second: Main House sheet_12
+  - first:
+      213: -4242950249270083747
+    second: Main House sheet_13
+  - first:
+      213: 1685988328831822683
+    second: Main House sheet_14
+  - first:
+      213: -1733586131778770263
+    second: Main House sheet_15
+  - first:
+      213: -2861312149235849327
+    second: Main House sheet_16
+  - first:
+      213: -1879732249585151858
+    second: Main House sheet_17
+  - first:
+      213: 8992209286934922722
+    second: Main House sheet_18
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Main House sheet_0
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 0
+        width: 86
+        height: 105
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06afcf698b585ac50800000000000000
+      internalID: 6675889050500266592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_1
+      rect:
+        serializedVersion: 2
+        x: 101
+        y: 0
+        width: 86
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14ac2bdd77c378c70800000000000000
+      internalID: 8973207268077259329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_2
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 0
+        width: 86
+        height: 98
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85db5652af464d030800000000000000
+      internalID: 3518548234415226200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_3
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 0
+        width: 86
+        height: 99
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1a8d7200d084cf20800000000000000
+      internalID: 3442017646101236253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_4
+      rect:
+        serializedVersion: 2
+        x: 389
+        y: 0
+        width: 86
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ef2b85f454f65420800000000000000
+      internalID: 2618548879096492003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_5
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 0
+        width: 86
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b16b9bcb1fb124c10800000000000000
+      internalID: 2036220706592241179
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_6
+      rect:
+        serializedVersion: 2
+        x: 581
+        y: 0
+        width: 86
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df7a5b0ebaa032410800000000000000
+      internalID: 1451015238269118461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_7
+      rect:
+        serializedVersion: 2
+        x: 677
+        y: 0
+        width: 86
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3fd9b4da4ce7a4a00800000000000000
+      internalID: 741544471841971699
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_8
+      rect:
+        serializedVersion: 2
+        x: 773
+        y: 0
+        width: 86
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bed59122bb532a510800000000000000
+      internalID: 1558867498870857195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_9
+      rect:
+        serializedVersion: 2
+        x: 869
+        y: 0
+        width: 86
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c338b304dc40c0610800000000000000
+      internalID: 1588650048147391292
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_10
+      rect:
+        serializedVersion: 2
+        x: 931
+        y: 91
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efed734fa4d9e7630800000000000000
+      internalID: 3926748870364094206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_11
+      rect:
+        serializedVersion: 2
+        x: 965
+        y: 0
+        width: 86
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 749ac6b3a83842c60800000000000000
+      internalID: 7792497884983503175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_12
+      rect:
+        serializedVersion: 2
+        x: 1027
+        y: 92
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c044dd54e8ce992c0800000000000000
+      internalID: -4424245063113161716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_13
+      rect:
+        serializedVersion: 2
+        x: 1061
+        y: 0
+        width: 86
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5ff9987a330e15c0800000000000000
+      internalID: -4242950249270083747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_14
+      rect:
+        serializedVersion: 2
+        x: 1124
+        y: 94
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5ba97bc375d56710800000000000000
+      internalID: 1685988328831822683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_15
+      rect:
+        serializedVersion: 2
+        x: 1157
+        y: 0
+        width: 86
+        height: 101
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9aa68cb199011f7e0800000000000000
+      internalID: -1733586131778770263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_16
+      rect:
+        serializedVersion: 2
+        x: 1253
+        y: 0
+        width: 86
+        height: 102
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 197a94992c39a48d0800000000000000
+      internalID: -2861312149235849327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_17
+      rect:
+        serializedVersion: 2
+        x: 1349
+        y: 0
+        width: 86
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8091ae6a79d9e5e0800000000000000
+      internalID: -1879732249585151858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Main House sheet_18
+      rect:
+        serializedVersion: 2
+        x: 1445
+        y: 0
+        width: 86
+        height: 104
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e589b524bebacc70800000000000000
+      internalID: 8992209286934922722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Main House sheet_0: 6675889050500266592
+      Main House sheet_1: 8973207268077259329
+      Main House sheet_10: 3926748870364094206
+      Main House sheet_11: 7792497884983503175
+      Main House sheet_12: -4424245063113161716
+      Main House sheet_13: -4242950249270083747
+      Main House sheet_14: 1685988328831822683
+      Main House sheet_15: -1733586131778770263
+      Main House sheet_16: -2861312149235849327
+      Main House sheet_17: -1879732249585151858
+      Main House sheet_18: 8992209286934922722
+      Main House sheet_2: 3518548234415226200
+      Main House sheet_3: 3442017646101236253
+      Main House sheet_4: 2618548879096492003
+      Main House sheet_5: 2036220706592241179
+      Main House sheet_6: 1451015238269118461
+      Main House sheet_7: 741544471841971699
+      Main House sheet_8: 1558867498870857195
+      Main House sheet_9: 1588650048147391292
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,325 @@
+fileFormatVersion: 2
+guid: 4e22511bf20e51342bc1cd88f293778a
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2173674137713567966
+    second: 10_Alternative_Colour_Cat_Roll-Sheet_0
+  - first:
+      213: -789913971946810119
+    second: 10_Alternative_Colour_Cat_Roll-Sheet_1
+  - first:
+      213: -2768995436800835207
+    second: 10_Alternative_Colour_Cat_Roll-Sheet_2
+  - first:
+      213: 997331750245579062
+    second: 10_Alternative_Colour_Cat_Roll-Sheet_3
+  - first:
+      213: 6615270229352972088
+    second: 10_Alternative_Colour_Cat_Roll-Sheet_4
+  - first:
+      213: 5217393724666509103
+    second: 10_Alternative_Colour_Cat_Roll-Sheet_5
+  - first:
+      213: 5525721703430538240
+    second: 10_Alternative_Colour_Cat_Roll-Sheet_6
+  - first:
+      213: 5970318789181108188
+    second: 10_Alternative_Colour_Cat_Roll-Sheet_7
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: 10_Alternative_Colour_Cat_Roll-Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 3
+        width: 16
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed8eed39c117a2e10800000000000000
+      internalID: 2173674137713567966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 10_Alternative_Colour_Cat_Roll-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 3
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f41efa7d69a905f0800000000000000
+      internalID: -789913971946810119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 10_Alternative_Colour_Cat_Roll-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 4
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9710fcc225d8299d0800000000000000
+      internalID: -2768995436800835207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 10_Alternative_Colour_Cat_Roll-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 4
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6393b9851fb37dd00800000000000000
+      internalID: 997331750245579062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 10_Alternative_Colour_Cat_Roll-Sheet_4
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 3
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83ffcc179392ecb50800000000000000
+      internalID: 6615270229352972088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 10_Alternative_Colour_Cat_Roll-Sheet_5
+      rect:
+        serializedVersion: 2
+        x: 170
+        y: 3
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f27791c13f7e76840800000000000000
+      internalID: 5217393724666509103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 10_Alternative_Colour_Cat_Roll-Sheet_6
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 3
+        width: 14
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 004c4acdc9e4fac40800000000000000
+      internalID: 5525721703430538240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 10_Alternative_Colour_Cat_Roll-Sheet_7
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 3
+        width: 12
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdfeaf08e45dad250800000000000000
+      internalID: 5970318789181108188
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      10_Alternative_Colour_Cat_Roll-Sheet_0: 2173674137713567966
+      10_Alternative_Colour_Cat_Roll-Sheet_1: -789913971946810119
+      10_Alternative_Colour_Cat_Roll-Sheet_2: -2768995436800835207
+      10_Alternative_Colour_Cat_Roll-Sheet_3: 997331750245579062
+      10_Alternative_Colour_Cat_Roll-Sheet_4: 6615270229352972088
+      10_Alternative_Colour_Cat_Roll-Sheet_5: 5217393724666509103
+      10_Alternative_Colour_Cat_Roll-Sheet_6: 5525721703430538240
+      10_Alternative_Colour_Cat_Roll-Sheet_7: 5970318789181108188
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

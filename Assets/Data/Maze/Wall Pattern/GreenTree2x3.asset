@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf43c1258cb998d49a081f4236997314, type: 3}
+  m_Name: GreenTree2x3
+  m_EditorClassIdentifier: Assembly-CSharp::MazeWallPattern
+  width: 2
+  height: 3
+  tiles:
+  - {fileID: 11400000, guid: 3afdeacc2c1bd484b9b9d74898f5ac26, type: 2}
+  - {fileID: 11400000, guid: 3a4a2c3c9b386d041a5dff696b31092b, type: 2}
+  - {fileID: 11400000, guid: d6d40ef2d4bbc494795439277053ce32, type: 2}
+  - {fileID: 11400000, guid: e96ba6ca785ba7443b76b003bc61720e, type: 2}
+  - {fileID: 11400000, guid: 4d81701bf4f0a7649b0b10b7d972ac5b, type: 2}
+  - {fileID: 11400000, guid: fe952775767522a4db58662454027704, type: 2}

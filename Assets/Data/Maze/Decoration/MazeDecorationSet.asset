@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbfb5261c8c62aa4c8482454da299951, type: 3}
+  m_Name: MazeDecorationSet
+  m_EditorClassIdentifier: Assembly-CSharp::MazeDecorationSet
+  pathBackPatterns:
+  - {fileID: 11400000, guid: d7d0375f35669c94da870685eb979769, type: 2}
+  - {fileID: 11400000, guid: 346801ccae9e8f648961dec52137abb8, type: 2}
+  pathBackProbability: 0.877
+  wallBackPatterns:
+  - {fileID: 11400000, guid: eabaa96aff7b9d64692dca7066810916, type: 2}
+  wallBackProbability: 0.94
+  wallFrontPatterns:
+  - {fileID: 11400000, guid: 08dc8092661795f48a1c934b7574f7e5, type: 2}
+  - {fileID: 11400000, guid: 96bdbc72de0f5b8479862ff479b62b88, type: 2}
+  wallFrontProbability: 0.943
+  borderBackPatterns:
+  - {fileID: 11400000, guid: 08dc8092661795f48a1c934b7574f7e5, type: 2}
+  borderBackProbability: 0.963
+  borderFrontPatterns:
+  - {fileID: 11400000, guid: eabaa96aff7b9d64692dca7066810916, type: 2}
+  borderFrontProbability: 0.922

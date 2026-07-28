@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd458c13073388d418615125ead98ad1, type: 3}
+  m_Name: Trees3x4
+  m_EditorClassIdentifier: Assembly-CSharp::MazeDecorationPattern
+  width: 3
+  height: 4
+  tiles:
+  - {fileID: 11400000, guid: 4c728cf0ca659a544a82f92a7567a6e6, type: 2}
+  - {fileID: 11400000, guid: 42e43dd573e4120498fb21b20d06e070, type: 2}
+  - {fileID: 11400000, guid: f0ff77384c6554141936bcab74c7b904, type: 2}
+  - {fileID: 11400000, guid: db7f88afb300870458783553cefdd2fe, type: 2}
+  - {fileID: 11400000, guid: 1197f5c26cf58d54283d99379a623410, type: 2}
+  - {fileID: 11400000, guid: 49b03599bc0733144869fc6bf6655066, type: 2}
+  - {fileID: 11400000, guid: 458b5c0bf0d41cb4eae34fd78fd4766a, type: 2}
+  - {fileID: 11400000, guid: d6c9942167dd85b4f8b4fe021c243051, type: 2}
+  - {fileID: 11400000, guid: 7ae9854caa59e15489f923ab27e72a76, type: 2}
+  - {fileID: 11400000, guid: 723d140d54005ec48a3df0a053e7881a, type: 2}
+  - {fileID: 11400000, guid: 07f9a36fb539acc43a4f5ecd5701e76e, type: 2}
+  - {fileID: 11400000, guid: 064239a4be89c2149ac1e30b7caf4cfb, type: 2}

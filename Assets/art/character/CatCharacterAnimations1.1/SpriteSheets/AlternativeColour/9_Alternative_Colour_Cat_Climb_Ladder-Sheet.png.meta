@@ -1,0 +1,325 @@
+fileFormatVersion: 2
+guid: 2f1dbaa9853b7af429ed74755a227254
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2782675833657502206
+    second: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_0
+  - first:
+      213: 7181634127613902425
+    second: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_1
+  - first:
+      213: 5616607123955619587
+    second: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_2
+  - first:
+      213: 8496060196189758324
+    second: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_3
+  - first:
+      213: 382510462170220130
+    second: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_4
+  - first:
+      213: 3178370048420944253
+    second: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_5
+  - first:
+      213: -6435863621395971335
+    second: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_6
+  - first:
+      213: -3348192857783523557
+    second: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_7
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 1
+        width: 13
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef9283e6dec0e9620800000000000000
+      internalID: 2782675833657502206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 2
+        width: 14
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95ebf3b603a4aa360800000000000000
+      internalID: 7181634127613902425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 2
+        width: 14
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3079d42db6232fd40800000000000000
+      internalID: 5616607123955619587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 105
+        y: 2
+        width: 13
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 473e9300cb118e570800000000000000
+      internalID: 8496060196189758324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_4
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 1
+        width: 13
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 266c68c1d33fe4500800000000000000
+      internalID: 382510462170220130
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_5
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 2
+        width: 14
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d791fd428b6db1c20800000000000000
+      internalID: 3178370048420944253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_6
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 2
+        width: 14
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f285df82283fa6a0800000000000000
+      internalID: -6435863621395971335
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: 9_Alternative_Colour_Cat_Climb_Ladder-Sheet_7
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 2
+        width: 13
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b172058d554d881d0800000000000000
+      internalID: -3348192857783523557
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      9_Alternative_Colour_Cat_Climb_Ladder-Sheet_0: 2782675833657502206
+      9_Alternative_Colour_Cat_Climb_Ladder-Sheet_1: 7181634127613902425
+      9_Alternative_Colour_Cat_Climb_Ladder-Sheet_2: 5616607123955619587
+      9_Alternative_Colour_Cat_Climb_Ladder-Sheet_3: 8496060196189758324
+      9_Alternative_Colour_Cat_Climb_Ladder-Sheet_4: 382510462170220130
+      9_Alternative_Colour_Cat_Climb_Ladder-Sheet_5: 3178370048420944253
+      9_Alternative_Colour_Cat_Climb_Ladder-Sheet_6: -6435863621395971335
+      9_Alternative_Colour_Cat_Climb_Ladder-Sheet_7: -3348192857783523557
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
