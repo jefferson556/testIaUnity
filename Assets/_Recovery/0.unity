@@ -2765,8 +2765,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MazeGenerator
   width: 8
   height: 8
-  useRandomSeed: 1
-  seed: 12345
+  useRandomSeed: 0
+  seed: 55293
   extraConnections: 2
 --- !u!114 &1259965862
 MonoBehaviour:

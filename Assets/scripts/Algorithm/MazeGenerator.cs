@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,7 +11,7 @@ public class MazeGenerator : MonoBehaviour
     [SerializeField, Min(5)]
     private int height = 15;
 
-    [Header("Generación aleatoria")]
+    [Header("Generaciï¿½n aleatoria")]
     [Tooltip(
         "Genera un laberinto diferente cada vez."
     )]
@@ -20,7 +20,7 @@ public class MazeGenerator : MonoBehaviour
 
     [Tooltip(
         "Permite repetir el mismo laberinto cuando " +
-        "Use Random Seed está desactivado."
+        "Use Random Seed estï¿½ desactivado."
     )]
     [SerializeField]
     private int seed = 12345;
@@ -28,7 +28,7 @@ public class MazeGenerator : MonoBehaviour
     [Header("Dificultad")]
     [Tooltip(
         "Abre rutas alternativas. Un valor alto " +
-        "hace que el laberinto sea más fácil."
+        "hace que el laberinto sea mï¿½s fï¿½cil."
     )]
     [SerializeField, Range(0, 20)]
     private int extraConnections = 2;
@@ -70,6 +70,9 @@ public class MazeGenerator : MonoBehaviour
             random,
             extraConnections
         );
+
+        // Garantizar area despejada 3x3 alrededor del punto de inicio del jugador
+        ClearStartArea(maze, StartCell, 1);
 
         Debug.Log(
             $"Laberinto generado: " +
@@ -266,5 +269,33 @@ public class MazeGenerator : MonoBehaviour
         }
 
         return seed;
+    }
+
+    // Despeja un area de radio 'radius' alrededor de la celda de inicio.
+    // Convierte todas las celdas interiores (no borde) a Path para garantizar
+    // que el jugador siempre tenga espacio libre a su alrededor.
+    private void ClearStartArea(
+        MazeCellType[,] maze,
+        Vector2Int center,
+        int radius)
+    {
+        int mazeWidth = maze.GetLength(0);
+        int mazeHeight = maze.GetLength(1);
+
+        for (int dx = -radius; dx <= radius; dx++)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                int x = center.x + dx;
+                int y = center.y + dy;
+
+                // Respetar los bordes del mapa (siempre son pared)
+                if (x > 0 && x < mazeWidth - 1 &&
+                    y > 0 && y < mazeHeight - 1)
+                {
+                    maze[x, y] = MazeCellType.Path;
+                }
+            }
+        }
     }
 }

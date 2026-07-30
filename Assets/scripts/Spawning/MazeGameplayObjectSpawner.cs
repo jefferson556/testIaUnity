@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LevelObjectSpawner : MonoBehaviour
+public class MazeGameplayObjectSpawner : MonoBehaviour
 {
     [Header("Destructible Configuration Set")]
     [SerializeField]

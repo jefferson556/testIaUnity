@@ -9,8 +9,16 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 785691763745818824, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
+      propertyPath: m_Simulated
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 785691763745818824, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_CollisionDetection
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1563040957426499662, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1631098933081595921, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalScale.x
@@ -22,11 +30,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1631098933081595921, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -10.75
+      value: -14.5
       objectReference: {fileID: 0}
     - target: {fileID: 1631098933081595921, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.75
+      value: -14.5
       objectReference: {fileID: 0}
     - target: {fileID: 1631098933081595921, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalPosition.z
@@ -38,15 +46,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1631098933081595921, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 1631098933081595921, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 1631098933081595921, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 1631098933081595921, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -70,15 +78,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3939681794178829280, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.2188
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3939681794178829280, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.3735
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8390671110182260301, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
       propertyPath: m_Name
       value: CatPlayer Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 8390671110182260301, guid: 79beaf3d0e8a91147b8270a35eeb720f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -136,8 +148,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.16999999, y: 0.3333186}
-  m_Size: {x: 0.8, y: 0.9888232}
+  m_Offset: {x: -0.03405285, y: 0.78563595}
+  m_Size: {x: 0.70477486, y: 1.2676954}
   m_Direction: 0
 --- !u!114 &5319485595099437268
 MonoBehaviour:
@@ -152,6 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AxeObstacleBreaker
   breakableTilemap: {fileID: 0}
+  animator: {fileID: 0}
   interactionDistance: 0.84
 --- !u!114 &7255949550215325861
 MonoBehaviour:

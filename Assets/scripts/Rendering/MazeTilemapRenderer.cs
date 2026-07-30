@@ -46,9 +46,23 @@ public class MazeTilemapRenderer : MonoBehaviour
 
     private Vector3Int currentOrigin;
 
+    public Vector3Int CurrentOrigin => currentOrigin;
+    public Vector2Int LogicalCellTileSize => logicalCellTileSize;
+
+    public void PreCalculateOrigin(MazeCellType[,] maze)
+    {
+        if (maze == null || !ValidateMainReferences(maze)) return;
+        int mazeWidth = maze.GetLength(0);
+        int mazeHeight = maze.GetLength(1);
+        int renderedWidth = mazeWidth * logicalCellTileSize.x;
+        int renderedHeight = mazeHeight * logicalCellTileSize.y;
+        currentOrigin = CalculateOrigin(renderedWidth, renderedHeight);
+    }
+
     public void Render(
         MazeCellType[,] maze,
-        int visualSeed)
+        int visualSeed,
+        Vector2Int startCell)
     {
         if (!ValidateMainReferences(maze))
         {
@@ -81,7 +95,8 @@ public class MazeTilemapRenderer : MonoBehaviour
 
         PaintDecorations(
             maze,
-            random
+            random,
+            startCell
         );
 
         RefreshTilemaps();
@@ -393,7 +408,8 @@ public class MazeTilemapRenderer : MonoBehaviour
 
     private void PaintDecorations(
         MazeCellType[,] maze,
-        System.Random random)
+        System.Random random,
+        Vector2Int startCell)
     {
         if (decorationSet == null)
         {
@@ -423,6 +439,11 @@ public class MazeTilemapRenderer : MonoBehaviour
                  mazeY < mazeHeight;
                  mazeY++)
             {
+                // Evitar pintar decoraciones en la celda de inicio y sus adyacentes inmediatas
+                if (Mathf.Abs(mazeX - startCell.x) <= 1 && Mathf.Abs(mazeY - startCell.y) <= 1)
+                {
+                    continue;
+                }
                 Vector3Int blockOrigin =
                     GetTilePosition(
                         new Vector2Int(

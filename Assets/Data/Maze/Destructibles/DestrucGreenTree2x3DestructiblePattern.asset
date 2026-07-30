@@ -1,0 +1,32 @@
+﻿%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c78ab39b212144348ab30b6cbdc7cf93, type: 3}
+  m_Name: DestrucGreenTree2x3DestructiblePattern
+  m_EditorClassIdentifier: Assembly-CSharp::MazeDestructiblePattern
+  id: destrucgreentree2x3_destructible
+  displayName: DestrucGreenTree2x3 Destructible
+  prefab: {fileID: 5127608368013533539, guid: 005caf99d95dad8488ca673b1241f4c1, type: 3}
+  width: 1
+  height: 1
+  pivotCell: {x: 0, y: 0}
+  positionOffset: {x: 0, y: 0}
+  selectionWeight: 1
+  minimumAmount: 3
+  maximumAmount: 10
+  minimumDifficulty: 0
+  minimumDistanceFromPlayer: 2
+  minimumDistanceFromCave: 2
+  blocksMovement: 1
+  requiresAxe: 1
+  avoidMainPath: 0
+  allowedInDeadEnds: 1
+  reserveAllPatternCells: 1

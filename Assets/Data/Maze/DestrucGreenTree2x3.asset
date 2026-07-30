@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd458c13073388d418615125ead98ad1, type: 3}
+  m_Name: DestrucGreenTree2x3
+  m_EditorClassIdentifier: Assembly-CSharp::MazeDecorationPattern
+  width: 3
+  height: 4
+  tiles:
+  - {fileID: 11400000, guid: d57ffa38dd77fd14ba82a3ce1efffcf4, type: 2}
+  - {fileID: 11400000, guid: a18637e080a5d4147a8203e6fcd79bb9, type: 2}
+  - {fileID: 11400000, guid: 4ecd5418a4c064f4e8c835b242022c23, type: 2}
+  - {fileID: 11400000, guid: 4bd3bf0f218927547b2214c87d97403c, type: 2}
+  - {fileID: 11400000, guid: 9d59092c12f1add4e8ee5f51a6f0dc25, type: 2}
+  - {fileID: 11400000, guid: 97fa3c8b9a51e1b4790642fd95eaac5f, type: 2}
+  - {fileID: 11400000, guid: fca31aa1169e75442945f7d43c095eea, type: 2}
+  - {fileID: 11400000, guid: bbd6038d19eb82841814c50c5e5e3c32, type: 2}
+  - {fileID: 11400000, guid: 41f2a8cea25fd314198ba02b150ebb80, type: 2}
+  - {fileID: 11400000, guid: e8ef7071f9e31274285e2d73539adb26, type: 2}
+  - {fileID: 11400000, guid: 54e6bb9bf4c457f43a12e6fb3c1cab7e, type: 2}
+  - {fileID: 11400000, guid: e18b255bacf32c343a202469b557905d, type: 2}

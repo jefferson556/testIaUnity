@@ -9,7 +9,10 @@ public class AxeObstacleBreaker : MonoBehaviour
     [SerializeField]
     private BreakableTilemap breakableTilemap;
 
-    [Header("Configuraci髇")]
+    [SerializeField]
+    private Animator animator;
+
+    [Header("Configuraci贸n")]
     [SerializeField, Min(0.1f)]
     private float interactionDistance = 0.8f;
 
@@ -23,14 +26,9 @@ public class AxeObstacleBreaker : MonoBehaviour
         inputReader = GetComponent<CatInputReader>();
         catMovement = GetComponent<CatMovement>();
 
-        if (breakableTilemap == null)
+        if (animator == null)
         {
-            Debug.LogError(
-                "Debes asignar BreakableObstacles en AxeObstacleBreaker.",
-                this
-            );
-
-            enabled = false;
+            animator = GetComponentInChildren<Animator>();
         }
     }
 
@@ -54,8 +52,19 @@ public class AxeObstacleBreaker : MonoBehaviour
     {
         if (!inventory.HasAxe)
         {
-            Debug.Log("Necesitas recoger el hacha.");
+            Debug.Log("Necesitas recoger el hacha primero.");
             return;
+        }
+
+        // Reproducir la animaci贸n de ataque Cat_Attack
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (animator != null)
+        {
+            animator.Play("Cat_Attack", 0, 0f);
         }
 
         Vector3 targetPosition =
@@ -65,24 +74,36 @@ public class AxeObstacleBreaker : MonoBehaviour
                 interactionDistance
             );
 
-        bool obstacleRemoved =
-            breakableTilemap.TryBreakAtWorldPosition(
-                targetPosition,
-                out Vector3Int removedCell
-            );
-
-        if (!obstacleRemoved)
+        // 1. Detecci贸n de Objetos Destruibles 2D (Prefabs de 谩rboles, rocas, etc.)
+        Collider2D hitCollider = Physics2D.OverlapCircle(targetPosition, 0.5f);
+        if (hitCollider != null)
         {
-            Debug.Log(
-                "No hay un obst醕ulo cortable delante."
-            );
-
-            return;
+            DestructibleObject destructible = hitCollider.GetComponentInParent<DestructibleObject>();
+            if (destructible != null)
+            {
+                destructible.Hit(1);
+                Debug.Log($"隆Obst谩culo destruible cortado con animaci贸n Cat_Attack! ({destructible.gameObject.name})");
+                return;
+            }
         }
 
-        Debug.Log(
-            $"bst醕ulo cortado! Celda eliminada: {removedCell}"
-        );
+        // 2. Detecci贸n de Tilemaps destructibles
+        if (breakableTilemap != null)
+        {
+            bool obstacleRemoved =
+                breakableTilemap.TryBreakAtWorldPosition(
+                    targetPosition,
+                    out Vector3Int removedCell
+                );
+
+            if (obstacleRemoved)
+            {
+                Debug.Log($"隆Obst谩culo de Tilemap cortado con animaci贸n Cat_Attack! Celda eliminada: {removedCell}");
+                return;
+            }
+        }
+
+        Debug.Log("No hay un obst谩culo cortable delante.");
     }
 
     private void OnDrawGizmosSelected()
@@ -109,7 +130,7 @@ public class AxeObstacleBreaker : MonoBehaviour
 
         Gizmos.DrawWireSphere(
             targetPosition,
-            0.15f
+            0.5f
         );
     }
 }

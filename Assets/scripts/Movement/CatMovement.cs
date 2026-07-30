@@ -13,6 +13,7 @@ public class CatMovement : MonoBehaviour
     private CatInputReader inputReader;
     private Vector2 movement;
     public Vector2 FacingDirection { get; private set; } = Vector2.down;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -52,6 +53,10 @@ public class CatMovement : MonoBehaviour
 
             enabled = false;
         }
+        else
+        {
+            spriteRenderer.transform.localPosition = Vector3.zero;
+        }
     }
 
     private void Update()
@@ -73,11 +78,31 @@ public class CatMovement : MonoBehaviour
 
     private void UpdateAnimation()
     {
+        if (animator == null)
+        {
+            return;
+        }
+
+        bool isMoving = movement.sqrMagnitude > 0.01f;
+        bool isAttacking = animator.GetCurrentAnimatorStateInfo(0).IsName("Cat_Attack");
+
+        if (isAttacking)
+        {
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            if (!isMoving && stateInfo.normalizedTime < 0.95f)
+            {
+                return;
+            }
+
+            if (!isMoving && stateInfo.normalizedTime >= 0.95f)
+            {
+                animator.Play("Cat_Idle");
+            }
+        }
+
         bool isMovingSide = false;
         bool isMovingForward = false;
         bool isMovingBackward = false;
-
-        bool isMoving = movement.sqrMagnitude > 0.01f;
 
         if (isMoving)
         {
@@ -122,6 +147,7 @@ public class CatMovement : MonoBehaviour
             spriteRenderer.flipX = true;
         }
     }
+
     private void UpdateFacingDirection()
     {
         if (movement.sqrMagnitude <= 0.01f)
