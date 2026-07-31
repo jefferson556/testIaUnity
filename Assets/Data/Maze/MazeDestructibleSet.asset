@@ -17,7 +17,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 492a0f11265cb794295da1396d988e03, type: 2}
   globalSpawnProbability: 1
   minimumTotalAmount: 3
-  maximumTotalAmount: 30
+  maximumTotalAmount: 11
   minimumSpacing: 1
   placementAttemptsPerObject: 50
   validateConnectivity: 1

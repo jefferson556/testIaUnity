@@ -166,6 +166,14 @@ public class MazeData : MonoBehaviour
         cells[x, y].IsPath = true; // Garantiza transitabilidad por otros sistemas
     }
 
+    public void SetCellAsWall(int x, int y)
+    {
+        if (cells == null || x < 0 || x >= width || y < 0 || y >= height) return;
+        cells[x, y].IsPath = false;
+        cells[x, y].IsAccessibleZone = false;
+        cells[x, y].IsMainRegion = false;
+    }
+
     public Vector2Int GetValidStartCell(Vector2Int preferredStart)
     {
         if (IsCellWalkableAndMain(preferredStart.x, preferredStart.y))

@@ -7,11 +7,23 @@ public class CavePortal : MonoBehaviour
     [SerializeField]
     private Transform destinationExitPoint;
 
+    public Transform DestinationExitPoint
+    {
+        get => destinationExitPoint;
+        set => destinationExitPoint = value;
+    }
+
     private void Awake()
     {
         Collider2D triggerCollider = GetComponent<Collider2D>();
-        triggerCollider.isTrigger = true;
+        if (triggerCollider != null)
+        {
+            triggerCollider.isTrigger = true;
+        }
+    }
 
+    private void Start()
+    {
         if (destinationExitPoint == null)
         {
             Debug.LogError(

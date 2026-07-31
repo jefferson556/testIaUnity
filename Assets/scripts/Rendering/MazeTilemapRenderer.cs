@@ -52,6 +52,7 @@ public class MazeTilemapRenderer : MonoBehaviour
 
     public Vector3Int CurrentOrigin => currentOrigin;
     public Vector2Int LogicalCellTileSize => logicalCellTileSize;
+    public Tilemap PathTilemap => pathTilemap;
 
     public void PreCalculateOrigin(MazeCellType[,] maze)
     {
@@ -175,6 +176,26 @@ public class MazeTilemapRenderer : MonoBehaviour
                     // Pintar el tile transitable exclusivo
                     pathTilemap.SetTile(pos, accessibleZoneTile);
                 }
+            }
+        }
+        RefreshTilemaps();
+    }
+
+    public void PaintWallCell(Vector2Int cell, System.Random random)
+    {
+        if (wallTilemap == null || tileSet == null) return;
+        Vector3Int blockOrigin = GetTilePosition(cell);
+        
+        for (int lx = 0; lx < logicalCellTileSize.x; lx++)
+        {
+            for (int ly = 0; ly < logicalCellTileSize.y; ly++)
+            {
+                Vector3Int pos = blockOrigin + new Vector3Int(lx, ly, 0);
+                pathTilemap?.SetTile(pos, null);
+                decorationBackTilemap?.SetTile(pos, null);
+                decorationFrontTilemap?.SetTile(pos, null);
+                
+                wallTilemap.SetTile(pos, tileSet.GetWallTile(random));
             }
         }
         RefreshTilemaps();

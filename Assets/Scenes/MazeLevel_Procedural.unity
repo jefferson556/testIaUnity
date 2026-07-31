@@ -368,6 +368,11 @@ MonoBehaviour:
   accessibleZoneSize: {x: 1, y: 1}
   itemsContainer: {fileID: 0}
   maximumGenerationAttempts: 100
+  cavePrefab: {fileID: 6697752899464144905, guid: dc500f3dc9d81a34ab8b66fdd188fd0d, type: 3}
+  keyPrefab: {fileID: 8242095866668300498, guid: fdb1e3bbe83b6864390e95cf6a956ce5, type: 3}
+  doorPrefab: {fileID: 5346199211828365795, guid: 49b5927b7da71544e8247a456611cd7f, type: 3}
+  missionDestructiblePrefab: {fileID: 4658633062640193059, guid: cb791563a202754498de41d1d6bd7ee6, type: 3}
+  showDebugGizmos: 1
 --- !u!4 &527185425
 Transform:
   m_ObjectHideFlags: 0
@@ -2765,8 +2770,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6683a099240f0694bb6ff807d5ec3dc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MazeGenerator
-  width: 10
-  height: 10
+  width: 20
+  height: 20
   useRandomSeed: 1
   seed: 12345
   extraConnections: 2

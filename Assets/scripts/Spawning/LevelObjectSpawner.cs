@@ -23,6 +23,8 @@ public class LevelObjectSpawner : MonoBehaviour
         new Dictionary<MazeDestructiblePattern, int>();
 
     public HashSet<Vector3Int> OccupiedCells => occupiedCells;
+    public string TargetSortingLayer => targetSortingLayer;
+    public int TargetSortingOrder => targetSortingOrder;
 
     public void SpawnDestructibles(
         MazeCellType[,] mazeMatrix,
