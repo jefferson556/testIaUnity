@@ -364,6 +364,8 @@ MonoBehaviour:
   axeTransform: {fileID: 659297677}
   axePrefab: {fileID: 1698891972}
   minimumAxeDistanceFromPlayer: 3
+  generateAccessibleZone: 1
+  accessibleZoneSize: {x: 1, y: 1}
   itemsContainer: {fileID: 0}
   maximumGenerationAttempts: 100
 --- !u!4 &527185425
@@ -2763,8 +2765,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6683a099240f0694bb6ff807d5ec3dc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MazeGenerator
-  width: 8
-  height: 8
+  width: 10
+  height: 10
   useRandomSeed: 1
   seed: 12345
   extraConnections: 2
@@ -2788,6 +2790,7 @@ MonoBehaviour:
   tileSet: {fileID: 11400000, guid: bd5a8030f6d52cc40864fa5f8c271c98, type: 2}
   decorationSet: {fileID: 11400000, guid: 32a10ac1cef14d74a8cc4afca0e7daba, type: 2}
   logicalCellTileSize: {x: 5, y: 5}
+  accessibleZoneTile: {fileID: -56264438900049826, guid: 3a95dd7475665274fb3f7ab0387d669d, type: 3}
   centerMaze: 1
   manualOrigin: {x: 0, y: 0}
 --- !u!114 &1259965863

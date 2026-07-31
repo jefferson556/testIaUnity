@@ -37,6 +37,10 @@ public class MazeTilemapRenderer : MonoBehaviour
     private Vector2Int logicalCellTileSize =
         new Vector2Int(3, 3);
 
+    [Header("Accessible Zone Settings")]
+    [SerializeField]
+    private TileBase accessibleZoneTile;
+
     [Header("Map Position")]
     [SerializeField]
     private bool centerMaze = true;
@@ -143,6 +147,37 @@ public class MazeTilemapRenderer : MonoBehaviour
         wallTilemap?.ClearAllTiles();
         decorationBackTilemap?.ClearAllTiles();
         decorationFrontTilemap?.ClearAllTiles();
+    }
+
+    public void PaintAccessibleZone(List<Vector2Int> cells)
+    {
+        if (accessibleZoneTile == null || pathTilemap == null)
+        {
+            Debug.LogWarning("MazeTilemapRenderer: No accessibleZoneTile or pathTilemap reference.", this);
+            return;
+        }
+
+        foreach (var cell in cells)
+        {
+            Vector3Int blockOrigin = GetTilePosition(cell);
+
+            for (int lx = 0; lx < logicalCellTileSize.x; lx++)
+            {
+                for (int ly = 0; ly < logicalCellTileSize.y; ly++)
+                {
+                    Vector3Int pos = blockOrigin + new Vector3Int(lx, ly, 0);
+                    
+                    // Limpiar paredes y decoraciones de la celda
+                    wallTilemap?.SetTile(pos, null);
+                    decorationBackTilemap?.SetTile(pos, null);
+                    decorationFrontTilemap?.SetTile(pos, null);
+                    
+                    // Pintar el tile transitable exclusivo
+                    pathTilemap.SetTile(pos, accessibleZoneTile);
+                }
+            }
+        }
+        RefreshTilemaps();
     }
 
     private void PaintMaze(

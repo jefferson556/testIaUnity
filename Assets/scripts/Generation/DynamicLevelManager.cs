@@ -49,6 +49,13 @@ public class DynamicLevelManager : MonoBehaviour
     [SerializeField, Min(1)]
     private int minimumAxeDistanceFromPlayer = 3;
 
+    [Header("Accessible Zone Settings")]
+    [SerializeField]
+    private bool generateAccessibleZone = true;
+
+    [SerializeField]
+    private Vector2Int accessibleZoneSize = new Vector2Int(3, 3);
+
     [Header("Contenedores de Jerarquía")]
     [SerializeField]
     private Transform itemsContainer;
@@ -235,6 +242,14 @@ public class DynamicLevelManager : MonoBehaviour
             {
                 RejectAttempt(attempt, currentSeed, "los destructibles desconectaron o hicieron inaccesible el hacha");
                 continue;
+            }
+
+            // Generar y pintar AccessibleZone si está habilitado
+            if (generateAccessibleZone)
+            {
+                List<Vector2Int> zoneCells = GenerateAccessibleZoneForAxe(axeCell, accessibleZoneSize, mazeData, maze);
+                mazeData.CalculateMainRegion(startCell); // Re-calcular región por si se expandió a paredes lógicas
+                mazeRenderer.PaintAccessibleZone(zoneCells);
             }
 
             Vector3 axeWorldPos = mazeRenderer.GetWorldPosition(axeCell);
@@ -672,5 +687,45 @@ public class DynamicLevelManager : MonoBehaviour
         {
             Debug.LogWarning("DynamicLevelManager: No se asignó ni Axe Transform ni Axe Prefab en el Inspector.", this);
         }
+    }
+
+    private List<Vector2Int> GenerateAccessibleZoneForAxe(Vector2Int rootCell, Vector2Int size, MazeData mazeData, MazeCellType[,] maze)
+    {
+        List<Vector2Int> zoneCells = new List<Vector2Int>();
+        int mazeWidth = maze.GetLength(0);
+        int mazeHeight = maze.GetLength(1);
+
+        // Asegurar que el tamaño sea de al menos 1x1
+        int targetWidth = Mathf.Max(1, size.x);
+        int targetHeight = Mathf.Max(1, size.y);
+
+        // Intentar centrar la zona de tamaño en rootCell, pero ajustar para no tocar los bordes del mapa (0 y width-1/height-1)
+        int halfWidth = targetWidth / 2;
+        int halfHeight = targetHeight / 2;
+
+        int startX = rootCell.x - halfWidth;
+        int startY = rootCell.y - halfHeight;
+
+        // Limitar para mantener un margen de 1 celda con respecto a los bordes exteriores del laberinto
+        startX = Mathf.Clamp(startX, 1, mazeWidth - 1 - targetWidth);
+        startY = Mathf.Clamp(startY, 1, mazeHeight - 1 - targetHeight);
+
+        for (int x = 0; x < targetWidth; x++)
+        {
+            for (int y = 0; y < targetHeight; y++)
+            {
+                int cellX = startX + x;
+                int cellY = startY + y;
+
+                if (cellX > 0 && cellX < mazeWidth - 1 && cellY > 0 && cellY < mazeHeight - 1)
+                {
+                    Vector2Int cell = new Vector2Int(cellX, cellY);
+                    zoneCells.Add(cell);
+                    mazeData.ConvertToAccessibleZone(cellX, cellY);
+                }
+            }
+        }
+
+        return zoneCells;
     }
 }

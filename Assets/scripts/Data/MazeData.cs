@@ -8,6 +8,7 @@ public class MazeData : MonoBehaviour
         public bool IsPath;
         public bool IsOccupied;
         public bool IsMainRegion;
+        public bool IsAccessibleZone;
     }
 
     private CellState[,] cells;
@@ -40,7 +41,8 @@ public class MazeData : MonoBehaviour
                 {
                     IsPath = maze[x, y] == MazeCellType.Path,
                     IsOccupied = false,
-                    IsMainRegion = false
+                    IsMainRegion = false,
+                    IsAccessibleZone = false
                 };
             }
         }
@@ -141,15 +143,27 @@ public class MazeData : MonoBehaviour
         return region;
     }
 
-    public bool IsCellWalkable(int x, int y)
+    public bool IsWalkable(int x, int y)
     {
         if (cells == null || x < 0 || x >= width || y < 0 || y >= height) return false;
-        return cells[x, y].IsPath && !cells[x, y].IsOccupied;
+        return (cells[x, y].IsPath || cells[x, y].IsAccessibleZone) && !cells[x, y].IsOccupied;
+    }
+
+    public bool IsCellWalkable(int x, int y)
+    {
+        return IsWalkable(x, y);
     }
 
     public bool IsCellWalkableAndMain(int x, int y)
     {
-        return IsCellWalkable(x, y) && cells[x, y].IsMainRegion;
+        return IsWalkable(x, y) && cells[x, y].IsMainRegion;
+    }
+
+    public void ConvertToAccessibleZone(int x, int y)
+    {
+        if (cells == null || x < 0 || x >= width || y < 0 || y >= height) return;
+        cells[x, y].IsAccessibleZone = true;
+        cells[x, y].IsPath = true; // Garantiza transitabilidad por otros sistemas
     }
 
     public Vector2Int GetValidStartCell(Vector2Int preferredStart)
@@ -235,6 +249,10 @@ public class MazeData : MonoBehaviour
                 if (state.IsOccupied)
                 {
                     Gizmos.color = occupiedColor;
+                }
+                else if (state.IsAccessibleZone)
+                {
+                    Gizmos.color = new Color(0f, 1f, 1f, 0.5f); // Cyan semitransparente
                 }
                 else if (state.IsMainRegion)
                 {
