@@ -646,16 +646,16 @@ public class DynamicLevelManager : MonoBehaviour
     {
         Vector3Int playerSpawnCell = new Vector3Int(startCell.x, startCell.y, 0);
 
-        LevelObjectSpawner spawnerToUse = levelObjectSpawner;
-        if (spawnerToUse == null)
+        BaseObjectSpawner spawner = levelObjectSpawner != null ? (BaseObjectSpawner)levelObjectSpawner : gameplayObjectSpawner;
+        if (spawner == null)
         {
-            spawnerToUse = GetComponentInChildren<LevelObjectSpawner>();
-            if (spawnerToUse == null) spawnerToUse = FindAnyObjectByType<LevelObjectSpawner>();
+            spawner = GetComponentInChildren<BaseObjectSpawner>();
+            if (spawner == null) spawner = FindAnyObjectByType<BaseObjectSpawner>();
         }
 
-        if (spawnerToUse != null)
+        if (spawner != null)
         {
-            spawnerToUse.SpawnDestructibles(
+            spawner.SpawnDestructibles(
                 maze,
                 mazeRenderer.CurrentOrigin,
                 mazeRenderer.LogicalCellTileSize,
@@ -663,32 +663,7 @@ public class DynamicLevelManager : MonoBehaviour
                 playerSpawnCell,
                 visualSeed
             );
-            foreach (var cell in spawnerToUse.OccupiedCells)
-            {
-                if (cell == playerSpawnCell) continue;
-                mazeData.MarkCellsAsOccupied(new Vector2Int(cell.x, cell.y), 1, 1);
-            }
-            return true;
-        }
-
-        MazeGameplayObjectSpawner altSpawner = gameplayObjectSpawner;
-        if (altSpawner == null)
-        {
-            altSpawner = GetComponentInChildren<MazeGameplayObjectSpawner>();
-            if (altSpawner == null) altSpawner = FindAnyObjectByType<MazeGameplayObjectSpawner>();
-        }
-
-        if (altSpawner != null)
-        {
-            altSpawner.SpawnDestructibles(
-                maze,
-                mazeRenderer.CurrentOrigin,
-                mazeRenderer.LogicalCellTileSize,
-                playerSpawnCell,
-                playerSpawnCell,
-                visualSeed
-            );
-            foreach (var cell in altSpawner.OccupiedCells)
+            foreach (var cell in spawner.OccupiedCells)
             {
                 if (cell == playerSpawnCell) continue;
                 mazeData.MarkCellsAsOccupied(new Vector2Int(cell.x, cell.y), 1, 1);
@@ -832,7 +807,12 @@ public class DynamicLevelManager : MonoBehaviour
         mazeData.Initialize(maze, mazeRenderer.CurrentOrigin, mazeRenderer.LogicalCellTileSize);
         
         // Volver a marcar las celdas ocupadas por destructibles base del spawner
-        LevelObjectSpawner spawnerToUse = levelObjectSpawner != null ? levelObjectSpawner : GetComponentInChildren<LevelObjectSpawner>();
+        BaseObjectSpawner spawnerToUse = levelObjectSpawner != null ? (BaseObjectSpawner)levelObjectSpawner : gameplayObjectSpawner;
+        if (spawnerToUse == null)
+        {
+            spawnerToUse = GetComponentInChildren<BaseObjectSpawner>();
+            if (spawnerToUse == null) spawnerToUse = FindAnyObjectByType<BaseObjectSpawner>();
+        }
         if (spawnerToUse != null)
         {
             foreach (var cell in spawnerToUse.OccupiedCells)
@@ -1364,7 +1344,12 @@ public class DynamicLevelManager : MonoBehaviour
         spawnedDoorInstance = Instantiate(doorPrefab, posMeta, Quaternion.identity, itemsContainer);
         spawnedDoorInstance.name = "Maze_Goal_Door";
 
-        LevelObjectSpawner spawnerToUse = levelObjectSpawner != null ? levelObjectSpawner : GetComponentInChildren<LevelObjectSpawner>();
+        BaseObjectSpawner spawnerToUse = levelObjectSpawner != null ? (BaseObjectSpawner)levelObjectSpawner : gameplayObjectSpawner;
+        if (spawnerToUse == null)
+        {
+            spawnerToUse = GetComponentInChildren<BaseObjectSpawner>();
+            if (spawnerToUse == null) spawnerToUse = FindAnyObjectByType<BaseObjectSpawner>();
+        }
 
         foreach (var bar in allBarriers)
         {
