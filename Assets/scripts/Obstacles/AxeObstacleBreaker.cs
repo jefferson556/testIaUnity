@@ -19,12 +19,14 @@ public class AxeObstacleBreaker : MonoBehaviour
     private CatInventory inventory;
     private CatInputReader inputReader;
     private CatMovement catMovement;
+    private Collider2D playerCollider;
 
     private void Awake()
     {
         inventory = GetComponent<CatInventory>();
         inputReader = GetComponent<CatInputReader>();
         catMovement = GetComponent<CatMovement>();
+        playerCollider = GetComponent<Collider2D>();
 
         if (animator == null)
         {
@@ -67,17 +69,25 @@ public class AxeObstacleBreaker : MonoBehaviour
             animator.Play("Cat_Attack", 0, 0f);
         }
 
+        Vector2 offset = playerCollider != null ? playerCollider.offset : Vector2.zero;
+        Vector3 origin = transform.position + (Vector3)offset;
         Vector3 targetPosition =
-            transform.position +
+            origin +
             (Vector3)(
                 catMovement.FacingDirection *
                 interactionDistance
             );
 
         // 1. Detección de Objetos Destruibles 2D (Prefabs de árboles, rocas, etc.)
-        Collider2D hitCollider = Physics2D.OverlapCircle(targetPosition, 0.5f);
-        if (hitCollider != null)
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(targetPosition, 0.5f);
+        foreach (var hitCollider in hitColliders)
         {
+            // Ignorar el colisionador del propio jugador
+            if (hitCollider.gameObject == gameObject || hitCollider.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
             DestructibleObject destructible = hitCollider.GetComponentInParent<DestructibleObject>();
             if (destructible != null)
             {
@@ -90,9 +100,17 @@ public class AxeObstacleBreaker : MonoBehaviour
         // 2. Detección de Tilemaps destructibles
         if (breakableTilemap != null)
         {
+            // Para el tilemap usamos transform.position directamente como origen para evitar desfases de celdas
+            Vector3 tilemapTargetPosition =
+                transform.position +
+                (Vector3)(
+                    catMovement.FacingDirection *
+                    interactionDistance
+                );
+
             bool obstacleRemoved =
                 breakableTilemap.TryBreakAtWorldPosition(
-                    targetPosition,
+                    tilemapTargetPosition,
                     out Vector3Int removedCell
                 );
 
@@ -116,15 +134,20 @@ public class AxeObstacleBreaker : MonoBehaviour
             return;
         }
 
+        Collider2D col = GetComponent<Collider2D>();
+        Vector2 offset = col != null ? col.offset : Vector2.zero;
+        Vector3 origin = transform.position + (Vector3)offset;
+
         Vector3 targetPosition =
-            transform.position +
+            origin +
             (Vector3)(
                 movement.FacingDirection *
                 interactionDistance
             );
 
+        Gizmos.color = Color.white;
         Gizmos.DrawLine(
-            transform.position,
+            origin,
             targetPosition
         );
 

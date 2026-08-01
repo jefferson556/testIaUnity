@@ -89,14 +89,18 @@ public class CatMovement : MonoBehaviour
         if (isAttacking)
         {
             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-            if (!isMoving && stateInfo.normalizedTime < 0.95f)
+            if (isMoving)
             {
-                return;
-            }
-
-            if (!isMoving && stateInfo.normalizedTime >= 0.95f)
-            {
+                // Si el jugador se empieza a mover, interrumpimos el ataque inmediatamente
                 animator.Play("Cat_Idle");
+            }
+            else
+            {
+                if (stateInfo.normalizedTime >= 0.95f)
+                {
+                    animator.Play("Cat_Idle");
+                }
+                return; // Evitamos actualizar parámetros de movimiento mientras ataca y está estático
             }
         }
 

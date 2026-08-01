@@ -80,6 +80,23 @@ public class DynamicLevelManager : MonoBehaviour
     private GameObject spawnedDoorInstance;
     private List<GameObject> spawnedMissionDestructibles = new List<GameObject>();
 
+    [Header("Configuración de Viaje Rápido (Travel Caves)")]
+    [SerializeField] private bool enableTravelCaves = true;
+    [SerializeField] private int minimumMapWidthForTravelCaves = 15;
+    [SerializeField] private int minimumMapHeightForTravelCaves = 15;
+    [SerializeField] private int maximumTravelCavePairs = 1;
+    [SerializeField] private int minimumPathDistanceBetweenTravelCaves = 10;
+    [SerializeField] private int minimumShortcutSaving = 8;
+    [SerializeField] private int travelCaveSafeAreaRadius = 0;
+    [SerializeField] private int maximumTravelPlacementAttempts = 50;
+    [SerializeField] private bool enableTravelCaveDebug = true;
+
+    private GameObject spawnedTravelCaveA;
+    private GameObject spawnedTravelCaveB;
+    private List<Vector2Int> travelCavePath = new List<Vector2Int>();
+    private List<Vector2Int> travelCaveACells = new List<Vector2Int>();
+    private List<Vector2Int> travelCaveBCells = new List<Vector2Int>();
+
     [Header("Depuración Visual - Gizmos")]
     [SerializeField] private bool showDebugGizmos = true;
 
@@ -89,7 +106,15 @@ public class DynamicLevelManager : MonoBehaviour
     private List<Vector2Int> keyToMetaPath = new List<Vector2Int>();
     private List<Vector2Int> keyZoneCells = new List<Vector2Int>();
     private List<Vector2Int> metaZoneCells = new List<Vector2Int>();
+    private List<Vector2Int> axeZoneCells = new List<Vector2Int>();
     private HashSet<Vector2Int> barrierCells = new HashSet<Vector2Int>();
+    private HashSet<Vector2Int> destructibleWallsCells = new HashSet<Vector2Int>();
+
+    private Vector2Int cuevaA;
+    private Vector2Int cuevaB;
+    private Vector2Int axeCell;
+    private Vector2Int keyCell;
+    private Vector2Int metaCell;
 
     private void Start()
     {
@@ -181,6 +206,9 @@ public class DynamicLevelManager : MonoBehaviour
             // 3. Generar la matriz lógica del laberinto
             maze = mazeGenerator.Generate();
             startCell = mazeGenerator.StartCell;
+
+            destructibleWallsCells.Clear();
+            ReplaceWallsWithDestructibles(maze, currentSeed, startCell);
 
             // 4. Pre-calcular el origen del Tilemap para inicializar MazeData
             mazeRenderer.PreCalculateOrigin(maze);
@@ -276,6 +304,9 @@ public class DynamicLevelManager : MonoBehaviour
                 RejectAttempt(attempt, currentSeed, "no se pudo colocar una misión soluble válida en este mapa base");
                 continue;
             }
+
+            // 17. Intentar colocar las cuevas de viaje rápido adicionales
+            TryPlaceTravelCaves(maze, mazeData, currentSeed);
 
             // Guardar métricas del éxito
             acceptedSeed = currentSeed;
@@ -773,12 +804,27 @@ public class DynamicLevelManager : MonoBehaviour
         }
         spawnedMissionDestructibles.Clear();
 
+        if (spawnedTravelCaveA != null) Destroy(spawnedTravelCaveA);
+        if (spawnedTravelCaveB != null) Destroy(spawnedTravelCaveB);
+
         startToCaveAPath.Clear();
         caveBToAxePath.Clear();
         axeToBarrierPath.Clear();
         keyToMetaPath.Clear();
         keyZoneCells.Clear();
+        metaZoneCells.Clear();
         barrierCells.Clear();
+
+        travelCavePath.Clear();
+        travelCaveACells.Clear();
+        travelCaveBCells.Clear();
+
+        cuevaA = Vector2Int.zero;
+        cuevaB = Vector2Int.zero;
+        axeCell = Vector2Int.zero;
+        keyCell = Vector2Int.zero;
+        metaCell = Vector2Int.zero;
+        axeZoneCells.Clear();
     }
 
     private void ResetMazeDataToBaseState(MazeCellType[,] maze, MazeData mazeData)
@@ -798,6 +844,32 @@ public class DynamicLevelManager : MonoBehaviour
 
         // Recalcular la región principal conexa básica
         mazeData.CalculateMainRegion(mazeGenerator.StartCell);
+    }
+
+    private void ReplaceWallsWithDestructibles(MazeCellType[,] maze, int seed, Vector2Int startCell)
+    {
+        int mazeWidth = maze.GetLength(0);
+        int mazeHeight = maze.GetLength(1);
+        System.Random random = new System.Random(seed);
+        float percentage = 0.10f; // Reemplazar el 10% de las paredes internas
+
+        for (int x = 1; x < mazeWidth - 1; x++)
+        {
+            for (int y = 1; y < mazeHeight - 1; y++)
+            {
+                if (maze[x, y] == MazeCellType.Wall)
+                {
+                    // Evitar que la pared esté en contacto directo con el spawn del jugador para no obstruir el inicio
+                    if (Mathf.Abs(x - startCell.x) <= 1 && Mathf.Abs(y - startCell.y) <= 1) continue;
+
+                    if (random.NextDouble() < percentage)
+                    {
+                        maze[x, y] = MazeCellType.Path;
+                        destructibleWallsCells.Add(new Vector2Int(x, y));
+                    }
+                }
+            }
+        }
     }
 
     private List<Vector2Int> IsolateAndBuildAxeZone(Vector2Int rootCell, Vector2Int size, MazeData mazeData, MazeCellType[,] maze, out List<Vector2Int> blockedConnections)
@@ -888,41 +960,169 @@ public class DynamicLevelManager : MonoBehaviour
         int mazeWidth = maze.GetLength(0);
         int mazeHeight = maze.GetLength(1);
 
-        // --- CUEVA A ---
-        List<Vector2Int> candidatesForA = new List<Vector2Int>();
+        // --- META (PUERTA) ---
+        // Buscamos la celda más lejana al inicio que pueda servir como meta (callejón o pasillo con 1 o 2 vecinos)
+        List<Vector2Int> candidatesForDoor = new List<Vector2Int>();
         for (int x = 1; x < mazeWidth - 1; x++)
         {
             for (int y = 1; y < mazeHeight - 1; y++)
             {
                 Vector2Int cell = new Vector2Int(x, y);
                 if (cell == startCell) continue;
-                if (mazeData.IsCellWalkableAndMain(x, y) && Vector2Int.Distance(cell, startCell) >= 2)
+
+                if (mazeData.IsCellWalkableAndMain(x, y))
                 {
-                    candidatesForA.Add(cell);
+                    int neighborsCount = GetWalkableNeighborsCount(cell, mazeData);
+                    if (neighborsCount == 1 || neighborsCount == 2)
+                    {
+                        candidatesForDoor.Add(cell);
+                    }
                 }
             }
         }
 
-        if (candidatesForA.Count == 0)
+        if (candidatesForDoor.Count == 0)
         {
-            Debug.LogWarning("[MissionGen] No se encontraron espacios lógicos para Cueva A.");
+            Debug.LogWarning("[MissionGen] No se encontró ningún candidato estructural para colocar la meta.");
             return false;
         }
 
-        Vector2Int cuevaA = candidatesForA[random.Next(candidatesForA.Count)];
+        // Ordenamos los candidatos de mayor a menor distancia respecto al punto de inicio (spawn)
+        candidatesForDoor.Sort((a, b) => {
+            float distA = Vector2Int.Distance(a, startCell);
+            float distB = Vector2Int.Distance(b, startCell);
+            return distB.CompareTo(distA); // Orden descendente (más lejano primero)
+        });
+
+        // Seleccionamos los candidatos que estén al menos al 85% de la distancia máxima encontrada
+        float maxDoorDistance = Vector2Int.Distance(candidatesForDoor[0], startCell);
+        float minDoorDistanceThreshold = maxDoorDistance * 0.85f;
+        List<Vector2Int> farDoorCandidates = new List<Vector2Int>();
+        foreach (var cand in candidatesForDoor)
+        {
+            if (Vector2Int.Distance(cand, startCell) >= minDoorDistanceThreshold)
+            {
+                farDoorCandidates.Add(cand);
+            }
+            else
+            {
+                break; // Ya que está ordenado descendente
+            }
+        }
+
+        // Aseguramos tener al menos 3 opciones para dar variabilidad
+        if (farDoorCandidates.Count < 3)
+        {
+            farDoorCandidates.Clear();
+            for (int i = 0; i < Mathf.Min(3, candidatesForDoor.Count); i++)
+            {
+                farDoorCandidates.Add(candidatesForDoor[i]);
+            }
+        }
+
+        // Desordenar (shuffle) únicamente el subconjunto de candidatos lejanos
+        for (int i = 0; i < farDoorCandidates.Count; i++)
+        {
+            int rnd = random.Next(i, farDoorCandidates.Count);
+            Vector2Int temp = farDoorCandidates[i];
+            farDoorCandidates[i] = farDoorCandidates[rnd];
+            farDoorCandidates[rnd] = temp;
+        }
+
+        metaCell = Vector2Int.zero;
+        HashSet<Vector2Int> tempMetaBarriers = new HashSet<Vector2Int>();
+        bool metaPlaced = false;
+
+        foreach (var candidate in farDoorCandidates)
+        {
+            List<Vector2Int> neighbors = GetWalkableNeighborsList(candidate, mazeData);
+            if (neighbors.Count == 0 || neighbors.Count > 2) continue;
+
+            // La meta no puede ser adyacente al jugador
+            bool touchesStart = false;
+            foreach (var neighbor in neighbors)
+            {
+                if (neighbor == startCell)
+                {
+                    touchesStart = true;
+                    break;
+                }
+            }
+            if (touchesStart) continue;
+
+            metaCell = candidate;
+            tempMetaBarriers.Clear();
+            foreach (var neighbor in neighbors)
+            {
+                tempMetaBarriers.Add(neighbor);
+            }
+            metaPlaced = true;
+            break;
+        }
+
+        if (!metaPlaced)
+        {
+            Debug.LogWarning("[MissionGen] No se pudo encontrar espacio aleatorio para la meta en las celdas más lejanas.");
+            return false;
+        }
 
         // --- ZONA DEL HACHA Y CUEVA B ---
-        Vector2Int axeCell = mazeData.SelectFurthestCell(startCell, seed, minimumAxeDistanceFromPlayer);
-        if (axeCell == startCell || !mazeData.IsCellWalkableAndMain(axeCell.x, axeCell.y))
+        // Buscamos candidatos lejanos al spawn pero también lejanos a la meta para colocar el hacha en otra esquina
+        List<Vector2Int> candidatesForAxe = new List<Vector2Int>();
+        for (int x = 1; x < mazeWidth - 1; x++)
         {
-            Debug.LogWarning("[MissionGen] El hacha lógica de origen no es accesible o es inválida.");
+            for (int y = 1; y < mazeHeight - 1; y++)
+            {
+                Vector2Int cell = new Vector2Int(x, y);
+                if (cell == startCell || cell == metaCell || tempMetaBarriers.Contains(cell)) continue;
+
+                if (mazeData.IsCellWalkableAndMain(x, y))
+                {
+                    float distToStart = Vector2Int.Distance(cell, startCell);
+                    float distToMeta = Vector2Int.Distance(cell, metaCell);
+
+                    if (distToStart >= 8.0f && distToMeta >= 8.0f)
+                    {
+                        candidatesForAxe.Add(cell);
+                    }
+                }
+            }
+        }
+
+        // Si la restricción de distancia es muy estricta, rebajamos el límite
+        if (candidatesForAxe.Count == 0)
+        {
+            for (int x = 1; x < mazeWidth - 1; x++)
+            {
+                for (int y = 1; y < mazeHeight - 1; y++)
+                {
+                    Vector2Int cell = new Vector2Int(x, y);
+                    if (cell == startCell || cell == metaCell || tempMetaBarriers.Contains(cell)) continue;
+                    if (mazeData.IsCellWalkableAndMain(x, y))
+                    {
+                        float distToStart = Vector2Int.Distance(cell, startCell);
+                        float distToMeta = Vector2Int.Distance(cell, metaCell);
+                        if (distToStart >= 5.0f && distToMeta >= 5.0f)
+                        {
+                            candidatesForAxe.Add(cell);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (candidatesForAxe.Count == 0)
+        {
+            Debug.LogWarning("[MissionGen] No se encontró candidato para la zona del hacha separado de la meta.");
             return false;
         }
 
-        List<Vector2Int> blockedConnections;
-        List<Vector2Int> axeZoneCells = IsolateAndBuildAxeZone(axeCell, accessibleZoneSize, mazeData, maze, out blockedConnections);
+        axeCell = candidatesForAxe[random.Next(candidatesForAxe.Count)];
 
-        Vector2Int cuevaB = Vector2Int.zero;
+        List<Vector2Int> blockedConnections;
+        axeZoneCells = IsolateAndBuildAxeZone(axeCell, accessibleZoneSize, mazeData, maze, out blockedConnections);
+
+        cuevaB = Vector2Int.zero;
         bool foundB = false;
         foreach (var cell in axeZoneCells)
         {
@@ -940,6 +1140,30 @@ public class DynamicLevelManager : MonoBehaviour
             return false;
         }
 
+        // --- CUEVA A ---
+        List<Vector2Int> candidatesForA = new List<Vector2Int>();
+        for (int x = 1; x < mazeWidth - 1; x++)
+        {
+            for (int y = 1; y < mazeHeight - 1; y++)
+            {
+                Vector2Int cell = new Vector2Int(x, y);
+                if (cell == startCell || cell == metaCell || tempMetaBarriers.Contains(cell) || axeZoneCells.Contains(cell)) continue;
+
+                if (mazeData.IsCellWalkableAndMain(x, y) && Vector2Int.Distance(cell, startCell) >= 2f)
+                {
+                    candidatesForA.Add(cell);
+                }
+            }
+        }
+
+        if (candidatesForA.Count == 0)
+        {
+            Debug.LogWarning("[MissionGen] No se encontró espacio para Cueva A fuera de la zona del hacha y de la meta.");
+            return false;
+        }
+
+        cuevaA = candidatesForA[random.Next(candidatesForA.Count)];
+
         // --- CALCULAR CAMINO PROTEGIDO INICIAL ---
         List<Vector2Int> tempProtectedPath = LevelValidator.GetPath(startCell, cuevaA, mazeData, false, false, cuevaA, cuevaB, cuevaB, cuevaA, new HashSet<Vector2Int>(), mazeWidth, mazeHeight);
         if (tempProtectedPath.Count == 0)
@@ -955,12 +1179,12 @@ public class DynamicLevelManager : MonoBehaviour
             for (int y = 1; y < mazeHeight - 1; y++)
             {
                 Vector2Int cell = new Vector2Int(x, y);
-                if (axeZoneCells.Contains(cell) || cell == cuevaA || cell == startCell) continue;
-                
+                if (axeZoneCells.Contains(cell) || cell == startCell || cell == cuevaA || cell == metaCell || tempMetaBarriers.Contains(cell)) continue;
+
                 if (mazeData.IsCellWalkableAndMain(x, y))
                 {
                     int neighborsCount = GetWalkableNeighborsCount(cell, mazeData);
-                    if (neighborsCount == 1) // Callejón sin salida
+                    if (neighborsCount == 1) // Callejón sin salida preferido
                     {
                         candidatesForKey.Add(cell);
                     }
@@ -975,7 +1199,7 @@ public class DynamicLevelManager : MonoBehaviour
                 for (int y = 1; y < mazeHeight - 1; y++)
                 {
                     Vector2Int cell = new Vector2Int(x, y);
-                    if (axeZoneCells.Contains(cell) || cell == cuevaA || cell == startCell) continue;
+                    if (axeZoneCells.Contains(cell) || cell == startCell || cell == cuevaA || cell == metaCell || tempMetaBarriers.Contains(cell)) continue;
                     if (mazeData.IsCellWalkableAndMain(x, y))
                     {
                         candidatesForKey.Add(cell);
@@ -990,8 +1214,7 @@ public class DynamicLevelManager : MonoBehaviour
             return false;
         }
 
-        // Buscar un candidato que no interfiera y que sus accesos puedan cerrarse
-        Vector2Int keyCell = Vector2Int.zero;
+        keyCell = Vector2Int.zero;
         HashSet<Vector2Int> tempBarriers = new HashSet<Vector2Int>();
         bool keyPlaced = false;
 
@@ -1008,13 +1231,13 @@ public class DynamicLevelManager : MonoBehaviour
         foreach (var candidate in shuffledCandidates)
         {
             List<Vector2Int> neighbors = GetWalkableNeighborsList(candidate, mazeData);
-            if (neighbors.Count == 0 || neighbors.Count > 2) continue; // Descartar si está aislado o tiene demasiados accesos
+            if (neighbors.Count == 0 || neighbors.Count > 2) continue;
 
-            // Comprobar si los accesos a bloquear están en rutas protegidas
             bool neighborProtected = false;
             foreach (var neighbor in neighbors)
             {
-                if (neighbor == startCell || neighbor == cuevaA || neighbor == cuevaB || neighbor == axeCell || tempProtectedPath.Contains(neighbor))
+                if (neighbor == startCell || neighbor == cuevaA || neighbor == cuevaB || neighbor == axeCell || 
+                    neighbor == metaCell || tempMetaBarriers.Contains(neighbor) || tempProtectedPath.Contains(neighbor))
                 {
                     neighborProtected = true;
                     break;
@@ -1035,117 +1258,17 @@ public class DynamicLevelManager : MonoBehaviour
 
         if (!keyPlaced)
         {
-            Debug.LogWarning("[MissionGen] No se pudo encontrar un callejón para la llave cuyos accesos no bloqueasen la ruta protegida.");
+            Debug.LogWarning("[MissionGen] No se pudo encontrar un callejón para la llave cuyos accesos no bloqueasen la ruta protegida o la meta.");
             return false;
         }
 
-        // --- META (PUERTA) ---
-        List<Vector2Int> candidatesForDoor = new List<Vector2Int>();
-        float minMetaDistance = (mazeWidth + mazeHeight) * 0.35f;
-
-        for (int x = 1; x < mazeWidth - 1; x++)
-        {
-            for (int y = 1; y < mazeHeight - 1; y++)
-            {
-                Vector2Int cell = new Vector2Int(x, y);
-                // Evitar colisionar con zonas clave ya colocadas
-                if (axeZoneCells.Contains(cell) || cell == keyCell || tempBarriers.Contains(cell) || cell == cuevaA || cell == startCell) continue;
-
-                // Debe estar lejos del spawn
-                float dist = Vector2Int.Distance(cell, startCell);
-                if (dist < minMetaDistance) continue;
-
-                if (mazeData.IsCellWalkableAndMain(x, y))
-                {
-                    int neighborsCount = GetWalkableNeighborsCount(cell, mazeData);
-                    if (neighborsCount == 1 || neighborsCount == 2)
-                    {
-                        candidatesForDoor.Add(cell);
-                    }
-                }
-            }
-        }
-
-        // Si no hay candidatos con distancia estricta, rebajamos la distancia mínima
-        if (candidatesForDoor.Count == 0)
-        {
-            for (int x = 1; x < mazeWidth - 1; x++)
-            {
-                for (int y = 1; y < mazeHeight - 1; y++)
-                {
-                    Vector2Int cell = new Vector2Int(x, y);
-                    if (axeZoneCells.Contains(cell) || cell == keyCell || tempBarriers.Contains(cell) || cell == cuevaA || cell == startCell) continue;
-                    if (mazeData.IsCellWalkableAndMain(x, y))
-                    {
-                        int neighborsCount = GetWalkableNeighborsCount(cell, mazeData);
-                        if (neighborsCount == 1 || neighborsCount == 2)
-                        {
-                            candidatesForDoor.Add(cell);
-                        }
-                    }
-                }
-            }
-        }
-
-        if (candidatesForDoor.Count == 0)
-        {
-            Debug.LogWarning("[MissionGen] No se encontró espacio para colocar la meta lejana bloqueable.");
-            return false;
-        }
-
-        // Buscar un candidato de meta que no interfiera y que sus accesos puedan cerrarse
-        Vector2Int metaCell = Vector2Int.zero;
-        HashSet<Vector2Int> tempMetaBarriers = new HashSet<Vector2Int>();
-        bool metaPlaced = false;
-
-        // Desordenar candidatos para selección aleatoria estructurada
-        List<Vector2Int> shuffledMetaCandidates = new List<Vector2Int>(candidatesForDoor);
-        for (int i = 0; i < shuffledMetaCandidates.Count; i++)
-        {
-            int rnd = random.Next(i, shuffledMetaCandidates.Count);
-            Vector2Int temp = shuffledMetaCandidates[i];
-            shuffledMetaCandidates[i] = shuffledMetaCandidates[rnd];
-            shuffledMetaCandidates[rnd] = temp;
-        }
-
-        foreach (var candidate in shuffledMetaCandidates)
-        {
-            List<Vector2Int> neighbors = GetWalkableNeighborsList(candidate, mazeData);
-            if (neighbors.Count == 0 || neighbors.Count > 2) continue;
-
-            // Comprobar si los accesos a bloquear están en rutas protegidas, o si tocan la llave/barreras de la llave
-            bool neighborProtected = false;
-            foreach (var neighbor in neighbors)
-            {
-                if (neighbor == startCell || neighbor == cuevaA || neighbor == cuevaB || neighbor == axeCell || 
-                    neighbor == keyCell || tempBarriers.Contains(neighbor) || tempProtectedPath.Contains(neighbor))
-                {
-                    neighborProtected = true;
-                    break;
-                }
-            }
-
-            if (neighborProtected) continue;
-
-            metaCell = candidate;
-            tempMetaBarriers.Clear();
-            foreach (var neighbor in neighbors)
-            {
-                tempMetaBarriers.Add(neighbor);
-            }
-            metaPlaced = true;
-            break;
-        }
-
-        if (!metaPlaced)
-        {
-            Debug.LogWarning("[MissionGen] No se pudo encontrar un callejón para la meta cuyos accesos no bloqueasen la ruta protegida o la llave.");
-            return false;
-        }
-
-        // Combinamos las barreras de la llave y de la meta para la validación lógica BFS
+        // Combinamos las barreras de la llave, de la meta y las paredes destructibles para la validación lógica BFS y la instanciación física
         HashSet<Vector2Int> allBarriers = new HashSet<Vector2Int>(tempBarriers);
         foreach (var b in tempMetaBarriers)
+        {
+            allBarriers.Add(b);
+        }
+        foreach (var b in destructibleWallsCells)
         {
             allBarriers.Add(b);
         }
@@ -1386,6 +1509,209 @@ public class DynamicLevelManager : MonoBehaviour
         return list;
     }
 
+    private bool TryPlaceTravelCaves(MazeCellType[,] maze, MazeData mazeData, int seed)
+    {
+        if (!enableTravelCaves) return true;
+
+        int mazeWidth = maze.GetLength(0);
+        int mazeHeight = maze.GetLength(1);
+
+        if (mazeWidth < minimumMapWidthForTravelCaves || mazeHeight < minimumMapHeightForTravelCaves)
+        {
+            Debug.Log($"[TravelCaves] El mapa ({mazeWidth}x{mazeHeight}) es demasiado pequeño para usar atajos (mínimo {minimumMapWidthForTravelCaves}x{minimumMapHeightForTravelCaves}).");
+            return true;
+        }
+
+        System.Random random = new System.Random(seed + 999);
+        Vector2Int startCell = mazeGenerator.StartCell;
+
+        // Limpiar estados de viaje rápido previos
+        if (spawnedTravelCaveA != null) Destroy(spawnedTravelCaveA);
+        if (spawnedTravelCaveB != null) Destroy(spawnedTravelCaveB);
+        travelCavePath.Clear();
+        travelCaveACells.Clear();
+        travelCaveBCells.Clear();
+
+        // 1. Obtener candidatos Path en la región transitable principal
+        List<Vector2Int> candidates = new List<Vector2Int>();
+        for (int x = 1; x < mazeWidth - 1; x++)
+        {
+            for (int y = 1; y < mazeHeight - 1; y++)
+            {
+                Vector2Int cell = new Vector2Int(x, y);
+
+                // No pueden colisionar con elementos importantes existentes
+                if (cell == startCell || cell == cuevaA || cell == cuevaB || cell == axeCell || cell == keyCell || cell == metaCell) continue;
+                if (axeZoneCells.Contains(cell) || barrierCells.Contains(cell)) continue;
+
+                if (mazeData.IsCellWalkableAndMain(x, y))
+                {
+                    candidates.Add(cell);
+                }
+            }
+        }
+
+        // Pre-filtrar los candidatos que son alcanzables desde el inicio sin el hacha
+        // Esto evita desperdiciar intentos del bucle aleatorio en celdas bloqueadas de la misión
+        List<Vector2Int> validCandidates = new List<Vector2Int>();
+        foreach (var cand in candidates)
+        {
+            bool canReachWithoutAxe = LevelValidator.CanPathfind(startCell, cand, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, barrierCells, mazeWidth, mazeHeight);
+            if (canReachWithoutAxe)
+            {
+                if (IsSafeAreaClear(cand, travelCaveSafeAreaRadius, mazeData, startCell, mazeWidth, mazeHeight))
+                {
+                    validCandidates.Add(cand);
+                }
+            }
+        }
+
+        if (validCandidates.Count < 2)
+        {
+            Debug.LogWarning("[TravelCaves] No hay suficientes celdas libres y accesibles para colocar atajos de viaje rápido.");
+            return true;
+        }
+
+        // Bucle de intentos con relajación dinámica de distancias
+        bool placementSuccess = false;
+        Vector2Int travelA = Vector2Int.zero;
+        Vector2Int travelB = Vector2Int.zero;
+        List<Vector2Int> shortcutNormalPath = null;
+
+        int currentMinDistance = minimumPathDistanceBetweenTravelCaves;
+        int currentMinSaving = minimumShortcutSaving;
+
+        // Intentamos colocar las cuevas en 3 rondas relajando los límites de distancia/ahorro si fallamos
+        for (int round = 1; round <= 3; round++)
+        {
+            for (int attempt = 0; attempt < maximumTravelPlacementAttempts; attempt++)
+            {
+                // Seleccionar dos candidatos aleatorios distintos del conjunto pre-filtrado de celdas válidas
+                int idxA = random.Next(validCandidates.Count);
+                int idxB = random.Next(validCandidates.Count);
+                while (idxA == idxB)
+                {
+                    idxB = random.Next(validCandidates.Count);
+                }
+
+                Vector2Int candA = validCandidates[idxA];
+                Vector2Int candB = validCandidates[idxB];
+
+                // Comprobar distancia y utilidad del atajo
+                List<Vector2Int> pathAB = LevelValidator.GetPath(candA, candB, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, barrierCells, mazeWidth, mazeHeight);
+                if (pathAB.Count < currentMinDistance) continue;
+
+                int saving = pathAB.Count - 1;
+                if (saving < currentMinSaving) continue;
+
+                // Encontrado!
+                travelA = candA;
+                travelB = candB;
+                shortcutNormalPath = pathAB;
+                placementSuccess = true;
+                break;
+            }
+
+            if (placementSuccess) break;
+
+            // Relajamos las distancias mínimas para la siguiente ronda si la actual falló
+            currentMinDistance = Mathf.Max(6, currentMinDistance - 2);
+            currentMinSaving = Mathf.Max(4, currentMinSaving - 2);
+        }
+
+        if (!placementSuccess)
+        {
+            Debug.LogWarning("[TravelCaves] No se pudo encontrar una pareja de viaje rápido incluso tras relajar los requisitos de distancia y ahorro.");
+            return true;
+        }
+
+        // Instanciar físicamente
+        Vector3 posA = mazeRenderer.GetWorldPosition(travelA);
+        spawnedTravelCaveA = Instantiate(cavePrefab, posA, Quaternion.identity, itemsContainer);
+        spawnedTravelCaveA.name = "TravelCave_A";
+
+        Vector3 posB = mazeRenderer.GetWorldPosition(travelB);
+        spawnedTravelCaveB = Instantiate(cavePrefab, posB, Quaternion.identity, itemsContainer);
+        spawnedTravelCaveB.name = "TravelCave_B";
+
+        CavePortal portalA = spawnedTravelCaveA.GetComponentInChildren<CavePortal>();
+        CavePortal portalB = spawnedTravelCaveB.GetComponentInChildren<CavePortal>();
+
+        // Configurar puntos de salida
+        Transform exitA = spawnedTravelCaveA.transform.Find("ExitPoint");
+        if (exitA == null) exitA = spawnedTravelCaveA.transform.Find("EntranceTrigger");
+        if (exitA == null) exitA = spawnedTravelCaveA.transform;
+
+        Transform exitB = spawnedTravelCaveB.transform.Find("ExitPoint");
+        if (exitB == null) exitB = spawnedTravelCaveB.transform.Find("EntranceTrigger");
+        if (exitB == null) exitB = spawnedTravelCaveB.transform;
+
+        if (portalA != null)
+        {
+            portalA.DestinationExitPoint = exitB;
+            portalA.enabled = true;
+        }
+        if (portalB != null)
+        {
+            portalB.DestinationExitPoint = exitA;
+            portalB.enabled = true;
+        }
+
+        // Registrar en mazeData
+        mazeData.MarkCellsAsOccupied(travelA, 1, 1);
+        mazeData.MarkCellsAsOccupied(travelB, 1, 1);
+
+        // Guardar datos de depuración
+        travelCavePath = shortcutNormalPath;
+        travelCaveACells = GetSafeAreaCells(travelA, travelCaveSafeAreaRadius, mazeWidth, mazeHeight);
+        travelCaveBCells = GetSafeAreaCells(travelB, travelCaveSafeAreaRadius, mazeWidth, mazeHeight);
+
+        Debug.Log($"[TravelCaves] Atajo de viaje rápido instanciado correctamente entre {travelA} y {travelB}. Distancia original: {shortcutNormalPath.Count} celdas. Ahorro: {shortcutNormalPath.Count - 1} celdas.");
+        return true;
+    }
+
+    private bool IsSafeAreaClear(Vector2Int center, int radius, MazeData mazeData, Vector2Int startCell, int mazeWidth, int mazeHeight)
+    {
+        for (int dx = -radius; dx <= radius; dx++)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                int x = center.x + dx;
+                int y = center.y + dy;
+
+                if (x < 1 || x >= mazeWidth - 1 || y < 1 || y >= mazeHeight - 1) return false;
+
+                Vector2Int cell = new Vector2Int(x, y);
+
+                // No puede colisionar con elementos importantes de la misión principal
+                if (cell == startCell || cell == cuevaA || cell == cuevaB || cell == axeCell || cell == keyCell || cell == metaCell) return false;
+                if (axeZoneCells.Contains(cell) || barrierCells.Contains(cell)) return false;
+
+                // Debe ser caminable (no pared ni ocupada)
+                if (!mazeData.IsCellWalkableAndMain(x, y)) return false;
+            }
+        }
+        return true;
+    }
+
+    private List<Vector2Int> GetSafeAreaCells(Vector2Int center, int radius, int width, int height)
+    {
+        List<Vector2Int> cells = new List<Vector2Int>();
+        for (int dx = -radius; dx <= radius; dx++)
+        {
+            for (int dy = -radius; dy <= radius; dy++)
+            {
+                int x = center.x + dx;
+                int y = center.y + dy;
+                if (x >= 0 && x < width && y >= 0 && y < height)
+                {
+                    cells.Add(new Vector2Int(x, y));
+                }
+            }
+        }
+        return cells;
+    }
+
     private void OnDrawGizmos()
     {
         if (!showDebugGizmos || mazeRenderer == null) return;
@@ -1425,6 +1751,30 @@ public class DynamicLevelManager : MonoBehaviour
         DrawPathGizmo(caveBToAxePath, Color.cyan);
         DrawPathGizmo(axeToBarrierPath, Color.red);
         DrawPathGizmo(keyToMetaPath, Color.blue);
+
+        // 4. Dibujar información de Travel Caves (Atajos de viaje rápido) si habilitado
+        if (enableTravelCaveDebug)
+        {
+            // Ruta normal en Magenta
+            DrawPathGizmo(travelCavePath, Color.magenta);
+
+            // Área segura de TravelCave A en Magenta semitransparente
+            Gizmos.color = new Color(1f, 0f, 1f, 0.3f);
+            foreach (var cell in travelCaveACells)
+            {
+                Vector3 worldPos = mazeRenderer.GetWorldPosition(cell);
+                Vector2 size = mazeRenderer.LogicalCellTileSize;
+                Gizmos.DrawWireCube(worldPos, new Vector3(size.x, size.y, 0.1f));
+            }
+
+            // Área segura de TravelCave B en Magenta semitransparente
+            foreach (var cell in travelCaveBCells)
+            {
+                Vector3 worldPos = mazeRenderer.GetWorldPosition(cell);
+                Vector2 size = mazeRenderer.LogicalCellTileSize;
+                Gizmos.DrawWireCube(worldPos, new Vector3(size.x, size.y, 0.1f));
+            }
+        }
     }
 
     private void DrawPathGizmo(List<Vector2Int> path, Color color)
