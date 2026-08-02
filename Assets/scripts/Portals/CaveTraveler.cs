@@ -1,14 +1,16 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class CaveTraveler : MonoBehaviour
 {
-    [Header("Configuración")]
+    [Header("ConfiguraciÃ³n")]
     [SerializeField, Min(0f)]
     private float teleportCooldown = 0.5f;
 
     private Rigidbody2D rb;
     private float nextTeleportTime;
+
+    public event System.Action OnTeleport;
 
     private void Awake()
     {
@@ -37,7 +39,8 @@ public class CaveTraveler : MonoBehaviour
         rb.position = destination.position;
         rb.linearVelocity = Vector2.zero;
 
-        Debug.Log($"El gato viajó hacia {destination.name}.");
+        Debug.Log($"El gato viajÃ³ hacia {destination.name}.");
+        OnTeleport?.Invoke();
 
         return true;
     }

@@ -40,6 +40,11 @@ public class DestructibleObject : MonoBehaviour
 
     public IReadOnlyList<Vector3Int> ReservedGridCells => reservedGridCells;
 
+    public void SetHealth(int val)
+    {
+        health = Mathf.Max(1, val);
+    }
+
     public void Hit(int damage = 1)
     {
         health -= damage;

@@ -5,6 +5,12 @@ public class CatMovement : MonoBehaviour
     [Header("Movimiento")]
     [SerializeField] private float moveSpeed = 4f;
 
+    public float MoveSpeed
+    {
+        get => moveSpeed;
+        set => moveSpeed = value;
+    }
+
     [Header("Referencias")]
     [SerializeField] private Animator animator;
     [SerializeField] private SpriteRenderer spriteRenderer;

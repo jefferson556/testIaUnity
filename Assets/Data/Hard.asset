@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca307e59e6e391643861bea554642083, type: 3}
+  m_Name: Hard
+  m_EditorClassIdentifier: Assembly-CSharp::DifficultyProfile
+  settings:
+    mapWidth: 21
+    mapHeight: 21
+    extraConnections: 0
+    minPlayerToCaveADistance: 4
+    minAxeToStartAndMetaDistance: 10
+    minKeyToAxeDistance: 10
+    minKeyToMetaDistance: 8
+    minPlayerToMetaDistance: 15
+    enableTravelCaves: 0
+    minimumPathDistanceBetweenTravelCaves: 10
+    minimumShortcutSaving: 8
+    travelCavePairs: 1
+    axeZoneSize: {x: 5, y: 5}
+    destructibleWallsPercentage: 0.65
+    missionDestructiblesHealth: 2
+    spawnDestructibles: 1
+    playerMoveSpeed: 5
+    hintsAvailable: 2
+    hintDelaySeconds: 10
+    hintIntensity: 0.5
+    highlightObjectives: 0
+    showDirectionIndicator: 0
+    zoomOutMaxDuration: 2
+    zoomOutCooldown: 5
+    zoomOutSize: 25
+    normalZoomSize: 4

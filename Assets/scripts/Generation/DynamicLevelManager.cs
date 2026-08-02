@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+
 public class DynamicLevelManager : MonoBehaviour
 {
     [Header("Generación Principal")]
@@ -116,6 +117,20 @@ public class DynamicLevelManager : MonoBehaviour
     private Vector2Int keyCell;
     private Vector2Int metaCell;
 
+    public static DynamicLevelManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
+
     private void Start()
     {
         StartGeneration();
@@ -158,6 +173,34 @@ public class DynamicLevelManager : MonoBehaviour
             Debug.LogError("[LevelGeneration] ERROR - La máscara 'Obstacle Layer' está vacía o no configurada en el Inspector. Deteniendo generación.", this);
             yield break;
         }
+
+        // Obtener dificultad de la autoridad central
+        DifficultySettings settings = null;
+        if (DifficultyManager.Instance != null)
+        {
+            settings = DifficultyManager.Instance.CurrentSettings;
+        }
+        if (settings == null)
+        {
+            settings = new DifficultySettings();
+        }
+
+        // Detener recopilación activa de métricas por si acaso
+        if (DifficultyMetricsCollector.Instance != null)
+        {
+            DifficultyMetricsCollector.Instance.StopCollecting();
+        }
+
+        // Configurar MazeGenerator
+        mazeGenerator.Width = settings.mapWidth;
+        mazeGenerator.Height = settings.mapHeight;
+        mazeGenerator.ExtraConnections = settings.extraConnections;
+
+        // Configurar otros parámetros de la corrutina
+        enableTravelCaves = settings.enableTravelCaves;
+        minimumPathDistanceBetweenTravelCaves = settings.minimumPathDistanceBetweenTravelCaves;
+        minimumShortcutSaving = settings.minimumShortcutSaving;
+        accessibleZoneSize = settings.axeZoneSize;
 
         ValidateSpawners();
         DisablePlayerControl();
@@ -208,7 +251,7 @@ public class DynamicLevelManager : MonoBehaviour
             startCell = mazeGenerator.StartCell;
 
             destructibleWallsCells.Clear();
-            ReplaceWallsWithDestructibles(maze, currentSeed, startCell);
+            ReplaceWallsWithDestructibles(maze, currentSeed, startCell, settings);
 
             // 4. Pre-calcular el origen del Tilemap para inicializar MazeData
             mazeRenderer.PreCalculateOrigin(maze);
@@ -292,7 +335,7 @@ public class DynamicLevelManager : MonoBehaviour
             for (int missionAttempt = 1; missionAttempt <= 50; missionAttempt++)
             {
                 int missionSeed = currentSeed * 100 + missionAttempt;
-                if (TryPlaceMission(maze, mazeData, missionSeed))
+                if (TryPlaceMission(maze, mazeData, missionSeed, settings))
                 {
                     missionPlaced = true;
                     break;
@@ -339,6 +382,61 @@ public class DynamicLevelManager : MonoBehaviour
             Physics2D.SyncTransforms();
             EnablePlayerControl();
 
+            // Aplicar velocidad del jugador según la dificultad y reiniciar inventario
+            if (playerTransform != null)
+            {
+                CatMovement movement = playerTransform.GetComponent<CatMovement>();
+                if (movement == null) movement = playerTransform.GetComponentInChildren<CatMovement>();
+                if (movement != null)
+                {
+                    movement.MoveSpeed = settings.playerMoveSpeed;
+                }
+
+                CatInventory inventory = playerTransform.GetComponent<CatInventory>();
+                if (inventory == null) inventory = playerTransform.GetComponentInChildren<CatInventory>();
+                if (inventory != null)
+                {
+                    inventory.ResetInventory();
+                }
+            }
+
+            // Inicializar y actualizar controladores de cámara y UI automáticamente
+            if (CameraZoomController.Instance != null)
+            {
+                CameraZoomController.Instance.UpdateSettingsFromDifficulty();
+            }
+            else
+            {
+                Camera mainCam = Camera.main;
+                if (mainCam != null && mainCam.GetComponent<CameraZoomController>() == null)
+                {
+                    mainCam.gameObject.AddComponent<CameraZoomController>();
+                }
+            }
+
+            if (GameUIManager.Instance == null)
+            {
+                GameObject uiManagerGO = new GameObject("GameUIManagerAutoCreated");
+                uiManagerGO.AddComponent<GameUIManager>();
+            }
+
+            // Suscribirse a la puerta para el fin de nivel
+            if (spawnedDoorInstance != null)
+            {
+                MazeDoor door = spawnedDoorInstance.GetComponent<MazeDoor>();
+                if (door == null) door = spawnedDoorInstance.GetComponentInChildren<MazeDoor>();
+                if (door != null)
+                {
+                    door.OnDoorOpened += OnLevelCompletedFromDoor;
+                }
+            }
+
+            // Iniciar recopilación de métricas
+            if (DifficultyMetricsCollector.Instance != null)
+            {
+                DifficultyMetricsCollector.Instance.StartCollecting();
+            }
+
             Debug.Log($"[LevelGeneration] Nivel válido en intento {(acceptedSeed - baseSeed)}. Seed: {acceptedSeed}.");
             Debug.Log($"[LevelGeneration] Direcciones libres: {finalFreeDirs}/4.");
             Debug.Log($"[LevelGeneration] Celdas alcanzables: {finalReachableCells}.");
@@ -349,6 +447,17 @@ public class DynamicLevelManager : MonoBehaviour
 
     private IEnumerator ClearPreviousAttemptRoutine()
     {
+        // Desuscribirse de la puerta antes de destruirla
+        if (spawnedDoorInstance != null)
+        {
+            MazeDoor door = spawnedDoorInstance.GetComponent<MazeDoor>();
+            if (door == null) door = spawnedDoorInstance.GetComponentInChildren<MazeDoor>();
+            if (door != null)
+            {
+                door.OnDoorOpened -= OnLevelCompletedFromDoor;
+            }
+        }
+
         // 1. Limpiar Tilemaps del renderizador
         if (mazeRenderer != null)
         {
@@ -826,12 +935,12 @@ public class DynamicLevelManager : MonoBehaviour
         mazeData.CalculateMainRegion(mazeGenerator.StartCell);
     }
 
-    private void ReplaceWallsWithDestructibles(MazeCellType[,] maze, int seed, Vector2Int startCell)
+    private void ReplaceWallsWithDestructibles(MazeCellType[,] maze, int seed, Vector2Int startCell, DifficultySettings settings)
     {
         int mazeWidth = maze.GetLength(0);
         int mazeHeight = maze.GetLength(1);
         System.Random random = new System.Random(seed);
-        float percentage = 0.10f; // Reemplazar el 10% de las paredes internas
+        float percentage = settings.destructibleWallsPercentage;
 
         for (int x = 1; x < mazeWidth - 1; x++)
         {
@@ -929,7 +1038,7 @@ public class DynamicLevelManager : MonoBehaviour
         return zoneCells;
     }
 
-    private bool TryPlaceMission(MazeCellType[,] maze, MazeData mazeData, int seed)
+    private bool TryPlaceMission(MazeCellType[,] maze, MazeData mazeData, int seed, DifficultySettings settings)
     {
         System.Random random = new System.Random(seed);
         Vector2Int startCell = mazeGenerator.StartCell;
@@ -974,19 +1083,14 @@ public class DynamicLevelManager : MonoBehaviour
             return distB.CompareTo(distA); // Orden descendente (más lejano primero)
         });
 
-        // Seleccionamos los candidatos que estén al menos al 85% de la distancia máxima encontrada
-        float maxDoorDistance = Vector2Int.Distance(candidatesForDoor[0], startCell);
-        float minDoorDistanceThreshold = maxDoorDistance * 0.85f;
+        // Seleccionamos los candidatos que estén al menos a la distancia mínima parametrizada
+        float minDoorDistanceThreshold = settings.minPlayerToMetaDistance;
         List<Vector2Int> farDoorCandidates = new List<Vector2Int>();
         foreach (var cand in candidatesForDoor)
         {
             if (Vector2Int.Distance(cand, startCell) >= minDoorDistanceThreshold)
             {
                 farDoorCandidates.Add(cand);
-            }
-            else
-            {
-                break; // Ya que está ordenado descendente
             }
         }
 
@@ -1061,7 +1165,7 @@ public class DynamicLevelManager : MonoBehaviour
                     float distToStart = Vector2Int.Distance(cell, startCell);
                     float distToMeta = Vector2Int.Distance(cell, metaCell);
 
-                    if (distToStart >= 8.0f && distToMeta >= 8.0f)
+                    if (distToStart >= settings.minAxeToStartAndMetaDistance && distToMeta >= settings.minAxeToStartAndMetaDistance)
                     {
                         candidatesForAxe.Add(cell);
                     }
@@ -1082,7 +1186,8 @@ public class DynamicLevelManager : MonoBehaviour
                     {
                         float distToStart = Vector2Int.Distance(cell, startCell);
                         float distToMeta = Vector2Int.Distance(cell, metaCell);
-                        if (distToStart >= 5.0f && distToMeta >= 5.0f)
+                        float minAxeDistFallback = settings.minAxeToStartAndMetaDistance * 0.6f;
+                        if (distToStart >= minAxeDistFallback && distToMeta >= minAxeDistFallback)
                         {
                             candidatesForAxe.Add(cell);
                         }
@@ -1129,7 +1234,7 @@ public class DynamicLevelManager : MonoBehaviour
                 Vector2Int cell = new Vector2Int(x, y);
                 if (cell == startCell || cell == metaCell || tempMetaBarriers.Contains(cell) || axeZoneCells.Contains(cell)) continue;
 
-                if (mazeData.IsCellWalkableAndMain(x, y) && Vector2Int.Distance(cell, startCell) >= 2f)
+                if (mazeData.IsCellWalkableAndMain(x, y) && Vector2Int.Distance(cell, startCell) >= settings.minPlayerToCaveADistance)
                 {
                     candidatesForA.Add(cell);
                 }
@@ -1415,6 +1520,7 @@ public class DynamicLevelManager : MonoBehaviour
                 DestructibleObject comp = spawnedBar.GetComponent<DestructibleObject>();
                 if (comp == null) comp = spawnedBar.AddComponent<DestructibleObject>();
                 comp.SetReservedCells(reservedCells);
+                comp.SetHealth(settings.missionDestructiblesHealth);
 
                 // Configurar SpriteRenderers
                 SpriteRenderer[] renderers = spawnedBar.GetComponentsInChildren<SpriteRenderer>();
@@ -1774,5 +1880,32 @@ public class DynamicLevelManager : MonoBehaviour
             Gizmos.DrawWireSphere(p1, 0.15f);
         }
         Gizmos.DrawWireSphere(mazeRenderer.GetWorldPosition(path[path.Count - 1]), 0.15f);
+    }
+
+    private void OnLevelCompletedFromDoor()
+    {
+        if (spawnedDoorInstance != null)
+        {
+            MazeDoor doorComp = spawnedDoorInstance.GetComponent<MazeDoor>();
+            if (doorComp == null) doorComp = spawnedDoorInstance.GetComponentInChildren<MazeDoor>();
+            if (doorComp != null)
+            {
+                doorComp.OnDoorOpened -= OnLevelCompletedFromDoor;
+            }
+        }
+
+        if (DifficultyMetricsCollector.Instance != null)
+        {
+            DifficultyMetricsCollector.Instance.OnLevelCompleted();
+        }
+
+        StartCoroutine(AutoRegenerateLevelRoutine());
+    }
+
+    private IEnumerator AutoRegenerateLevelRoutine()
+    {
+        yield return new WaitForSeconds(1.5f);
+        string activeSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(activeSceneName);
     }
 }

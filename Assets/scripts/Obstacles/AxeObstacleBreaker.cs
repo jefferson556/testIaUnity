@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(CatInventory))]
 [RequireComponent(typeof(CatInputReader))]
@@ -20,6 +20,9 @@ public class AxeObstacleBreaker : MonoBehaviour
     private CatInputReader inputReader;
     private CatMovement catMovement;
     private Collider2D playerCollider;
+
+    public event System.Action OnFailedHitNoAxe;
+    public event System.Action OnObstacleHit;
 
     private void Awake()
     {
@@ -55,6 +58,7 @@ public class AxeObstacleBreaker : MonoBehaviour
         if (!inventory.HasAxe)
         {
             Debug.Log("Necesitas recoger el hacha primero.");
+            OnFailedHitNoAxe?.Invoke();
             return;
         }
 
@@ -92,7 +96,8 @@ public class AxeObstacleBreaker : MonoBehaviour
             if (destructible != null)
             {
                 destructible.Hit(1);
-                Debug.Log($"¡Obstáculo destruible cortado con animación Cat_Attack! ({destructible.gameObject.name})");
+                Debug.Log($"¡Obstáculo destructible cortado con animación Cat_Attack! ({destructible.gameObject.name})");
+                OnObstacleHit?.Invoke();
                 return;
             }
         }
@@ -117,6 +122,7 @@ public class AxeObstacleBreaker : MonoBehaviour
             if (obstacleRemoved)
             {
                 Debug.Log($"¡Obstáculo de Tilemap cortado con animación Cat_Attack! Celda eliminada: {removedCell}");
+                OnObstacleHit?.Invoke();
                 return;
             }
         }

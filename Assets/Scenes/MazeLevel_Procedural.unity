@@ -381,7 +381,7 @@ MonoBehaviour:
   travelCaveSafeAreaRadius: 0
   maximumTravelPlacementAttempts: 50
   enableTravelCaveDebug: 1
-  showDebugGizmos: 1
+  showDebugGizmos: 0
 --- !u!4 &527185425
 Transform:
   m_ObjectHideFlags: 0
@@ -2733,6 +2733,245 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1197096176
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1197096180}
+  - component: {fileID: 1197096179}
+  - component: {fileID: 1197096178}
+  - component: {fileID: 1197096177}
+  m_Layer: 0
+  m_Name: DifficultySystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1197096177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1197096176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8acfcf6d57058d449991e86d94b6f77b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DifficultyDebugController
+  easyProfile: {fileID: 11400000, guid: d44bb35ab2f3a5440b63fa7699b827ef, type: 2}
+  normalProfile: {fileID: 11400000, guid: 1781d70b841870e479d271cb1536600c, type: 2}
+  hardProfile: {fileID: 11400000, guid: f891ab89c2f3a5440b63fa7699b827ea, type: 2}
+  targetScore: 0.237
+  customMapWidth: 19
+  customDestructiblesHealth: 3
+--- !u!114 &1197096178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1197096176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8411337be732f541bedd939f4165850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DifficultyMetricsCollector
+  metrics:
+    totalLevelTime: 0
+    timeToFindAxe: 0
+    timeToFindKey: 0
+    timeToReachHouse: 0
+    movementCount: 0
+    idleCount: 0
+    destructibleHits: 0
+    failedHitsWithoutAxe: 0
+    cavesUsed: 0
+    backtrackingCount: 0
+    distanceTraveled: 0
+    explorationPercentage: 0
+    hintsUsed: 0
+    restartCount: 0
+    errorCount: 0
+    objectivesCollected: 0
+--- !u!114 &1197096179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1197096176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6350901b494a394096eacb1d5b4174c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
+  defaultProfile: {fileID: 11400000, guid: d44bb35ab2f3a5440b63fa7699b827ef, type: 2}
+  constraints:
+    mapWidth:
+      minimum: 9
+      maximum: 35
+      maximumChangePerLevel: 2
+      defaultValue: 15
+    mapHeight:
+      minimum: 9
+      maximum: 35
+      maximumChangePerLevel: 2
+      defaultValue: 15
+    extraConnections:
+      minimum: 0
+      maximum: 20
+      maximumChangePerLevel: 2
+      defaultValue: 2
+    minPlayerToCaveADistance:
+      minimum: 1
+      maximum: 15
+      maximumChangePerLevel: 2
+      defaultValue: 2
+    minAxeToStartAndMetaDistance:
+      minimum: 3
+      maximum: 20
+      maximumChangePerLevel: 2
+      defaultValue: 8
+    minKeyToAxeDistance:
+      minimum: 1
+      maximum: 15
+      maximumChangePerLevel: 2
+      defaultValue: 4
+    minKeyToMetaDistance:
+      minimum: 1
+      maximum: 15
+      maximumChangePerLevel: 2
+      defaultValue: 4
+    minPlayerToMetaDistance:
+      minimum: 3
+      maximum: 20
+      maximumChangePerLevel: 2
+      defaultValue: 8
+    minimumPathDistanceBetweenTravelCaves:
+      minimum: 5
+      maximum: 20
+      maximumChangePerLevel: 2
+      defaultValue: 10
+    minimumShortcutSaving:
+      minimum: 3
+      maximum: 15
+      maximumChangePerLevel: 2
+      defaultValue: 8
+    travelCavePairs:
+      minimum: 0
+      maximum: 3
+      maximumChangePerLevel: 1
+      defaultValue: 1
+    axeZoneSizeX:
+      minimum: 2
+      maximum: 5
+      maximumChangePerLevel: 1
+      defaultValue: 3
+    axeZoneSizeY:
+      minimum: 2
+      maximum: 5
+      maximumChangePerLevel: 1
+      defaultValue: 3
+    destructibleWallsPercentage:
+      minimum: 0
+      maximum: 0.5
+      maximumChangePerLevel: 0.1
+      defaultValue: 0.1
+    missionDestructiblesHealth:
+      minimum: 1
+      maximum: 10
+      maximumChangePerLevel: 1
+      defaultValue: 1
+    playerMoveSpeed:
+      minimum: 2
+      maximum: 8
+      maximumChangePerLevel: 1
+      defaultValue: 4
+    hintsAvailable:
+      minimum: 0
+      maximum: 10
+      maximumChangePerLevel: 1
+      defaultValue: 3
+    hintDelaySeconds:
+      minimum: 5
+      maximum: 60
+      maximumChangePerLevel: 5
+      defaultValue: 15
+    hintIntensity:
+      minimum: 0.1
+      maximum: 1
+      maximumChangePerLevel: 0.2
+      defaultValue: 1
+    zoomOutMaxDuration:
+      minimum: 0.5
+      maximum: 20
+      maximumChangePerLevel: 2
+      defaultValue: 4
+    zoomOutCooldown:
+      minimum: 0.5
+      maximum: 30
+      maximumChangePerLevel: 3
+      defaultValue: 3
+    zoomOutSize:
+      minimum: 5
+      maximum: 15
+      maximumChangePerLevel: 2
+      defaultValue: 9
+    normalZoomSize:
+      minimum: 2
+      maximum: 8
+      maximumChangePerLevel: 1
+      defaultValue: 4
+  currentSettings:
+    mapWidth: 15
+    mapHeight: 15
+    extraConnections: 2
+    minPlayerToCaveADistance: 2
+    minAxeToStartAndMetaDistance: 8
+    minKeyToAxeDistance: 4
+    minKeyToMetaDistance: 4
+    minPlayerToMetaDistance: 8
+    enableTravelCaves: 1
+    minimumPathDistanceBetweenTravelCaves: 10
+    minimumShortcutSaving: 8
+    travelCavePairs: 1
+    axeZoneSize: {x: 3, y: 3}
+    destructibleWallsPercentage: 0.1
+    missionDestructiblesHealth: 1
+    spawnDestructibles: 1
+    playerMoveSpeed: 4
+    hintsAvailable: 3
+    hintDelaySeconds: 15
+    hintIntensity: 1
+    highlightObjectives: 1
+    showDirectionIndicator: 1
+    zoomOutMaxDuration: 4
+    zoomOutCooldown: 3
+    zoomOutSize: 9
+    normalZoomSize: 4
+  difficultyScore: 0.501
+  history: []
+--- !u!4 &1197096180
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1197096176}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.46979, y: 0.50851, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1259965858
 GameObject:
   m_ObjectHideFlags: 0
@@ -4161,3 +4400,4 @@ SceneRoots:
   - {fileID: 1067833658}
   - {fileID: 1259965859}
   - {fileID: 527185425}
+  - {fileID: 1197096180}

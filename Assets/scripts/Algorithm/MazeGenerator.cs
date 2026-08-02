@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,6 +32,24 @@ public class MazeGenerator : MonoBehaviour
     )]
     [SerializeField, Range(0, 20)]
     private int extraConnections = 2;
+
+    public int Width
+    {
+        get => width;
+        set => width = value;
+    }
+
+    public int Height
+    {
+        get => height;
+        set => height = value;
+    }
+
+    public int ExtraConnections
+    {
+        get => extraConnections;
+        set => extraConnections = value;
+    }
 
     private static readonly Vector2Int[] Directions =
     {

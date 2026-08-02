@@ -1,8 +1,9 @@
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System.Collections.Generic;
 
 public class MazeData : MonoBehaviour
 {
+    [System.Serializable]
     public struct CellState
     {
         public bool IsPath;
@@ -11,19 +12,32 @@ public class MazeData : MonoBehaviour
         public bool IsAccessibleZone;
     }
 
-    private CellState[,] cells;
+    [SerializeField]
+    private bool showGizmos = true;
+
+    [SerializeField]
+    private Color wallColor = Color.black;
+
+    [SerializeField]
+    private Color pathColor = Color.white;
+
+    [SerializeField]
+    private Color mainRegionColor = Color.green;
+
+    [SerializeField]
+    private Color occupiedColor = Color.red;
+
     private int width;
     private int height;
-
-    [Header("Debug Visuals")]
-    [SerializeField] private bool showGizmos = false;
-    [SerializeField] private Color pathColor = new Color(0, 1, 0, 0.3f);
-    [SerializeField] private Color wallColor = new Color(1, 0, 0, 0.3f);
-    [SerializeField] private Color occupiedColor = new Color(1, 0.5f, 0, 0.5f);
-    [SerializeField] private Color mainRegionColor = new Color(0, 0, 1, 0.3f);
+    private CellState[,] cells;
     
     private Vector3 mapOrigin = Vector3.zero;
     private Vector2Int cellSize = Vector2Int.one;
+
+    public int Width => width;
+    public int Height => height;
+    public Vector3 MapOrigin => mapOrigin;
+    public Vector2Int CellSize => cellSize;
 
     public void Initialize(MazeCellType[,] maze, Vector3 origin, Vector2Int logicalCellSize)
     {

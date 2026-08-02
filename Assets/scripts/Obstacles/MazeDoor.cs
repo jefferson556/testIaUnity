@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -21,6 +21,8 @@ public sealed class MazeDoor : MonoBehaviour
     private int openBoolHash;
     private bool isOpen;
 
+    public event System.Action OnDoorOpened;
+
     private void Awake()
     {
         ConfigureCollider();
@@ -34,7 +36,19 @@ public sealed class MazeDoor : MonoBehaviour
     private void ConfigureCollider()
     {
         Collider2D doorCollider = GetComponent<Collider2D>();
-        doorCollider.isTrigger = true;
+        if (doorCollider != null)
+        {
+            doorCollider.isTrigger = true;
+
+            if (doorCollider is BoxCollider2D box)
+            {
+                if (transform.localPosition.y > 0.5f && box.offset.y >= 0f)
+                {
+                    box.offset = new Vector2(0f, -0.25f);
+                    box.size = new Vector2(Mathf.Max(box.size.x, 0.3f), Mathf.Max(box.size.y, 0.6f));
+                }
+            }
+        }
     }
 
     private bool ConfigureAnimator()
@@ -93,31 +107,30 @@ public sealed class MazeDoor : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        Debug.Log($"[MazeDoor] Colisión detectada con: {other.name}");
         if (isOpen)
         {
+            Debug.Log("[MazeDoor] La puerta ya está abierta.");
             return;
         }
 
-        CatInventory inventory =
-            other.GetComponent<CatInventory>();
-
+        CatInventory inventory = other.GetComponent<CatInventory>();
         if (inventory == null)
         {
-            inventory =
-                other.GetComponentInParent<CatInventory>();
+            inventory = other.GetComponentInParent<CatInventory>();
         }
 
         if (inventory == null)
         {
+            Debug.Log("[MazeDoor] El objeto que colisionó no tiene CatInventory.");
             return;
         }
+
+        Debug.Log($"[MazeDoor] CatInventory detectado. ¿Tiene llave? {inventory.HasKey}");
 
         if (!inventory.TryConsumeKey())
         {
-            Debug.Log(
-                "La puerta está cerrada. Necesitas la llave."
-            );
-
+            Debug.Log("[MazeDoor] La puerta está cerrada. Necesitas la llave.");
             return;
         }
 
@@ -134,6 +147,8 @@ public sealed class MazeDoor : MonoBehaviour
             "¡Puerta abierta! ¡Nivel completado!"
         );
 
+        OnDoorOpened?.Invoke();
+
         StartCoroutine(CompleteLevelAfterDelay());
     }
 
@@ -143,6 +158,36 @@ public sealed class MazeDoor : MonoBehaviour
             completionDelay
         );
 
-        onLevelCompleted?.Invoke();
+        if (onLevelCompleted != null && onLevelCompleted.GetPersistentEventCount() > 0)
+        {
+            onLevelCompleted.Invoke();
+        }
+        else
+        {
+            NextLevelLoader levelLoader = GetComponent<NextLevelLoader>();
+            if (levelLoader == null)
+            {
+                levelLoader = Object.FindAnyObjectByType<NextLevelLoader>();
+            }
+
+            if (levelLoader != null)
+            {
+                levelLoader.LoadNextLevel();
+            }
+            else
+            {
+                int currentBuildIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+                int sceneCount = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
+                if (sceneCount > 0)
+                {
+                    int nextIndex = (currentBuildIndex + 1) % sceneCount;
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(nextIndex);
+                }
+                else
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+                }
+            }
+        }
     }
 }
