@@ -309,7 +309,12 @@ public static class MazePathfinder
     /// </summary>
     private static bool CanEnter(Vector2Int cell, MazeData mazeData, bool hasAxe, HashSet<Vector2Int> barriers, Vector2Int targetEnd = default)
     {
-        if (barriers != null && barriers.Contains(cell) && !hasAxe) return false;
+        bool isBarrier = barriers != null && barriers.Contains(cell);
+        if (isBarrier)
+        {
+            if (!hasAxe) return false;
+            return mazeData.IsCellWalkableIgnoreOccupied(cell.x, cell.y);
+        }
 
         if (targetEnd != default && cell == targetEnd)
         {
@@ -332,7 +337,12 @@ public static class MazePathfinder
         // Usamos IsWalkable que ya combina Path/AccessibleZone y NOT Occupied.
         // Si la salida del portal es la celda exacta donde está el prefab, usaremos
         // la celda adyacente (ExitA / ExitB se calculan como adyacentes en TravelCavePairManager).
-        if (barriers != null && barriers.Contains(cell) && !hasAxe) return false;
+        bool isBarrier = barriers != null && barriers.Contains(cell);
+        if (isBarrier)
+        {
+            if (!hasAxe) return false;
+            return mazeData.IsCellWalkableIgnoreOccupied(cell.x, cell.y);
+        }
         return mazeData.IsWalkable(cell.x, cell.y);
     }
 

@@ -22,15 +22,41 @@ Standard HUD displaying collected items (Axe, Key) and debug console metrics, al
 - `Assets/scripts/Validation/LevelValidator.cs`: Contains the validation-time pathfinding algorithms used during procedural level generation.
 - `Assets/scripts/Generation/DynamicLevelManager.cs`: Handles procedural level construction, item placement, metric tracking on level completion, and triggers errors if pathfinding consistency checks fail.
 
+# Bug Analysis & Validation Trace
+1. **Procedural Level Generation & Validation (Pre-Instantiation)**:
+   - Before actual prefab spawning, `DynamicLevelManager` validates that the generated grid is solvable using `LevelValidator.CanPathfind(..., hasAxe = true)`.
+   - At this stage, the barriers are not yet physical objects and have NOT been marked as occupied in `MazeData`.
+   - `LevelValidator.CanPathfind` checks if a neighbor cell is walkable. Since the barrier cells are not yet marked as occupied, `mazeData.IsWalkable` returns `true`.
+   - It then hits `if (barriers.Contains(neighbor))` and correctly verifies that `hasAxe == true`, successfully passing the validation check.
+2. **Physical Instantiation & Occupancy Marking**:
+   - Once validated, physical objects are spawned, and `mazeData.MarkCellsAsOccupied(bar, 1, 1)` is called for all barriers.
+   - This marks those cells as occupied, causing `mazeData.IsWalkable` to return `false` from that point onward.
+3. **Key Collection & Runtime Pathfinding**:
+   - When the player collects the key, `DynamicLevelManager.OnKeyCollectedForPathfinding` is invoked, which calculates the optimal remaining walking path:
+     `keyToGoalWalkingResult = MazePathfinder.FindWalkingPath(..., hasAxe = true)`
+   - Within `MazePathfinder.CanEnter`:
+     ```csharp
+     if (barriers != null && barriers.Contains(cell) && !hasAxe) return false;
+     ...
+     return mazeData.IsWalkable(cell.x, cell.y);
+     ```
+     Since `hasAxe` is `true`, it bypasses the first check and returns `mazeData.IsWalkable(cell.x, cell.y)`.
+   - But because the barrier cell is physically marked as occupied, `IsWalkable` returns `false`!
+   - Consequently, the pathfinder is completely blocked from passing through any barrier cells even though `hasAxe` is `true`. This results in `keyToGoalWalkingResult.PathExists = false` and `Start/Goal walkable neighbors = 0`.
+4. **Level Completion & Inconsistency Error**:
+   - The player, using physical mechanics, swings the axe to destroy barriers.
+   - Destroying a barrier calls `mazeData.UnmarkCellAsOccupied`, allowing the player to reach the exit door.
+   - Upon opening the door, `OnLevelCompletedFromDoor()` checks `keyToGoalWalkingResult.PathExists`. Since it was computed at the key collection moment (where it incorrectly failed), it throws the `[CRITICAL INCONSISTENCY]` error.
+
 # Implementation Steps
 ## Step 1: Fix `MazePathfinder.cs`
-- **Description**: Update `CanEnter` and `IsWalkableForPathfinder` to correctly use `IsCellWalkableIgnoreOccupied` when a cell is a breakable barrier and the player has the axe (`hasAxe == true`).
+- **Description**: Update `CanEnter` and `IsWalkableForPathfinder` in `MazePathfinder.cs` to correctly check if a cell is a barrier. If it is a barrier and `hasAxe` is `true`, return `mazeData.IsCellWalkableIgnoreOccupied(cell.x, cell.y)` to bypass the barrier's own occupancy state.
 - **Assigned role**: developer
 - **Dependencies**: None
 - **Parallelizable**: No
 
 ## Step 2: Fix `LevelValidator.cs`
-- **Description**: Update the four pathfinding overloads (`CanPathfind` and `GetPath` for both single and multiple portal lists) to ensure that when a cell is a barrier and the player has the axe (`hasAxe == true`), it correctly resolves to walk-accessible via `IsCellWalkableIgnoreOccupied`.
+- **Description**: Update all 4 pathfinding loops in `LevelValidator.cs` to handle the same occupancy-bypassing logic for barriers when `hasAxe` is `true`.
 - **Assigned role**: developer
 - **Dependencies**: Step 1
 - **Parallelizable**: No

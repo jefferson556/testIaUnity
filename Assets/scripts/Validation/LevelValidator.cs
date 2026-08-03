@@ -87,22 +87,21 @@ public class LevelValidator : MonoBehaviour
                 {
                     if (!visited.Contains(neighbor))
                     {
-                        bool canStep = (neighbor == end) ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y) : mazeData.IsWalkable(neighbor.x, neighbor.y);
+                        bool isBarrier = barriers != null && barriers.Contains(neighbor);
+                        bool canStep = false;
+                        if (isBarrier)
+                        {
+                            canStep = hasAxe && mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y);
+                        }
+                        else
+                        {
+                            canStep = (neighbor == end) ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y) : mazeData.IsWalkable(neighbor.x, neighbor.y);
+                        }
+
                         if (canStep)
                         {
-                            if (barriers.Contains(neighbor))
-                            {
-                                if (hasAxe)
-                                {
-                                    visited.Add(neighbor);
-                                    queue.Enqueue(neighbor);
-                                }
-                            }
-                            else
-                            {
-                                visited.Add(neighbor);
-                                queue.Enqueue(neighbor);
-                            }
+                            visited.Add(neighbor);
+                            queue.Enqueue(neighbor);
                         }
                     }
                 }
@@ -186,24 +185,22 @@ public class LevelValidator : MonoBehaviour
                 {
                     if (!visited.Contains(neighbor))
                     {
-                        bool canStep = (neighbor == end) ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y) : mazeData.IsWalkable(neighbor.x, neighbor.y);
+                        bool isBarrier = barriers != null && barriers.Contains(neighbor);
+                        bool canStep = false;
+                        if (isBarrier)
+                        {
+                            canStep = hasAxe && mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y);
+                        }
+                        else
+                        {
+                            canStep = (neighbor == end) ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y) : mazeData.IsWalkable(neighbor.x, neighbor.y);
+                        }
+
                         if (canStep)
                         {
-                            if (barriers.Contains(neighbor))
-                            {
-                                if (hasAxe)
-                                {
-                                    visited.Add(neighbor);
-                                    parentMap[neighbor] = current;
-                                    queue.Enqueue(neighbor);
-                                }
-                            }
-                            else
-                            {
-                                visited.Add(neighbor);
-                                parentMap[neighbor] = current;
-                                queue.Enqueue(neighbor);
-                            }
+                            visited.Add(neighbor);
+                            parentMap[neighbor] = current;
+                            queue.Enqueue(neighbor);
                         }
                     }
                 }
@@ -278,7 +275,17 @@ public class LevelValidator : MonoBehaviour
                     if (triggered && exitCell.x >= 0 && exitCell.x < width &&
                         exitCell.y >= 0 && exitCell.y < height && !visited.Contains(exitCell))
                     {
-                        bool canStepExit = (exitCell == end) ? mazeData.IsCellWalkableIgnoreOccupied(exitCell.x, exitCell.y) : mazeData.IsWalkable(exitCell.x, exitCell.y);
+                        bool isExitBarrier = barriers != null && barriers.Contains(exitCell);
+                        bool canStepExit = false;
+                        if (isExitBarrier)
+                        {
+                            canStepExit = hasAxe && mazeData.IsCellWalkableIgnoreOccupied(exitCell.x, exitCell.y);
+                        }
+                        else
+                        {
+                            canStepExit = (exitCell == end) ? mazeData.IsCellWalkableIgnoreOccupied(exitCell.x, exitCell.y) : mazeData.IsWalkable(exitCell.x, exitCell.y);
+                        }
+
                         if (canStepExit)
                         {
                             visited.Add(exitCell);
@@ -294,9 +301,19 @@ public class LevelValidator : MonoBehaviour
                 Vector2Int neighbor = current + dir;
                 if (neighbor.x < 0 || neighbor.x >= width || neighbor.y < 0 || neighbor.y >= height) continue;
                 if (visited.Contains(neighbor)) continue;
-                bool canStep = (neighbor == end) ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y) : mazeData.IsWalkable(neighbor.x, neighbor.y);
+
+                bool isBarrier = barriers != null && barriers.Contains(neighbor);
+                bool canStep = false;
+                if (isBarrier)
+                {
+                    canStep = hasAxe && mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y);
+                }
+                else
+                {
+                    canStep = (neighbor == end) ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y) : mazeData.IsWalkable(neighbor.x, neighbor.y);
+                }
+
                 if (!canStep) continue;
-                if (barriers != null && barriers.Contains(neighbor) && !hasAxe) continue;
 
                 visited.Add(neighbor);
                 queue.Enqueue(neighbor);
@@ -357,7 +374,17 @@ public class LevelValidator : MonoBehaviour
                     if (triggered && exitCell.x >= 0 && exitCell.x < width &&
                         exitCell.y >= 0 && exitCell.y < height && !visited.Contains(exitCell))
                     {
-                        bool canStepExit = (exitCell == end) ? mazeData.IsCellWalkableIgnoreOccupied(exitCell.x, exitCell.y) : mazeData.IsWalkable(exitCell.x, exitCell.y);
+                        bool isExitBarrier = barriers != null && barriers.Contains(exitCell);
+                        bool canStepExit = false;
+                        if (isExitBarrier)
+                        {
+                            canStepExit = hasAxe && mazeData.IsCellWalkableIgnoreOccupied(exitCell.x, exitCell.y);
+                        }
+                        else
+                        {
+                            canStepExit = (exitCell == end) ? mazeData.IsCellWalkableIgnoreOccupied(exitCell.x, exitCell.y) : mazeData.IsWalkable(exitCell.x, exitCell.y);
+                        }
+
                         if (canStepExit)
                         {
                             visited.Add(exitCell);
@@ -374,9 +401,19 @@ public class LevelValidator : MonoBehaviour
                 Vector2Int neighbor = current + dir;
                 if (neighbor.x < 0 || neighbor.x >= width || neighbor.y < 0 || neighbor.y >= height) continue;
                 if (visited.Contains(neighbor)) continue;
-                bool canStep = (neighbor == end) ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y) : mazeData.IsWalkable(neighbor.x, neighbor.y);
+
+                bool isBarrier = barriers != null && barriers.Contains(neighbor);
+                bool canStep = false;
+                if (isBarrier)
+                {
+                    canStep = hasAxe && mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y);
+                }
+                else
+                {
+                    canStep = (neighbor == end) ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y) : mazeData.IsWalkable(neighbor.x, neighbor.y);
+                }
+
                 if (!canStep) continue;
-                if (barriers != null && barriers.Contains(neighbor) && !hasAxe) continue;
 
                 visited.Add(neighbor);
                 parentMap[neighbor] = current;
