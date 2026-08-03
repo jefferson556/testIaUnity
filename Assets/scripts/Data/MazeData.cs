@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class MazeData : MonoBehaviour
@@ -13,7 +13,7 @@ public class MazeData : MonoBehaviour
     }
 
     [SerializeField]
-    private bool showGizmos = true;
+    private bool showGizmos = false;
 
     [SerializeField]
     private Color wallColor = Color.black;
@@ -79,6 +79,23 @@ public class MazeData : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void UnmarkCellAsOccupied(Vector2Int cell)
+    {
+        UnmarkCellAsOccupied(cell.x, cell.y);
+    }
+
+    public void UnmarkCellAsOccupied(int x, int y)
+    {
+        if (cells == null || x < 0 || x >= width || y < 0 || y >= height) return;
+        cells[x, y].IsOccupied = false;
+    }
+
+    public void SetCellOccupiedState(int x, int y, bool occupied)
+    {
+        if (cells == null || x < 0 || x >= width || y < 0 || y >= height) return;
+        cells[x, y].IsOccupied = occupied;
     }
 
     public void CalculateMainRegion(Vector2Int startCell)
@@ -163,6 +180,12 @@ public class MazeData : MonoBehaviour
         return (cells[x, y].IsPath || cells[x, y].IsAccessibleZone) && !cells[x, y].IsOccupied;
     }
 
+    public bool IsCellWalkableIgnoreOccupied(int x, int y)
+    {
+        if (cells == null || x < 0 || x >= width || y < 0 || y >= height) return false;
+        return cells[x, y].IsPath || cells[x, y].IsAccessibleZone;
+    }
+
     public bool IsCellWalkable(int x, int y)
     {
         return IsWalkable(x, y);
@@ -186,6 +209,29 @@ public class MazeData : MonoBehaviour
         cells[x, y].IsPath = false;
         cells[x, y].IsAccessibleZone = false;
         cells[x, y].IsMainRegion = false;
+    }
+
+    public Vector2Int GetNearestWalkableCell(Vector2Int cell)
+    {
+        if (IsWalkable(cell.x, cell.y)) return cell;
+
+        // BFS en espiral para encontrar la celda transitable más cercana
+        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+                                    new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1) };
+
+        for (int r = 1; r <= 3; r++)
+        {
+            foreach (var dir in directions)
+            {
+                Vector2Int cand = cell + dir * r;
+                if (IsWalkable(cand.x, cand.y))
+                {
+                    return cand;
+                }
+            }
+        }
+
+        return cell; // Fallback
     }
 
     public Vector2Int GetValidStartCell(Vector2Int preferredStart)
@@ -265,31 +311,36 @@ public class MazeData : MonoBehaviour
                 Vector3 worldPos = mapOrigin + new Vector3(
                     x * cellSize.x + cellSize.x * 0.5f,
                     y * cellSize.y + cellSize.y * 0.5f,
-                    0
+                    0.05f // Pequeño offset Z para no solapar con los Gizmos de ruta
                 );
 
+                Color baseColor;
                 if (state.IsOccupied)
                 {
-                    Gizmos.color = occupiedColor;
+                    baseColor = occupiedColor;
                 }
                 else if (state.IsAccessibleZone)
                 {
-                    Gizmos.color = new Color(0f, 1f, 1f, 0.5f); // Cyan semitransparente
+                    baseColor = new Color(0f, 1f, 1f, 0.5f); // Cyan semitransparente
                 }
                 else if (state.IsMainRegion)
                 {
-                    Gizmos.color = mainRegionColor;
+                    baseColor = mainRegionColor;
                 }
                 else if (state.IsPath)
                 {
-                    Gizmos.color = pathColor;
+                    baseColor = pathColor;
                 }
                 else
                 {
-                    Gizmos.color = wallColor;
+                    baseColor = wallColor;
                 }
 
-                Gizmos.DrawCube(worldPos, size);
+                // Usar color semitransparente para no tapar los Gizmos de caminos de DynamicLevelManager
+                Gizmos.color = new Color(baseColor.r, baseColor.g, baseColor.b, 0.25f);
+                Gizmos.DrawCube(worldPos, size * 0.95f);
+                Gizmos.color = new Color(baseColor.r, baseColor.g, baseColor.b, 0.6f);
+                Gizmos.DrawWireCube(worldPos, size * 0.95f);
             }
         }
     }

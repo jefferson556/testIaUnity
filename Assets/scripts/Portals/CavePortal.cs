@@ -13,6 +13,13 @@ public class CavePortal : MonoBehaviour
         set => destinationExitPoint = value;
     }
 
+    /// <summary>
+    /// Índice de la pareja de cuevas a la que pertenece este portal.
+    /// -1 para portales de misión obligatoria (Cave_A_Entrance / Cave_B_Exit).
+    /// Asignado por TravelCavePairManager al instanciar portales opcionales.
+    /// </summary>
+    public int PairIndex { get; set; } = -1;
+
     private void Awake()
     {
         Collider2D triggerCollider = GetComponent<Collider2D>();
@@ -51,6 +58,9 @@ public class CavePortal : MonoBehaviour
             return;
         }
 
+        // Comunicar el índice de pareja antes de teletransportar,
+        // para que OnTeleportWithPairId lo reciba correctamente.
+        traveler.CurrentPairIndex = PairIndex;
         traveler.TryTeleport(destinationExitPoint);
     }
 

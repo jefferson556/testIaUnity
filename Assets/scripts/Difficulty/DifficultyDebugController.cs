@@ -22,8 +22,10 @@ public class DifficultyDebugController : MonoBehaviour
     [SerializeField]
     private int customMapWidth = 19;
 
+#pragma warning disable 0414
     [SerializeField]
     private int customDestructiblesHealth = 3;
+#pragma warning restore 0414
 
     private void Update()
     {

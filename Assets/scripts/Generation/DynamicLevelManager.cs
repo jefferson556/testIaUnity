@@ -47,12 +47,14 @@ public class DynamicLevelManager : MonoBehaviour
     [SerializeField]
     private GameObject axePrefab;
 
+#pragma warning disable 0414
     [SerializeField, Min(1)]
     private int minimumAxeDistanceFromPlayer = 3;
 
     [Header("Accessible Zone Settings")]
     [SerializeField]
     private bool generateAccessibleZone = true;
+#pragma warning restore 0414
 
     [SerializeField]
     private Vector2Int accessibleZoneSize = new Vector2Int(3, 3);
@@ -81,25 +83,37 @@ public class DynamicLevelManager : MonoBehaviour
     private GameObject spawnedDoorInstance;
     private List<GameObject> spawnedMissionDestructibles = new List<GameObject>();
 
-    [Header("Configuración de Viaje Rápido (Travel Caves)")]
-    [SerializeField] private bool enableTravelCaves = true;
-    [SerializeField] private int minimumMapWidthForTravelCaves = 15;
-    [SerializeField] private int minimumMapHeightForTravelCaves = 15;
-    [SerializeField] private int maximumTravelCavePairs = 1;
-    [SerializeField] private int minimumPathDistanceBetweenTravelCaves = 10;
-    [SerializeField] private int minimumShortcutSaving = 8;
-    [SerializeField] private int travelCaveSafeAreaRadius = 0;
-    [SerializeField] private int maximumTravelPlacementAttempts = 50;
-    [SerializeField] private bool enableTravelCaveDebug = true;
+    // La configuración de cuevas opcionales se lee de DifficultySettings.
+    // El Inspector local ya no muestra campos separados para travel caves;
+    // todos se configuran en DifficultySettings (o DifficultyProfile).
 
-    private GameObject spawnedTravelCaveA;
-    private GameObject spawnedTravelCaveB;
-    private List<Vector2Int> travelCavePath = new List<Vector2Int>();
-    private List<Vector2Int> travelCaveACells = new List<Vector2Int>();
-    private List<Vector2Int> travelCaveBCells = new List<Vector2Int>();
+    // Campo de respaldo actualizado cada generación desde DifficultySettings.enableTravelCaves.
+    private bool enableTravelCaves = true;
+
+    // Administrador de múltiples parejas de cuevas opcionales.
+    // Se obtiene automáticamente del mismo GameObject en Awake.
+    private TravelCavePairManager travelCavePairManager;
+
+    // Lista de conexiones de portal activas — construida tras GeneratePairs.
+    private List<PortalConnection> activePortalConnections = new List<PortalConnection>();
+
+    // Rutas óptimas calculadas al recoger la llave (se calculan en OnKeyCollected).
+    private PathfindResult keyToGoalWalkingResult;
+    private PathfindResult keyToGoalMechanicResult;
+    // Índices de las parejas que usa la ruta óptima con mecánicas (para Gizmos).
+    private List<int> optimalPortalPairIndices = new List<int>();
+
 
     [Header("Depuración Visual - Gizmos")]
     [SerializeField] private bool showDebugGizmos = true;
+    [Tooltip("Muestra las rutas obligatorias de la misión (Inicio→CuevaA, CuevaB→Hacha, etc.)")]
+    [SerializeField] private bool showMissionPathsGizmos = true;
+    [Tooltip("Muestra la ruta óptima calculada (Dijkstra) desde la llave hasta la meta en Verde")]
+    [SerializeField] private bool showOptimalKeyToGoalGizmo = true;
+    [Tooltip("Muestra las ubicaciones y conexiones de las cuevas opcionales de viaje rápido")]
+    [SerializeField] private bool showTravelCaveGizmos = true;
+    [Tooltip("Muestra las zonas marcadas (Llave, Meta, Barreras)")]
+    [SerializeField] private bool showZoneGizmos = true;
 
     private List<Vector2Int> startToCaveAPath = new List<Vector2Int>();
     private List<Vector2Int> caveBToAxePath = new List<Vector2Int>();
@@ -197,10 +211,8 @@ public class DynamicLevelManager : MonoBehaviour
         mazeGenerator.ExtraConnections = settings.extraConnections;
 
         // Configurar otros parámetros de la corrutina
-        enableTravelCaves = settings.enableTravelCaves;
-        minimumPathDistanceBetweenTravelCaves = settings.minimumPathDistanceBetweenTravelCaves;
-        minimumShortcutSaving = settings.minimumShortcutSaving;
         accessibleZoneSize = settings.axeZoneSize;
+        enableTravelCaves = settings.enableTravelCaves;
 
         ValidateSpawners();
         DisablePlayerControl();
@@ -259,6 +271,14 @@ public class DynamicLevelManager : MonoBehaviour
             // 5. Inicializar Fuente de Verdad (MazeData)
             MazeData mazeData = GetComponent<MazeData>();
             if (mazeData == null) mazeData = gameObject.AddComponent<MazeData>();
+
+            // Asegurar que TravelCavePairManager existe en el mismo GameObject
+            if (travelCavePairManager == null)
+            {
+                travelCavePairManager = GetComponent<TravelCavePairManager>();
+                if (travelCavePairManager == null)
+                    travelCavePairManager = gameObject.AddComponent<TravelCavePairManager>();
+            }
             mazeData.Initialize(maze, mazeRenderer.CurrentOrigin, mazeRenderer.LogicalCellTileSize);
 
             // 6. Pintar el laberinto visualmente (esto crea la base del nivel)
@@ -888,8 +908,14 @@ public class DynamicLevelManager : MonoBehaviour
         }
         spawnedMissionDestructibles.Clear();
 
-        if (spawnedTravelCaveA != null) Destroy(spawnedTravelCaveA);
-        if (spawnedTravelCaveB != null) Destroy(spawnedTravelCaveB);
+        // Limpiar todas las parejas de cuevas opcionales
+        if (travelCavePairManager != null)
+            travelCavePairManager.ClearAllPairs();
+
+        activePortalConnections.Clear();
+        keyToGoalWalkingResult  = null;
+        keyToGoalMechanicResult = null;
+        optimalPortalPairIndices.Clear();
 
         startToCaveAPath.Clear();
         caveBToAxePath.Clear();
@@ -899,16 +925,16 @@ public class DynamicLevelManager : MonoBehaviour
         metaZoneCells.Clear();
         barrierCells.Clear();
 
-        travelCavePath.Clear();
-        travelCaveACells.Clear();
-        travelCaveBCells.Clear();
-
         cuevaA = Vector2Int.zero;
         cuevaB = Vector2Int.zero;
         axeCell = Vector2Int.zero;
         keyCell = Vector2Int.zero;
         metaCell = Vector2Int.zero;
         axeZoneCells.Clear();
+
+        // Cancelar tracking de llave→meta si estaba activo
+        if (KeyToGoalTracker.Instance != null)
+            KeyToGoalTracker.Instance.CancelTracking();
     }
 
     private void ResetMazeDataToBaseState(MazeCellType[,] maze, MazeData mazeData)
@@ -1602,162 +1628,200 @@ public class DynamicLevelManager : MonoBehaviour
 
     private bool TryPlaceTravelCaves(MazeCellType[,] maze, MazeData mazeData, int seed)
     {
-        if (!enableTravelCaves) return true;
+        DifficultySettings settings = null;
+        if (DifficultyManager.Instance != null)
+            settings = DifficultyManager.Instance.CurrentSettings;
+        if (settings == null)
+            settings = new DifficultySettings();
 
-        int mazeWidth = maze.GetLength(0);
-        int mazeHeight = maze.GetLength(1);
+        enableTravelCaves = settings.enableTravelCaves;
 
-        if (mazeWidth < minimumMapWidthForTravelCaves || mazeHeight < minimumMapHeightForTravelCaves)
+        if (!settings.enableTravelCaves)
         {
-            Debug.Log($"[TravelCaves] El mapa ({mazeWidth}x{mazeHeight}) es demasiado pequeño para usar atajos (mínimo {minimumMapWidthForTravelCaves}x{minimumMapHeightForTravelCaves}).");
+            Debug.LogWarning("[TravelCaves] Las cuevas opcionales están DESHABILITADAS en la configuración de dificultad (settings.enableTravelCaves = false).");
             return true;
         }
 
-        System.Random random = new System.Random(seed + 999);
-        Vector2Int startCell = mazeGenerator.StartCell;
-
-        // Limpiar estados de viaje rápido previos
-        if (spawnedTravelCaveA != null) Destroy(spawnedTravelCaveA);
-        if (spawnedTravelCaveB != null) Destroy(spawnedTravelCaveB);
-        travelCavePath.Clear();
-        travelCaveACells.Clear();
-        travelCaveBCells.Clear();
-
-        // 1. Obtener candidatos Path en la región transitable principal
-        List<Vector2Int> candidates = new List<Vector2Int>();
-        for (int x = 1; x < mazeWidth - 1; x++)
+        // Delegar en TravelCavePairManager (soporta múltiples parejas)
+        if (travelCavePairManager == null)
         {
-            for (int y = 1; y < mazeHeight - 1; y++)
-            {
-                Vector2Int cell = new Vector2Int(x, y);
-
-                // No pueden colisionar con elementos importantes existentes
-                if (cell == startCell || cell == cuevaA || cell == cuevaB || cell == axeCell || cell == keyCell || cell == metaCell) continue;
-                if (axeZoneCells.Contains(cell) || barrierCells.Contains(cell)) continue;
-
-                if (mazeData.IsCellWalkableAndMain(x, y))
-                {
-                    candidates.Add(cell);
-                }
-            }
+            travelCavePairManager = GetComponent<TravelCavePairManager>();
+            if (travelCavePairManager == null)
+                travelCavePairManager = gameObject.AddComponent<TravelCavePairManager>();
         }
 
-        // Pre-filtrar los candidatos que son alcanzables desde el inicio sin el hacha
-        // Esto evita desperdiciar intentos del bucle aleatorio en celdas bloqueadas de la misión
-        List<Vector2Int> validCandidates = new List<Vector2Int>();
-        foreach (var cand in candidates)
+        // Construir conjunto de celdas de misión a excluir
+        var missionCells = new HashSet<Vector2Int>
         {
-            bool canReachWithoutAxe = LevelValidator.CanPathfind(startCell, cand, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, barrierCells, mazeWidth, mazeHeight);
-            if (canReachWithoutAxe)
-            {
-                if (IsSafeAreaClear(cand, travelCaveSafeAreaRadius, mazeData, startCell, mazeWidth, mazeHeight))
-                {
-                    validCandidates.Add(cand);
-                }
-            }
+            mazeGenerator.StartCell, cuevaA, cuevaB, axeCell, keyCell, metaCell
+        };
+        foreach (var b in barrierCells) missionCells.Add(b);
+
+        travelCavePairManager.GeneratePairs(
+            maze, mazeData,
+            cavePrefab, itemsContainer, mazeRenderer,
+            mazeGenerator.StartCell,
+            missionCells, barrierCells, axeZoneCells,
+            settings, seed);
+
+        // Construir lista de conexiones activas para el pathfinder
+        activePortalConnections = travelCavePairManager.BuildPortalConnections(mazeData);
+
+        // Registrar el evento de llave recogida para calcular rutas óptimas
+        // (lo hacemos aquí, después de conocer los portales disponibles)
+        SubscribeToKeyCollectionForPathfinding();
+
+        return true;
+    }
+
+    // ── Pathfinding llave→meta ───────────────────────────────────────────────────
+
+    private CatInventory subscribedInventory;
+
+    private void SubscribeToKeyCollectionForPathfinding()
+    {
+        // Desuscribir primero para evitar doble suscripción
+        if (subscribedInventory != null)
+        {
+            subscribedInventory.OnKeyCollected -= OnKeyCollectedForPathfinding;
+            subscribedInventory = null;
         }
 
-        if (validCandidates.Count < 2)
+        if (playerTransform == null) return;
+
+        subscribedInventory = playerTransform.GetComponent<CatInventory>();
+        if (subscribedInventory == null)
+            subscribedInventory = playerTransform.GetComponentInChildren<CatInventory>();
+
+        if (subscribedInventory != null)
+            subscribedInventory.OnKeyCollected += OnKeyCollectedForPathfinding;
+    }
+
+    private void OnKeyCollectedForPathfinding()
+    {
+        MazeData mazeData = GetComponent<MazeData>();
+        if (mazeData == null) return;
+
+        DifficultySettings settings = null;
+        if (DifficultyManager.Instance != null)
+            settings = DifficultyManager.Instance.CurrentSettings;
+        if (settings == null)
+            settings = new DifficultySettings();
+
+        // 1. Determinar celda inicial (priorizar posición actual del jugador, fallback a celda transitable más cercana o keyCell)
+        Vector2Int playerCell = playerTransform != null 
+            ? mazeRenderer.GetCellFromWorldPosition(playerTransform.position)
+            : keyCell;
+
+        Vector2Int startCellForPath = mazeData.IsWalkable(playerCell.x, playerCell.y)
+            ? playerCell
+            : mazeData.GetNearestWalkableCell(keyCell);
+
+        Vector2Int goalCellForPath = metaCell;
+
+        // 2. Calcular ruta óptima caminando (sin portales)
+        keyToGoalWalkingResult = MazePathfinder.FindWalkingPath(
+            startCellForPath, goalCellForPath, mazeData, true, barrierCells, 1f);
+
+        // 3. Calcular ruta óptima con portales opcionales activos
+        keyToGoalMechanicResult = MazePathfinder.FindPathWithPortals(
+            startCellForPath, goalCellForPath, mazeData, true,
+            activePortalConnections, barrierCells,
+            1f);
+
+        // 4. Registrar los portales usados por la ruta óptima para Gizmos
+        optimalPortalPairIndices = keyToGoalMechanicResult != null
+            ? new List<int>(keyToGoalMechanicResult.PortalPairIndicesUsed)
+            : new List<int>();
+
+        // 5. Emitir Log de Diagnóstico Estructurado (de una sola ejecución)
+        Vector3 playerWorldPos = playerTransform != null ? playerTransform.position : Vector3.zero;
+        Vector3 keyWorldPos = spawnedKeyInstance != null ? spawnedKeyInstance.transform.position : mazeRenderer.GetWorldPosition(keyCell);
+        Vector3 goalWorldPos = spawnedDoorInstance != null ? spawnedDoorInstance.transform.position : mazeRenderer.GetWorldPosition(metaCell);
+
+        int width = mazeData.Width;
+        int height = mazeData.Height;
+
+        bool startInBounds = startCellForPath.x >= 0 && startCellForPath.x < width && startCellForPath.y >= 0 && startCellForPath.y < height;
+        bool startWalkable = mazeData.IsWalkable(startCellForPath.x, startCellForPath.y);
+        bool startOccupied = !startWalkable;
+        int startNeighbors = GetWalkableNeighborsList(startCellForPath, mazeData).Count;
+
+        bool goalInBounds = goalCellForPath.x >= 0 && goalCellForPath.x < width && goalCellForPath.y >= 0 && goalCellForPath.y < height;
+        bool goalWalkable = mazeData.IsCellWalkableIgnoreOccupied(goalCellForPath.x, goalCellForPath.y);
+        bool goalOccupied = false;
+        int goalNeighbors = GetWalkableNeighborsList(goalCellForPath, mazeData).Count;
+
+        int activeDestructiblesCount = spawnedMissionDestructibles != null ? spawnedMissionDestructibles.Count : 0;
+        int activePortalPairsCount = travelCavePairManager != null ? travelCavePairManager.GeneratedPairs.Count : 0;
+
+        bool walkingFound = keyToGoalWalkingResult != null && keyToGoalWalkingResult.PathExists;
+        bool mechanicFound = keyToGoalMechanicResult != null && keyToGoalMechanicResult.PathExists;
+
+        System.Text.StringBuilder diagLog = new System.Text.StringBuilder();
+        diagLog.AppendLine("[KeyToGoal Pathfinding]");
+        diagLog.AppendLine($"Player world position: {playerWorldPos}");
+        diagLog.AppendLine($"Key world position: {keyWorldPos}");
+        diagLog.AppendLine($"Start cell: {startCellForPath}");
+        diagLog.AppendLine($"Start in bounds: {startInBounds}");
+        diagLog.AppendLine($"Start walkable: {startWalkable}");
+        diagLog.AppendLine($"Start occupied: {startOccupied}");
+        diagLog.AppendLine($"Start walkable neighbors: {startNeighbors}");
+        diagLog.AppendLine();
+        diagLog.AppendLine($"Goal world position: {goalWorldPos}");
+        diagLog.AppendLine($"Goal cell: {goalCellForPath}");
+        diagLog.AppendLine($"Goal in bounds: {goalInBounds}");
+        diagLog.AppendLine($"Goal walkable: {goalWalkable}");
+        diagLog.AppendLine($"Goal occupied: {goalOccupied}");
+        diagLog.AppendLine($"Goal walkable neighbors: {goalNeighbors}");
+        diagLog.AppendLine();
+        diagLog.AppendLine($"Active destructibles: {activeDestructiblesCount}");
+        diagLog.AppendLine($"Active portal pairs: {activePortalPairsCount}");
+        diagLog.AppendLine($"Walking path found: {walkingFound}");
+        diagLog.AppendLine($"Mechanic path found: {mechanicFound}");
+
+        if (!walkingFound || !mechanicFound)
         {
-            Debug.LogWarning("[TravelCaves] No hay suficientes celdas libres y accesibles para colocar atajos de viaje rápido.");
-            return true;
+            if (!startInBounds) diagLog.AppendLine("Path failed: start cell is out of bounds.");
+            else if (!startWalkable) diagLog.AppendLine("Path failed: start cell is not walkable.");
+            else if (!goalInBounds) diagLog.AppendLine("Path failed: goal cell is out of bounds.");
+            else if (!goalWalkable) diagLog.AppendLine("Path failed: goal cell is not walkable.");
+            else if (goalNeighbors == 0) diagLog.AppendLine("Path failed: no accessible neighbor near goal.");
+            else diagLog.AppendLine("Path failed: no path found between start and goal.");
         }
 
-        // Bucle de intentos con relajación dinámica de distancias
-        bool placementSuccess = false;
-        Vector2Int travelA = Vector2Int.zero;
-        Vector2Int travelB = Vector2Int.zero;
-        List<Vector2Int> shortcutNormalPath = null;
+        Debug.Log(diagLog.ToString());
 
-        int currentMinDistance = minimumPathDistanceBetweenTravelCaves;
-        int currentMinSaving = minimumShortcutSaving;
-
-        // Intentamos colocar las cuevas en 3 rondas relajando los límites de distancia/ahorro si fallamos
-        for (int round = 1; round <= 3; round++)
+        // Iniciar tracking del segmento llave→meta
+        EnsureKeyToGoalTracker();
+        if (KeyToGoalTracker.Instance != null)
         {
-            for (int attempt = 0; attempt < maximumTravelPlacementAttempts; attempt++)
-            {
-                // Seleccionar dos candidatos aleatorios distintos del conjunto pre-filtrado de celdas válidas
-                int idxA = random.Next(validCandidates.Count);
-                int idxB = random.Next(validCandidates.Count);
-                while (idxA == idxB)
-                {
-                    idxB = random.Next(validCandidates.Count);
-                }
-
-                Vector2Int candA = validCandidates[idxA];
-                Vector2Int candB = validCandidates[idxB];
-
-                // Comprobar distancia y utilidad del atajo
-                List<Vector2Int> pathAB = LevelValidator.GetPath(candA, candB, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, barrierCells, mazeWidth, mazeHeight);
-                if (pathAB.Count < currentMinDistance) continue;
-
-                int saving = pathAB.Count - 1;
-                if (saving < currentMinSaving) continue;
-
-                // Encontrado!
-                travelA = candA;
-                travelB = candB;
-                shortcutNormalPath = pathAB;
-                placementSuccess = true;
-                break;
-            }
-
-            if (placementSuccess) break;
-
-            // Relajamos las distancias mínimas para la siguiente ronda si la actual falló
-            currentMinDistance = Mathf.Max(6, currentMinDistance - 2);
-            currentMinSaving = Mathf.Max(4, currentMinSaving - 2);
+            KeyToGoalTracker.Instance.StartTracking(
+                keyToGoalWalkingResult,
+                keyToGoalMechanicResult,
+                mazeData,
+                stepCost:   1f,
+                portalCost: settings.teleportCost);
         }
+    }
 
-        if (!placementSuccess)
+    private void EnsureKeyToGoalTracker()
+    {
+        if (KeyToGoalTracker.Instance == null)
         {
-            Debug.LogWarning("[TravelCaves] No se pudo encontrar una pareja de viaje rápido incluso tras relajar los requisitos de distancia y ahorro.");
-            return true;
+            new GameObject("KeyToGoalTracker").AddComponent<KeyToGoalTracker>();
         }
+    }
 
-        // Instanciar físicamente
-        Vector3 posA = mazeRenderer.GetWorldPosition(travelA);
-        spawnedTravelCaveA = Instantiate(cavePrefab, posA, Quaternion.identity, itemsContainer);
-        spawnedTravelCaveA.name = "TravelCave_A";
+    // ── Stub del método original — ahora es un NO-OP para evitar referencias obsoletas
+    // El bloque original TryPlaceTravelCaves tenía 159 líneas de código que se reemplazó
+    // por la llamada a TravelCavePairManager.GeneratePairs() arriba.
+    // Estas helpers privadas ya no son necesarias pero se mantienen como guard:
 
-        Vector3 posB = mazeRenderer.GetWorldPosition(travelB);
-        spawnedTravelCaveB = Instantiate(cavePrefab, posB, Quaternion.identity, itemsContainer);
-        spawnedTravelCaveB.name = "TravelCave_B";
-
-        CavePortal portalA = spawnedTravelCaveA.GetComponentInChildren<CavePortal>();
-        CavePortal portalB = spawnedTravelCaveB.GetComponentInChildren<CavePortal>();
-
-        // Configurar puntos de salida
-        Transform exitA = spawnedTravelCaveA.transform.Find("ExitPoint");
-        if (exitA == null) exitA = spawnedTravelCaveA.transform.Find("EntranceTrigger");
-        if (exitA == null) exitA = spawnedTravelCaveA.transform;
-
-        Transform exitB = spawnedTravelCaveB.transform.Find("ExitPoint");
-        if (exitB == null) exitB = spawnedTravelCaveB.transform.Find("EntranceTrigger");
-        if (exitB == null) exitB = spawnedTravelCaveB.transform;
-
-        if (portalA != null)
-        {
-            portalA.DestinationExitPoint = exitB;
-            portalA.enabled = true;
-        }
-        if (portalB != null)
-        {
-            portalB.DestinationExitPoint = exitA;
-            portalB.enabled = true;
-        }
-
-        // Registrar en mazeData
-        mazeData.MarkCellsAsOccupied(travelA, 1, 1);
-        mazeData.MarkCellsAsOccupied(travelB, 1, 1);
-
-        // Guardar datos de depuración
-        travelCavePath = shortcutNormalPath;
-        travelCaveACells = GetSafeAreaCells(travelA, travelCaveSafeAreaRadius, mazeWidth, mazeHeight);
-        travelCaveBCells = GetSafeAreaCells(travelB, travelCaveSafeAreaRadius, mazeWidth, mazeHeight);
-
-        Debug.Log($"[TravelCaves] Atajo de viaje rápido instanciado correctamente entre {travelA} y {travelB}. Distancia original: {shortcutNormalPath.Count} celdas. Ahorro: {shortcutNormalPath.Count - 1} celdas.");
+    private bool OBSOLETE_TryPlaceTravelCaves_OriginalGuard()
+    {
+        // Este método solo existe para no romper referencias internas heredadas.
+        // No se llama desde ningún lugar. Puede eliminarse en una limpieza futura.
         return true;
     }
 
@@ -1803,6 +1867,7 @@ public class DynamicLevelManager : MonoBehaviour
         return cells;
     }
 
+
     private void OnDrawGizmos()
     {
         if (!showDebugGizmos || mazeRenderer == null) return;
@@ -1810,63 +1875,59 @@ public class DynamicLevelManager : MonoBehaviour
         if (keyZoneCells == null || metaZoneCells == null || barrierCells == null) return;
         if (startToCaveAPath == null || caveBToAxePath == null || axeToBarrierPath == null || keyToMetaPath == null) return;
 
-        // 1. Dibujar Zona de la Llave en Dorado/Amarillo
-        Gizmos.color = new Color(1f, 0.85f, 0f, 0.4f);
-        foreach (var cell in keyZoneCells)
+        // 1. Zonas (Llave, Meta, Barreras)
+        if (showZoneGizmos)
         {
-            Vector3 worldPos = mazeRenderer.GetWorldPosition(cell);
-            Vector2 size = mazeRenderer.LogicalCellTileSize;
-            Gizmos.DrawWireCube(worldPos, new Vector3(size.x, size.y, 0.1f));
-        }
-
-        // 1b. Dibujar Zona de la Meta en Azul
-        Gizmos.color = new Color(0f, 0.5f, 1f, 0.4f);
-        foreach (var cell in metaZoneCells)
-        {
-            Vector3 worldPos = mazeRenderer.GetWorldPosition(cell);
-            Vector2 size = mazeRenderer.LogicalCellTileSize;
-            Gizmos.DrawWireCube(worldPos, new Vector3(size.x, size.y, 0.1f));
-        }
-
-        // 2. Dibujar celdas de barreras destructibles en Naranja
-        Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
-        foreach (var cell in barrierCells)
-        {
-            Vector3 worldPos = mazeRenderer.GetWorldPosition(cell);
-            Vector2 size = mazeRenderer.LogicalCellTileSize;
-            Gizmos.DrawCube(worldPos, new Vector3(size.x, size.y, 0.1f));
-        }
-
-        // 3. Dibujar rutas lógicas en colores
-        DrawPathGizmo(startToCaveAPath, Color.green);
-        DrawPathGizmo(caveBToAxePath, Color.cyan);
-        DrawPathGizmo(axeToBarrierPath, Color.red);
-        DrawPathGizmo(keyToMetaPath, Color.blue);
-
-        // 4. Dibujar información de Travel Caves (Atajos de viaje rápido) si habilitado
-        if (enableTravelCaveDebug)
-        {
-            // Ruta normal en Magenta
-            DrawPathGizmo(travelCavePath, Color.magenta);
-
-            // Área segura de TravelCave A en Magenta semitransparente
-            Gizmos.color = new Color(1f, 0f, 1f, 0.3f);
-            foreach (var cell in travelCaveACells)
+            // Zona de la Llave — Dorado
+            Gizmos.color = new Color(1f, 0.85f, 0f, 0.4f);
+            foreach (var cell in keyZoneCells)
             {
                 Vector3 worldPos = mazeRenderer.GetWorldPosition(cell);
                 Vector2 size = mazeRenderer.LogicalCellTileSize;
                 Gizmos.DrawWireCube(worldPos, new Vector3(size.x, size.y, 0.1f));
             }
 
-            // Área segura de TravelCave B en Magenta semitransparente
-            foreach (var cell in travelCaveBCells)
+            // Zona de la Meta — Azul
+            Gizmos.color = new Color(0f, 0.5f, 1f, 0.4f);
+            foreach (var cell in metaZoneCells)
             {
                 Vector3 worldPos = mazeRenderer.GetWorldPosition(cell);
                 Vector2 size = mazeRenderer.LogicalCellTileSize;
                 Gizmos.DrawWireCube(worldPos, new Vector3(size.x, size.y, 0.1f));
             }
+
+            // Barreras destructibles — Naranja
+            Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
+            foreach (var cell in barrierCells)
+            {
+                Vector3 worldPos = mazeRenderer.GetWorldPosition(cell);
+                Vector2 size = mazeRenderer.LogicalCellTileSize;
+                Gizmos.DrawCube(worldPos, new Vector3(size.x, size.y, 0.1f));
+            }
+        }
+
+        // 2. Rutas de misión obligatoria
+        if (showMissionPathsGizmos)
+        {
+            DrawPathGizmo(startToCaveAPath, Color.green);
+            DrawPathGizmo(caveBToAxePath, Color.cyan);
+            DrawPathGizmo(axeToBarrierPath, Color.red);
+            DrawPathGizmo(keyToMetaPath, Color.blue);
+        }
+
+        // 3. Ruta óptima llave→meta con mecánicas (Dijkstra en Verde)
+        if (showOptimalKeyToGoalGizmo && keyToGoalMechanicResult != null && keyToGoalMechanicResult.PathExists)
+        {
+            DrawPathGizmo(keyToGoalMechanicResult.Cells, new Color(0.3f, 1f, 0.3f));
+        }
+
+        // 4. Parejas de cuevas opcionales (via TravelCavePairManager)
+        if (showTravelCaveGizmos && enableTravelCaves && travelCavePairManager != null)
+        {
+            travelCavePairManager.DrawGizmos(mazeRenderer, optimalPortalPairIndices);
         }
     }
+
 
     private void DrawPathGizmo(List<Vector2Int> path, Color color)
     {
@@ -1892,6 +1953,13 @@ public class DynamicLevelManager : MonoBehaviour
             {
                 doorComp.OnDoorOpened -= OnLevelCompletedFromDoor;
             }
+        }
+
+        // Validación crítica de desarrollo de inconsistencia
+        if (keyToGoalWalkingResult == null || !keyToGoalWalkingResult.PathExists)
+        {
+            Debug.LogError($"[CRITICAL INCONSISTENCY] El jugador llegó a la meta pero el pathfinder no encontró ruta navegable caminando.\n" +
+                           $"  StartCell: {keyCell}, GoalCell: {metaCell}, Barreras activas: {barrierCells?.Count}");
         }
 
         if (DifficultyMetricsCollector.Instance != null)

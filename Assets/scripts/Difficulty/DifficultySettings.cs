@@ -29,18 +29,38 @@ public class DifficultySettings
     [Tooltip("Distancia mínima entre el jugador y la casa/meta.")]
     public float minPlayerToMetaDistance = 8f;
 
-    [Header("Cuevas")]
-    [Tooltip("Permite habilitar o deshabilitar atajos de viaje rápido adicionales.")]
+    [Header("Cuevas Opcionales de Viaje Rápido")]
+    [Tooltip("Activa o desactiva la generación de cuevas opcionales de atajo.")]
     public bool enableTravelCaves = true;
 
-    [Tooltip("Distancia de ruta mínima entre cuevas de viaje rápido.")]
-    public int minimumPathDistanceBetweenTravelCaves = 10;
+    [Tooltip("Número máximo de parejas de cuevas opcionales a generar. " +
+             "La cantidad real depende del tamaño del mapa.")]
+    public int maximumTravelCavePairs = 1;
 
-    [Tooltip("Ahorro de camino mínimo requerido para crear un atajo de viaje rápido.")]
-    public int minimumShortcutSaving = 8;
+    [Tooltip("Ancho mínimo del mapa para habilitar cuevas opcionales.")]
+    public int minimumMapWidthForTravelCaves = 10;
 
-    [Tooltip("Cantidad de parejas de cuevas de viaje rápido (para soporte futuro).")]
-    public int travelCavePairs = 1;
+    [Tooltip("Alto mínimo del mapa para habilitar cuevas opcionales.")]
+    public int minimumMapHeightForTravelCaves = 10;
+
+    [Tooltip("Celdas transitables mínimas en la región principal para generar 1 pareja.")]
+    public int minWalkableCellsForOnePair = 40;
+
+    [Tooltip("Celdas transitables mínimas para generar 2 parejas.")]
+    public int minWalkableCellsForTwoPairs = 90;
+
+    [Tooltip("Celdas transitables mínimas para generar 3 o más parejas.")]
+    public int minWalkableCellsForThreePairs = 150;
+
+    [Tooltip("Distancia mínima en pasos de celda entre las entradas A y B de una pareja.")]
+    public int minimumPathDistanceBetweenTravelCaves = 6;
+
+    [Tooltip("Ahorro mínimo requerido (NormalPathDistance - TeleportCost) para crear una pareja.")]
+    public int minimumShortcutSaving = 4;
+
+    [Tooltip("Costo de usar un portal en unidades del pathfinder. " +
+             "Si es igual al costo de un paso normal (1), se usa BFS; si difiere, se usa Dijkstra.")]
+    public float teleportCost = 3f;
 
     [Tooltip("Tamaño de la zona de acceso al hacha (ancho y alto).")]
     public Vector2Int axeZoneSize = new Vector2Int(3, 3);

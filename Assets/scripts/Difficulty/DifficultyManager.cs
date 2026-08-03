@@ -245,7 +245,7 @@ public class DifficultyManager : MonoBehaviour
         
         result.minimumPathDistanceBetweenTravelCaves = constraints.minimumPathDistanceBetweenTravelCaves.Clamp(prev.minimumPathDistanceBetweenTravelCaves, req.minimumPathDistanceBetweenTravelCaves);
         result.minimumShortcutSaving = constraints.minimumShortcutSaving.Clamp(prev.minimumShortcutSaving, req.minimumShortcutSaving);
-        result.travelCavePairs = constraints.travelCavePairs.Clamp(prev.travelCavePairs, req.travelCavePairs);
+        result.maximumTravelCavePairs = constraints.maximumTravelCavePairs.Clamp(prev.maximumTravelCavePairs, req.maximumTravelCavePairs);
         
         result.axeZoneSize = new Vector2Int(
             constraints.axeZoneSizeX.Clamp(prev.axeZoneSize.x, req.axeZoneSize.x),
@@ -300,10 +300,10 @@ public class DifficultyManager : MonoBehaviour
         settings.minKeyToMetaDistance = Mathf.Lerp(constraints.minKeyToMetaDistance.minimum, constraints.minKeyToMetaDistance.maximum, score);
         settings.minPlayerToMetaDistance = Mathf.Lerp(constraints.minPlayerToMetaDistance.minimum, constraints.minPlayerToMetaDistance.maximum, score);
 
-        settings.enableTravelCaves = score < 0.8f;
+        settings.enableTravelCaves = true;
         settings.minimumPathDistanceBetweenTravelCaves = Mathf.RoundToInt(Mathf.Lerp(constraints.minimumPathDistanceBetweenTravelCaves.minimum, constraints.minimumPathDistanceBetweenTravelCaves.maximum, score));
         settings.minimumShortcutSaving = Mathf.RoundToInt(Mathf.Lerp(constraints.minimumShortcutSaving.minimum, constraints.minimumShortcutSaving.maximum, score));
-        settings.travelCavePairs = Mathf.RoundToInt(Mathf.Lerp(constraints.travelCavePairs.minimum, constraints.travelCavePairs.maximum, score));
+        settings.maximumTravelCavePairs = Mathf.Max(1, Mathf.RoundToInt(Mathf.Lerp(constraints.maximumTravelCavePairs.minimum, constraints.maximumTravelCavePairs.maximum, score)));
         
         settings.axeZoneSize = new Vector2Int(
             Mathf.RoundToInt(Mathf.Lerp(constraints.axeZoneSizeX.minimum, constraints.axeZoneSizeX.maximum, score)),
@@ -359,10 +359,70 @@ public class DifficultyManager : MonoBehaviour
     public void RegisterLevelCompletion(DifficultyMetrics metrics)
     {
         lastLevelMetrics = metrics;
-        Debug.Log($"[DifficultyManager] Métricas del nivel {currentLevelNumber} registradas.");
+
+        DifficultySettings current = CurrentSettings != null ? CurrentSettings : new DifficultySettings();
+
+        // 1. Registrar la entrada en el historial interno
+        RegisterHistoryEntry(
+            current,
+            current,
+            current,
+            $"Nivel {currentLevelNumber} completado",
+            "Player",
+            false
+        );
+
+        // 2. Almacenar automáticamente los archivos JSON en disco
+        SaveMetricsToJsonFiles(metrics, current);
+
+        Debug.Log($"[DifficultyManager] Métricas del nivel {currentLevelNumber} registradas y guardadas en JSON.");
         
         // Aumentar el número de nivel para la siguiente generación
         currentLevelNumber++;
+    }
+
+    private void SaveMetricsToJsonFiles(DifficultyMetrics metrics, DifficultySettings settings)
+    {
+        try
+        {
+            // Se guardan en la carpeta Assets/MetricsLogs para fácil acceso en el editor,
+            // y fallback a persistentDataPath si es un build.
+            string folderPath = System.IO.Path.Combine(Application.dataPath, "MetricsLogs");
+            if (!System.IO.Directory.Exists(folderPath))
+            {
+                System.IO.Directory.CreateDirectory(folderPath);
+            }
+
+            var exportData = new LevelMetricsDataFile
+            {
+                levelNumber = currentLevelNumber,
+                timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                difficultyScore = difficultyScore,
+                appliedSettings = settings,
+                metrics = metrics
+            };
+
+            string jsonContent = JsonUtility.ToJson(exportData, true);
+
+            // 1. Archivo JSON individual para este nivel específico
+            string fileName = $"metrics_level_{(currentLevelNumber):D3}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+            string filePath = System.IO.Path.Combine(folderPath, fileName);
+            System.IO.File.WriteAllText(filePath, jsonContent);
+
+            // 2. Archivo JSON acumulativo con todo el historial de la sesión
+            string historyFilePath = System.IO.Path.Combine(folderPath, "metrics_history_all.json");
+            System.IO.File.WriteAllText(historyFilePath, ExportHistoryToJson());
+
+#if UNITY_EDITOR
+            UnityEditor.AssetDatabase.Refresh();
+#endif
+
+            Debug.Log($"[DifficultyManager] 📄 JSON de métricas guardado exitosamente:\n  ➜ Archivo individual: {filePath}\n  ➜ Historial completo: {historyFilePath}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[DifficultyManager] Error al guardar el archivo JSON de métricas: {ex.Message}");
+        }
     }
 
     private DifficultyHistoryEntry RegisterHistoryEntry(
@@ -406,4 +466,14 @@ public class DifficultyManager : MonoBehaviour
     {
         public List<DifficultyHistoryEntry> entries;
     }
+}
+
+[Serializable]
+public class LevelMetricsDataFile
+{
+    public int levelNumber;
+    public string timestamp;
+    public float difficultyScore;
+    public DifficultySettings appliedSettings;
+    public DifficultyMetrics metrics;
 }

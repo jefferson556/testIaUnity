@@ -7,7 +7,7 @@ public class DebugPhys : MonoBehaviour
     private void Start()
     {
         // Try to copy the obstacle layer from DynamicLevelManager
-        var dlm = FindFirstObjectByType<DynamicLevelManager>();
+        var dlm = FindAnyObjectByType<DynamicLevelManager>();
         if (dlm != null)
         {
             var obstacleLayerField = typeof(DynamicLevelManager).GetField("obstacleLayer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

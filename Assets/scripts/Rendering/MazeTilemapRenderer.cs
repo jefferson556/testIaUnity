@@ -141,6 +141,15 @@ public class MazeTilemapRenderer : MonoBehaviour
         );
     }
 
+    public Vector2Int GetCellFromWorldPosition(Vector3 worldPos)
+    {
+        if (logicalCellTileSize.x <= 0 || logicalCellTileSize.y <= 0 || pathTilemap == null) return Vector2Int.zero;
+        Vector3Int tilePos = pathTilemap.WorldToCell(worldPos);
+        int x = (tilePos.x - currentOrigin.x) / logicalCellTileSize.x;
+        int y = (tilePos.y - currentOrigin.y) / logicalCellTileSize.y;
+        return new Vector2Int(x, y);
+    }
+
     public void Clear()
     {
         groundTilemap?.ClearAllTiles();

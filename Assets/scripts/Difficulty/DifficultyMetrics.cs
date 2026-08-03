@@ -18,4 +18,11 @@ public class DifficultyMetrics
     public int restartCount;
     public int errorCount;
     public int objectivesCollected;
+
+    /// <summary>
+    /// Métricas detalladas del segmento llave → meta.
+    /// Calculadas por KeyToGoalTracker al finalizar dicho segmento.
+    /// </summary>
+    public KeyToGoalMetrics keyToGoal = new KeyToGoalMetrics();
 }
+

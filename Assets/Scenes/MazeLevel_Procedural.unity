@@ -372,16 +372,11 @@ MonoBehaviour:
   keyPrefab: {fileID: 8242095866668300498, guid: fdb1e3bbe83b6864390e95cf6a956ce5, type: 3}
   doorPrefab: {fileID: 5346199211828365795, guid: 49b5927b7da71544e8247a456611cd7f, type: 3}
   missionDestructiblePrefab: {fileID: 4658633062640193059, guid: cb791563a202754498de41d1d6bd7ee6, type: 3}
-  enableTravelCaves: 1
-  minimumMapWidthForTravelCaves: 15
-  minimumMapHeightForTravelCaves: 15
-  maximumTravelCavePairs: 1
-  minimumPathDistanceBetweenTravelCaves: 10
-  minimumShortcutSaving: 8
-  travelCaveSafeAreaRadius: 0
-  maximumTravelPlacementAttempts: 50
-  enableTravelCaveDebug: 1
   showDebugGizmos: 0
+  showMissionPathsGizmos: 1
+  showOptimalKeyToGoalGizmo: 1
+  showTravelCaveGizmos: 1
+  showZoneGizmos: 1
 --- !u!4 &527185425
 Transform:
   m_ObjectHideFlags: 0
@@ -2799,6 +2794,27 @@ MonoBehaviour:
     restartCount: 0
     errorCount: 0
     objectivesCollected: 0
+    keyToGoal:
+      keyToGoalOptimalWalkingCost: 0
+      keyToGoalOptimalMechanicCost: 0
+      keyToGoalOptimalWalkingDistance: 0
+      keyToGoalOptimalMechanicWalkingDistance: 0
+      keyToGoalOptimalPortalUses: 0
+      keyToGoalOptimalUsesCaves: 0
+      keyToGoalPotentialSaving: 0
+      keyToGoalTime: 0
+      keyToGoalActualWalkingDistance: 0
+      keyToGoalActualCost: 0
+      keyToGoalCaveUses: 0
+      keyToGoalUniqueCavePairsUsed: 0
+      keyToGoalCavePairIndicesUsed: 
+      keyToGoalRepeatedCells: 0
+      keyToGoalWalkingEfficiency: 0
+      keyToGoalMechanicEfficiency: 0
+      keyToGoalActualSaving: 0
+      keyToGoalUsedOptimalCave: 0
+      keyToGoalIgnoredUsefulCave: 0
+      keyToGoalNavigationStyle: 0
 --- !u!114 &1197096179
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2863,7 +2879,7 @@ MonoBehaviour:
       maximum: 15
       maximumChangePerLevel: 2
       defaultValue: 8
-    travelCavePairs:
+    maximumTravelCavePairs:
       minimum: 0
       maximum: 3
       maximumChangePerLevel: 1
@@ -2938,9 +2954,15 @@ MonoBehaviour:
     minKeyToMetaDistance: 4
     minPlayerToMetaDistance: 8
     enableTravelCaves: 1
+    maximumTravelCavePairs: 1
+    minimumMapWidthForTravelCaves: 15
+    minimumMapHeightForTravelCaves: 15
+    minWalkableCellsForOnePair: 80
+    minWalkableCellsForTwoPairs: 160
+    minWalkableCellsForThreePairs: 280
     minimumPathDistanceBetweenTravelCaves: 10
     minimumShortcutSaving: 8
-    travelCavePairs: 1
+    teleportCost: 3
     axeZoneSize: {x: 3, y: 3}
     destructibleWallsPercentage: 0.1
     missionDestructiblesHealth: 1
@@ -2955,7 +2977,7 @@ MonoBehaviour:
     zoomOutCooldown: 3
     zoomOutSize: 9
     normalZoomSize: 4
-  difficultyScore: 0.501
+  difficultyScore: 0.48
   history: []
 --- !u!4 &1197096180
 Transform:

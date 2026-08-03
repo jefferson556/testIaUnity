@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class CaveTraveler : MonoBehaviour
@@ -10,7 +10,23 @@ public class CaveTraveler : MonoBehaviour
     private Rigidbody2D rb;
     private float nextTeleportTime;
 
+    // ── Eventos ────────────────────────────────────────────────────────────────────
+
+    /// <summary>Disparado cada vez que el jugador usa cualquier portal.</summary>
     public event System.Action OnTeleport;
+
+    /// <summary>
+    /// Disparado con el índice de la pareja usada.
+    /// Permite a KeyToGoalTracker identificar qué pareja se utilizó.
+    /// </summary>
+    public event System.Action<int> OnTeleportWithPairId;
+
+    /// <summary>
+    /// Índice de la pareja de portal a la que pertenece el último portal activado.
+    /// Asignado por CavePortal.OnTriggerEnter2D antes de llamar a TryTeleport.
+    /// -1 si no es una cueva de viaje rápido opcional (ej. cueva de misión).
+    /// </summary>
+    public int CurrentPairIndex { get; set; } = -1;
 
     private void Awake()
     {
@@ -39,8 +55,9 @@ public class CaveTraveler : MonoBehaviour
         rb.position = destination.position;
         rb.linearVelocity = Vector2.zero;
 
-        Debug.Log($"El gato viajó hacia {destination.name}.");
+        Debug.Log($"El gato viajó hacia {destination.name}. PairIndex={CurrentPairIndex}");
         OnTeleport?.Invoke();
+        OnTeleportWithPairId?.Invoke(CurrentPairIndex);
 
         return true;
     }

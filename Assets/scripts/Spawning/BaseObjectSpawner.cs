@@ -410,9 +410,15 @@ public abstract class BaseObjectSpawner : MonoBehaviour
             return;
         }
 
+        MazeData mazeData = FindAnyObjectByType<MazeData>();
+
         foreach (var cell in destructible.ReservedGridCells)
         {
             occupiedCells.Remove(cell);
+            if (mazeData != null)
+            {
+                mazeData.UnmarkCellAsOccupied(cell.x, cell.y);
+            }
         }
     }
 }

@@ -56,9 +56,9 @@ public class DifficultyConstraints
     public FloatDifficultyConstraint minPlayerToMetaDistance = new FloatDifficultyConstraint { minimum = 3f, maximum = 20f, maximumChangePerLevel = 2f, defaultValue = 8f };
 
     [Header("Cuevas")]
-    public IntDifficultyConstraint minimumPathDistanceBetweenTravelCaves = new IntDifficultyConstraint { minimum = 5, maximum = 20, maximumChangePerLevel = 2, defaultValue = 10 };
-    public IntDifficultyConstraint minimumShortcutSaving = new IntDifficultyConstraint { minimum = 3, maximum = 15, maximumChangePerLevel = 2, defaultValue = 8 };
-    public IntDifficultyConstraint travelCavePairs = new IntDifficultyConstraint { minimum = 0, maximum = 3, maximumChangePerLevel = 1, defaultValue = 1 };
+    public IntDifficultyConstraint minimumPathDistanceBetweenTravelCaves = new IntDifficultyConstraint { minimum = 4, maximum = 15, maximumChangePerLevel = 2, defaultValue = 6 };
+    public IntDifficultyConstraint minimumShortcutSaving = new IntDifficultyConstraint { minimum = 2, maximum = 12, maximumChangePerLevel = 2, defaultValue = 4 };
+    public IntDifficultyConstraint maximumTravelCavePairs = new IntDifficultyConstraint { minimum = 1, maximum = 3, maximumChangePerLevel = 1, defaultValue = 1 };
     public IntDifficultyConstraint axeZoneSizeX = new IntDifficultyConstraint { minimum = 2, maximum = 5, maximumChangePerLevel = 1, defaultValue = 3 };
     public IntDifficultyConstraint axeZoneSizeY = new IntDifficultyConstraint { minimum = 2, maximum = 5, maximumChangePerLevel = 1, defaultValue = 3 };
 

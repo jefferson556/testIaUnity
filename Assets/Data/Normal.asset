@@ -22,10 +22,16 @@ MonoBehaviour:
     minKeyToMetaDistance: 6
     minPlayerToMetaDistance: 10
     enableTravelCaves: 1
+    maximumTravelCavePairs: 5
+    minimumMapWidthForTravelCaves: 10
+    minimumMapHeightForTravelCaves: 10
+    minWalkableCellsForOnePair: 80
+    minWalkableCellsForTwoPairs: 160
+    minWalkableCellsForThreePairs: 280
     minimumPathDistanceBetweenTravelCaves: 10
     minimumShortcutSaving: 8
-    travelCavePairs: 2
-    axeZoneSize: {x: 4, y: 4}
+    teleportCost: 3
+    axeZoneSize: {x: 2, y: 2}
     destructibleWallsPercentage: 0.539
     missionDestructiblesHealth: 1
     spawnDestructibles: 1
@@ -35,3 +41,7 @@ MonoBehaviour:
     hintIntensity: 1
     highlightObjectives: 1
     showDirectionIndicator: 1
+    zoomOutMaxDuration: 4
+    zoomOutCooldown: 3
+    zoomOutSize: 9
+    normalZoomSize: 4

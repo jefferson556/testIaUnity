@@ -55,6 +55,12 @@ public class DifficultyMetricsCollector : MonoBehaviour
         mazeData = FindAnyObjectByType<MazeData>();
         isCollecting = true;
         
+        // Cancelar cualquier tracking activo de llave→meta
+        if (KeyToGoalTracker.Instance != null)
+        {
+            KeyToGoalTracker.Instance.CancelTracking();
+        }
+
         Debug.Log("[MetricsCollector] Recopilación de métricas iniciada para el nivel.");
     }
 
@@ -130,6 +136,12 @@ public class DifficultyMetricsCollector : MonoBehaviour
                 }
             }
         }
+
+        // Delegar actualización de posición al tracker de llave→meta
+        if (KeyToGoalTracker.Instance != null && KeyToGoalTracker.Instance.IsTracking)
+        {
+            KeyToGoalTracker.Instance.UpdatePlayerPosition(currentPos);
+        }
     }
 
     private int GetTotalWalkableCellsCount(MazeData data)
@@ -167,6 +179,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
         if (playerTraveler != null)
         {
             playerTraveler.OnTeleport += HandleTeleport;
+            playerTraveler.OnTeleportWithPairId += HandleTeleportWithPairId;
         }
     }
 
@@ -185,6 +198,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
         if (playerTraveler != null)
         {
             playerTraveler.OnTeleport -= HandleTeleport;
+            playerTraveler.OnTeleportWithPairId -= HandleTeleportWithPairId;
         }
     }
 
@@ -200,6 +214,8 @@ public class DifficultyMetricsCollector : MonoBehaviour
         metrics.timeToFindKey = Time.time - levelStartTime;
         metrics.objectivesCollected++;
         Debug.Log($"[Metrics] Llave recolectada en {metrics.timeToFindKey:F2} segundos.");
+        // El inicio del tracking de llave→meta es responsabilidad de DynamicLevelManager
+        // porque necesita las rutas óptimas calculadas con el estado actual del mapa.
     }
 
     private void HandleObstacleHit()
@@ -217,7 +233,16 @@ public class DifficultyMetricsCollector : MonoBehaviour
     private void HandleTeleport()
     {
         metrics.cavesUsed++;
-        Debug.Log($"[Metrics] Cueva de viaje rápido utilizada. Total: {metrics.cavesUsed}");
+        Debug.Log($"[Metrics] Cueva utilizada. Total: {metrics.cavesUsed}");
+    }
+
+    private void HandleTeleportWithPairId(int pairIndex)
+    {
+        // El tracking detallado por PairIndex se hace en KeyToGoalTracker
+        if (KeyToGoalTracker.Instance != null && KeyToGoalTracker.Instance.IsTracking)
+        {
+            KeyToGoalTracker.Instance.RegisterCaveUse(pairIndex);
+        }
     }
 
     public void OnLevelCompleted()
@@ -228,6 +253,17 @@ public class DifficultyMetricsCollector : MonoBehaviour
         
         metrics.totalLevelTime = Time.time - levelStartTime;
         metrics.timeToReachHouse = metrics.totalLevelTime;
+
+        // Finalizar el tracking de llave→meta y copiar las métricas
+        if (KeyToGoalTracker.Instance != null && KeyToGoalTracker.Instance.IsTracking)
+        {
+            KeyToGoalTracker.Instance.StopTracking();
+        }
+
+        if (KeyToGoalTracker.Instance != null && KeyToGoalTracker.Instance.HasCompletedMetrics)
+        {
+            metrics.keyToGoal = KeyToGoalTracker.Instance.CompletedMetrics;
+        }
         
         Debug.Log($"[MetricsCollector] Nivel completado. Tiempo total: {metrics.totalLevelTime:F2}s. Distancia: {metrics.distanceTraveled:F1}m.");
         
