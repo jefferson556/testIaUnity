@@ -5,30 +5,50 @@ using UnityEngine;
 /// Registra el recorrido real del jugador desde que recoge la llave hasta que llega a la meta.
 /// Se activa mediante StartTracking() (llamado desde DifficultyMetricsCollector)
 /// y termina mediante StopTracking() cuando la puerta se abre.
-///
-/// No usa Update() de MonoBehaviour para el tracking de celda; en su lugar se actualiza
-/// desde DifficultyMetricsCollector.Update() para evitar duplicar lógica de Update.
 /// </summary>
 public class KeyToGoalTracker : MonoBehaviour
 {
     public static KeyToGoalTracker Instance { get; private set; }
 
+    // ── CONFIGURACIÓN DE UMBRALES (Ajustables en Inspector) ───────────────────────
+    [Header("Umbrales de Clasificación")]
+    [SerializeField] public float strugglingEfficiencyThreshold = 0.50f;
+    [SerializeField] public float strugglingRepeatedRatioThreshold = 0.35f;
+    [SerializeField] public int strugglingExtraDistanceThreshold = 8;
+    [SerializeField] public float strugglingTimeThreshold = 60f;
+    [SerializeField] public int strugglingUnproductiveCavesThreshold = 2;
+
+    [Header("Umbrales de Teletransporte")]
+    [SerializeField] public float minimumUsefulCaveSaving = 3f;
+    [SerializeField] public float maximumNeutralCaveDifference = 2f;
+
     // ── Estado de tracking ────────────────────────────────────────────────────────
     private bool isTracking;
     private float trackingStartTime;
+    private bool justTeleported;
 
-    // ── Datos del recorrido ───────────────────────────────────────────────────────
+    // ── Datos del recorrido en tiempo real ────────────────────────────────────────
     private Vector2Int lastCell = new Vector2Int(-1, -1);
-    private readonly HashSet<Vector2Int>  visitedCells   = new HashSet<Vector2Int>();
-    private readonly Dictionary<Vector2Int, int> cellVisitCount = new Dictionary<Vector2Int, int>();
+    private readonly HashSet<Vector2Int> visitedCells = new HashSet<Vector2Int>();
     private readonly HashSet<int> usedPairIndices = new HashSet<int>();
+
+    // Contadores de recorrido real
+    private int actualWalkingDistance;
+    private int repeatedCellsCount;
     private int totalCaveUses;
+
+    // Contadores de categorías de teletransporte
+    private int usefulCaveUses;
+    private int neutralCaveUses;
+    private int unproductiveCaveUses;
+    private int unevaluatedCaveUses;
+    private int mandatoryCaveUses;
 
     // ── Referencias a rutas óptimas (calculadas al recoger la llave) ──────────────
     private PathfindResult optimalWalkingPath;
     private PathfindResult optimalMechanicPath;
     private float normalStepCost = 1f;
-    private float teleportCost   = 3f;
+    private float teleportCost = 3f;
 
     // ── Referencia al MazeData (para convertir posición → celda) ─────────────────
     private MazeData mazeData;
@@ -60,16 +80,11 @@ public class KeyToGoalTracker : MonoBehaviour
     /// Inicia el tracking del segmento llave→meta.
     /// Debe llamarse inmediatamente después de que el jugador recoge la llave.
     /// </summary>
-    /// <param name="walkingPath">Ruta óptima caminando (sin portales).</param>
-    /// <param name="mechanicPath">Ruta óptima con portales activos.</param>
-    /// <param name="data">Referencia al MazeData para conversión de coordenadas.</param>
-    /// <param name="stepCost">Costo por paso normal.</param>
-    /// <param name="portalCost">Costo por teletransporte.</param>
     public void StartTracking(
         PathfindResult walkingPath,
         PathfindResult mechanicPath,
         MazeData data,
-        float stepCost   = 1f,
+        float stepCost = 1f,
         float portalCost = 3f)
     {
         if (isTracking)
@@ -77,33 +92,42 @@ public class KeyToGoalTracker : MonoBehaviour
             Debug.LogWarning("[KeyToGoalTracker] StartTracking llamado mientras ya estaba activo. Reiniciando.");
         }
 
-        isTracking        = true;
+        isTracking = true;
         trackingStartTime = Time.time;
-        normalStepCost    = stepCost;
-        teleportCost      = portalCost;
-        mazeData          = data;
+        normalStepCost = stepCost;
+        teleportCost = portalCost;
+        mazeData = data;
+        justTeleported = false;
 
-        optimalWalkingPath  = walkingPath  ?? PathfindResult.NoPath();
+        optimalWalkingPath = walkingPath ?? PathfindResult.NoPath();
         optimalMechanicPath = mechanicPath ?? PathfindResult.NoPath();
 
+        // Limpieza de datos (Section 13)
         visitedCells.Clear();
-        cellVisitCount.Clear();
         usedPairIndices.Clear();
-        totalCaveUses    = 0;
-        lastCell         = new Vector2Int(-1, -1);
+        actualWalkingDistance = 0;
+        repeatedCellsCount = 0;
+        totalCaveUses = 0;
+
+        usefulCaveUses = 0;
+        neutralCaveUses = 0;
+        unproductiveCaveUses = 0;
+        unevaluatedCaveUses = 0;
+        mandatoryCaveUses = 0;
+
+        lastCell = new Vector2Int(-1, -1);
         HasCompletedMetrics = false;
-        CompletedMetrics    = null;
+        CompletedMetrics = null;
     }
 
     /// <summary>
     /// Actualiza la posición actual del jugador. Debe llamarse cada frame desde DifficultyMetricsCollector.
     /// </summary>
-    /// <param name="worldPosition">Posición world del jugador.</param>
     public void UpdatePlayerPosition(Vector3 worldPosition)
     {
         if (!isTracking || mazeData == null) return;
 
-        var origin   = mazeData.MapOrigin;
+        var origin = mazeData.MapOrigin;
         var cellSize = mazeData.CellSize;
 
         if (cellSize.x <= 0 || cellSize.y <= 0) return;
@@ -114,43 +138,224 @@ public class KeyToGoalTracker : MonoBehaviour
         if (cx < 0 || cx >= mazeData.Width || cy < 0 || cy >= mazeData.Height) return;
 
         var currentCell = new Vector2Int(cx, cy);
+
+        // Si es el primer paso registrado
+        if (lastCell == new Vector2Int(-1, -1))
+        {
+            lastCell = currentCell;
+            visitedCells.Add(currentCell);
+            return;
+        }
+
         if (currentCell == lastCell) return;
 
+        if (justTeleported)
+        {
+            justTeleported = false;
+            lastCell = currentCell;
+            RecordCellVisit(currentCell);
+            return;
+        }
+
+        // Cambio de celda normal caminando (Section 2)
+        actualWalkingDistance++;
         lastCell = currentCell;
+        RecordCellVisit(currentCell);
+    }
 
-        // Registrar visita
-        if (cellVisitCount.ContainsKey(currentCell))
-            cellVisitCount[currentCell]++;
+    private void RecordCellVisit(Vector2Int cell)
+    {
+        if (visitedCells.Contains(cell))
+        {
+            repeatedCellsCount++;
+        }
         else
-            cellVisitCount[currentCell] = 1;
-
-        visitedCells.Add(currentCell);
+        {
+            visitedCells.Add(cell);
+        }
     }
 
     /// <summary>
-    /// Registra que el jugador usó un portal con el índice de pareja dado.
-    /// Debe llamarse desde el evento CaveTraveler.OnTeleportWithPairId.
+    /// Registra y evalúa un teletransporte en tiempo real cuando ocurre (Section 5 y 6).
     /// </summary>
     public void RegisterCaveUse(int pairIndex)
     {
         if (!isTracking) return;
+
         totalCaveUses++;
+        justTeleported = true; // Activar flag para que no sume distancia física caminada
+
+        if (pairIndex == -1)
+        {
+            // Cueva obligatoria de misión (Section 7): clasificar como Unevaluated
+            unevaluatedCaveUses++;
+            mandatoryCaveUses++;
+
+            Debug.Log(
+                "[KeyToGoal Cave Evaluation]\n" +
+                "Pair ID: -1 (Mandatory)\n" +
+                "Classification: Unevaluated\n" +
+                "Reason: Mandatory mission cave"
+            );
+            return;
+        }
+
         usedPairIndices.Add(pairIndex);
+
+        // Encontrar referencias en TravelCavePairManager
+        var pairManager = Object.FindAnyObjectByType<TravelCavePairManager>();
+        TravelCavePair pair = null;
+        if (pairManager != null)
+        {
+            foreach (var p in pairManager.GeneratedPairs)
+            {
+                if (p.PairIndex == pairIndex)
+                {
+                    pair = p;
+                    break;
+                }
+            }
+        }
+
+        // Determinar celdas de entrada y salida seguras basadas en proximidad lúdica
+        Vector2Int entryCell = Vector2Int.zero;
+        Vector2Int exitCell = Vector2Int.zero;
+        if (pair != null)
+        {
+            float distToA = Vector2Int.Distance(lastCell, pair.CellA);
+            float distToB = Vector2Int.Distance(lastCell, pair.CellB);
+            if (distToA < distToB)
+            {
+                entryCell = pair.CellA;
+                exitCell = pair.CellB;
+            }
+            else
+            {
+                entryCell = pair.CellB;
+                exitCell = pair.CellA;
+            }
+        }
+
+        // Obtener metaCell del singleton de nivel
+        Vector2Int metaCell = Vector2Int.zero;
+        if (DynamicLevelManager.Instance != null)
+        {
+            metaCell = DynamicLevelManager.Instance.MetaCell;
+        }
+        else if (optimalWalkingPath != null && optimalWalkingPath.Cells != null && optimalWalkingPath.Cells.Count > 0)
+        {
+            metaCell = optimalWalkingPath.Cells[optimalWalkingPath.Cells.Count - 1];
+        }
+
+        // CASOS NO EVALUABLES (Section 6)
+        if (pair == null || metaCell == Vector2Int.zero || mazeData == null)
+        {
+            unevaluatedCaveUses++;
+            Debug.Log(
+                $"[KeyToGoal Cave Evaluation]\n" +
+                $"Pair ID: {pairIndex}\n" +
+                $"Classification: Unevaluated\n" +
+                $"Reason: missing level references"
+            );
+            return;
+        }
+
+        // Obtener conexiones y barreras actuales
+        var activePortals = DynamicLevelManager.Instance != null ? DynamicLevelManager.Instance.ActivePortalConnections : null;
+        var barriers = DynamicLevelManager.Instance != null ? DynamicLevelManager.Instance.BarrierCells : null;
+
+        // Comprobar si existe ruta válida antes (con todas las conexiones activas)
+        PathfindResult routeBefore = MazePathfinder.FindPathWithPortals(entryCell, metaCell, mazeData, true, activePortals, barriers, 1f);
+        if (routeBefore == null || !routeBefore.PathExists)
+        {
+            unevaluatedCaveUses++;
+            Debug.Log(
+                $"[KeyToGoal Cave Evaluation]\n" +
+                $"Pair ID: {pairIndex}\n" +
+                $"Classification: Unevaluated\n" +
+                $"Reason: no valid path from entry cell to goal"
+            );
+            return;
+        }
+
+        // Comprobar si existe ruta válida desde la salida
+        PathfindResult routeFromExit = MazePathfinder.FindPathWithPortals(exitCell, metaCell, mazeData, true, activePortals, barriers, 1f);
+        if (routeFromExit == null || !routeFromExit.PathExists)
+        {
+            unevaluatedCaveUses++;
+            Debug.Log(
+                $"[KeyToGoal Cave Evaluation]\n" +
+                $"Pair ID: {pairIndex}\n" +
+                $"Classification: Unevaluated\n" +
+                $"Reason: no valid path from portal exit to goal"
+            );
+            return;
+        }
+
+        // Excluir ÚNICAMENTE el portal actual para calcular costWithoutTeleport (evita recursión, Section 6)
+        var portalsWithoutCurrent = new List<PortalConnection>();
+        if (activePortals != null)
+        {
+            foreach (var pc in activePortals)
+            {
+                if (pc.PairIndex != pairIndex)
+                {
+                    portalsWithoutCurrent.Add(pc);
+                }
+            }
+        }
+
+        PathfindResult routeWithoutCurrent = MazePathfinder.FindPathWithPortals(entryCell, metaCell, mazeData, true, portalsWithoutCurrent, barriers, 1f);
+        
+        // Si no existe camino alternativo sin este portal, se asume que el portal es la única vía (ahorro máximo)
+        float costWithoutTeleport = routeWithoutCurrent.PathExists ? routeWithoutCurrent.TotalCost : 9999f;
+        float costWithTeleport = pair.TeleportCost + routeFromExit.TotalCost;
+        float caveSaving = costWithoutTeleport - costWithTeleport;
+
+        // Clasificar utilidad según umbrales centralizados
+        string classification;
+        if (caveSaving >= minimumUsefulCaveSaving)
+        {
+            usefulCaveUses++;
+            classification = "Useful";
+        }
+        else if (caveSaving <= -minimumUsefulCaveSaving)
+        {
+            unproductiveCaveUses++;
+            classification = "Unproductive";
+        }
+        else
+        {
+            neutralCaveUses++;
+            classification = "Neutral";
+        }
+
+        // Log exacto solicitado (Section 14)
+        Debug.Log(
+            $"[KeyToGoal Cave Evaluation]\n" +
+            $"Pair ID: {pairIndex}\n" +
+            $"Entry cell: {entryCell}\n" +
+            $"Exit cell: {exitCell}\n" +
+            $"Cost without current portal: {(costWithoutTeleport >= 999f ? "Infinity" : costWithoutTeleport.ToString("F1"))}\n" +
+            $"Cost with portal: {costWithTeleport:F1}\n" +
+            $"Teleport cost: {pair.TeleportCost:F1}\n" +
+            $"Saving: {(costWithoutTeleport >= 999f ? "Infinity" : caveSaving.ToString("F1"))}\n" +
+            $"Classification: {classification}"
+        );
     }
 
     /// <summary>
-    /// Finaliza el tracking y calcula las métricas completas.
-    /// Debe llamarse cuando el jugador llega a la meta (puerta abierta).
+    /// Finaliza el tracking y calcula las métricas completas (Section 2 y 3).
     /// </summary>
     public void StopTracking()
     {
         if (!isTracking) return;
         isTracking = false;
 
-        CompletedMetrics    = CalculateMetrics();
+        CompletedMetrics = CalculateMetrics();
         HasCompletedMetrics = true;
 
-        LogMetrics(CompletedMetrics);
+        LogSummary(CompletedMetrics);
     }
 
     /// <summary>
@@ -158,13 +363,20 @@ public class KeyToGoalTracker : MonoBehaviour
     /// </summary>
     public void CancelTracking()
     {
-        isTracking          = false;
+        isTracking = false;
         HasCompletedMetrics = false;
-        CompletedMetrics    = null;
+        CompletedMetrics = null;
         visitedCells.Clear();
-        cellVisitCount.Clear();
         usedPairIndices.Clear();
+        actualWalkingDistance = 0;
+        repeatedCellsCount = 0;
         totalCaveUses = 0;
+        usefulCaveUses = 0;
+        neutralCaveUses = 0;
+        unproductiveCaveUses = 0;
+        unevaluatedCaveUses = 0;
+        mandatoryCaveUses = 0;
+        lastCell = new Vector2Int(-1, -1);
     }
 
     public bool IsTracking => isTracking;
@@ -176,137 +388,129 @@ public class KeyToGoalTracker : MonoBehaviour
         var m = new KeyToGoalMetrics();
 
         // ── Datos de rutas óptimas ─────────────────────────────────────────────────
-        bool walkingExists  = optimalWalkingPath  != null && optimalWalkingPath.PathExists;
-        bool mechanicExists = optimalMechanicPath != null && optimalMechanicPath.PathExists;
+        bool walkingExists = optimalWalkingPath != null && optimalWalkingPath.PathExists;
+        m.keyToGoalPathDataValid = walkingExists;
 
-        m.keyToGoalPathDataValid = walkingExists && mechanicExists;
-
-        m.keyToGoalOptimalWalkingCost  = walkingExists  ? optimalWalkingPath.TotalCost  : -1f;
-        m.keyToGoalOptimalMechanicCost = mechanicExists ? optimalMechanicPath.TotalCost : -1f;
-
-        m.keyToGoalOptimalWalkingDistance          = walkingExists  ? optimalWalkingPath.WalkingSteps  : 0;
-        m.keyToGoalOptimalMechanicWalkingDistance  = mechanicExists ? optimalMechanicPath.WalkingSteps : 0;
-        m.keyToGoalOptimalPortalUses               = mechanicExists ? optimalMechanicPath.TeleportCount : 0;
-        m.keyToGoalOptimalUsesCaves                = mechanicExists && optimalMechanicPath.UsesCaves;
-
-        if (m.keyToGoalPathDataValid)
-        {
-            float potSaving = m.keyToGoalOptimalWalkingCost - m.keyToGoalOptimalMechanicCost;
-            m.keyToGoalPotentialSaving = Mathf.Max(0f, potSaving);
-        }
-        else
-        {
-            m.keyToGoalPotentialSaving = 0f;
-        }
-
-        // ── Datos del recorrido real ───────────────────────────────────────────────
         m.keyToGoalTime = Time.time - trackingStartTime;
 
-        // Sumar todos los pasos reales (incluyendo repetidos)
-        int totalSteps = 0;
-        int repeatedCells = 0;
-        foreach (var kvp in cellVisitCount)
-        {
-            totalSteps += kvp.Value;
-            if (kvp.Value > 1) repeatedCells += kvp.Value - 1;
-        }
-
-        m.keyToGoalActualWalkingDistance = totalSteps;
-        m.keyToGoalRepeatedCells         = repeatedCells;
-        m.keyToGoalCaveUses              = totalCaveUses;
-        m.keyToGoalUniqueCavePairsUsed   = usedPairIndices.Count;
-        m.keyToGoalCavePairIndicesUsed   = new System.Collections.Generic.List<int>(usedPairIndices);
-
-        // Costo real estimado
-        float actualWalkCost = totalSteps * normalStepCost;
-        float actualPortalCost = totalCaveUses * teleportCost;
-        m.keyToGoalActualCost = actualWalkCost + actualPortalCost;
-
-        // ── Eficiencias y Clasificación (solo si el pathfinder encontró ruta válida) ───────────────────
         if (m.keyToGoalPathDataValid)
         {
-            if (m.keyToGoalActualWalkingDistance > 0)
-            {
-                m.keyToGoalWalkingEfficiency = Mathf.Clamp01(
-                    (float)m.keyToGoalOptimalWalkingDistance / m.keyToGoalActualWalkingDistance);
-            }
+            m.keyToGoalOptimalDistance = optimalWalkingPath.WalkingSteps;
+            m.keyToGoalActualDistance = actualWalkingDistance;
+            m.keyToGoalExtraDistance = Mathf.Max(0, m.keyToGoalActualDistance - m.keyToGoalOptimalDistance);
+            m.keyToGoalRepeatedCells = repeatedCellsCount;
 
-            if (m.keyToGoalActualCost > 0f)
-            {
-                m.keyToGoalMechanicEfficiency = Mathf.Clamp01(
-                    m.keyToGoalOptimalMechanicCost / m.keyToGoalActualCost);
-            }
+            m.keyToGoalRepeatedCellRatio = m.keyToGoalActualDistance > 0 
+                ? (float)m.keyToGoalRepeatedCells / m.keyToGoalActualDistance 
+                : 0f;
 
+            m.keyToGoalEfficiency = m.keyToGoalActualDistance > 0 
+                ? (float)m.keyToGoalOptimalDistance / m.keyToGoalActualDistance 
+                : 0f;
+
+            // Llenar variables obsoletas para compatibilidad histórica
+#pragma warning disable 618
+            m.keyToGoalOptimalWalkingDistance = m.keyToGoalOptimalDistance;
+            m.keyToGoalActualWalkingDistance = m.keyToGoalActualDistance;
+            m.keyToGoalWalkingEfficiency = m.keyToGoalEfficiency;
+            m.keyToGoalUsedOptimalCave = usefulCaveUses > 0;
+            m.keyToGoalOptimalWalkingCost = optimalWalkingPath.TotalCost;
+            m.keyToGoalOptimalMechanicCost = optimalMechanicPath != null && optimalMechanicPath.PathExists ? optimalMechanicPath.TotalCost : optimalWalkingPath.TotalCost;
+            m.keyToGoalPotentialSaving = Mathf.Max(0f, m.keyToGoalOptimalWalkingCost - m.keyToGoalOptimalMechanicCost);
+            m.keyToGoalActualCost = (m.keyToGoalActualDistance * normalStepCost) + (totalCaveUses * teleportCost);
             m.keyToGoalActualSaving = m.keyToGoalOptimalWalkingCost - m.keyToGoalActualCost;
-
-            if (mechanicExists)
-            {
-                foreach (var usedIdx in usedPairIndices)
-                {
-                    if (optimalMechanicPath.PortalPairIndicesUsed.Contains(usedIdx))
-                    {
-                        m.keyToGoalUsedOptimalCave = true;
-                        break;
-                    }
-                }
-            }
-
+            m.keyToGoalMechanicEfficiency = m.keyToGoalActualCost > 0 ? m.keyToGoalOptimalMechanicCost / m.keyToGoalActualCost : 0f;
             m.keyToGoalIgnoredUsefulCave = m.keyToGoalPotentialSaving > 0f && totalCaveUses == 0;
-            m.keyToGoalNavigationStyle = ClassifyNavigation(m);
+#pragma warning restore 618
         }
         else
         {
+            m.keyToGoalOptimalDistance = 0;
+            m.keyToGoalActualDistance = actualWalkingDistance;
+            m.keyToGoalExtraDistance = 0;
+            m.keyToGoalRepeatedCells = repeatedCellsCount;
+            m.keyToGoalRepeatedCellRatio = 0f;
+            m.keyToGoalEfficiency = 0f;
+
+#pragma warning disable 618
             m.keyToGoalWalkingEfficiency = 0f;
             m.keyToGoalMechanicEfficiency = 0f;
             m.keyToGoalActualSaving = 0f;
-            m.keyToGoalNavigationStyle = NavigationStyle.Efficient; // Estilo neutro cuando no hay evaluación
+#pragma warning restore 618
         }
+
+        // Llenar variables de teletransporte
+        m.keyToGoalCaveUses = totalCaveUses;
+        m.keyToGoalUniqueCavePairsUsed = usedPairIndices.Count;
+        m.keyToGoalUsefulCaveUses = usefulCaveUses;
+        m.keyToGoalNeutralCaveUses = neutralCaveUses;
+        m.keyToGoalUnproductiveCaveUses = unproductiveCaveUses;
+        m.keyToGoalUnevaluatedCaveUses = unevaluatedCaveUses;
+        m.keyToGoalMandatoryCaveUses = mandatoryCaveUses;
+        m.keyToGoalCavePairIndicesUsed = new List<int>(usedPairIndices);
+
+        // Clasificar estilo de navegación
+        m.keyToGoalNavigationState = ClassifyNavigation(m);
+
+#pragma warning disable 618
+        m.keyToGoalNavigationStyle = m.keyToGoalNavigationState; // Mantener histórico alineado
+#pragma warning restore 618
 
         return m;
     }
 
-    private static NavigationStyle ClassifyNavigation(KeyToGoalMetrics m)
+    private NavigationStyle ClassifyNavigation(KeyToGoalMetrics m)
     {
-        const float EFFICIENCY_GOOD = 0.8f;
-        const float EFFICIENCY_POOR = 0.4f;
-
-        bool poorOverall = m.keyToGoalWalkingEfficiency < EFFICIENCY_POOR
-                        && m.keyToGoalMechanicEfficiency < EFFICIENCY_POOR;
-        if (poorOverall)
-            return NavigationStyle.Lost;
-
-        if (m.keyToGoalCaveUses > 0)
+        if (!m.keyToGoalPathDataValid)
         {
-            if (m.keyToGoalUsedOptimalCave && m.keyToGoalMechanicEfficiency >= EFFICIENCY_GOOD)
-                return NavigationStyle.EfficientWithCave;
-            return NavigationStyle.SuboptimalCave;
+            return NavigationStyle.NotEvaluated;
         }
 
-        if (m.keyToGoalIgnoredUsefulCave)
-            return NavigationStyle.MissedShortcut;
+        // Evaluar señales para Struggling (Section 3)
+        int strugglingSignals = 0;
+        if (m.keyToGoalEfficiency < strugglingEfficiencyThreshold) strugglingSignals++;
+        if (m.keyToGoalRepeatedCellRatio >= strugglingRepeatedRatioThreshold) strugglingSignals++;
+        if (m.keyToGoalExtraDistance >= strugglingExtraDistanceThreshold) strugglingSignals++;
+        if (m.keyToGoalTime >= strugglingTimeThreshold) strugglingSignals++;
+        if (m.keyToGoalUnproductiveCaveUses >= strugglingUnproductiveCavesThreshold) strugglingSignals++;
 
-        if (m.keyToGoalWalkingEfficiency >= EFFICIENCY_GOOD)
+        if (strugglingSignals >= 2)
+        {
+            return NavigationStyle.Struggling;
+        }
+
+        // Evaluar Efficient
+        // - extraDistance <= 2 OR efficiency >= 0.80
+        // - repeated ratio < 0.20
+        bool satisfiesDistance = (m.keyToGoalExtraDistance <= 2) || (m.keyToGoalEfficiency >= 0.80f);
+        bool satisfiesRepeated = m.keyToGoalRepeatedCellRatio < 0.20f;
+        if (satisfiesDistance && satisfiesRepeated)
+        {
             return NavigationStyle.Efficient;
+        }
 
-        return NavigationStyle.Lost;
+        // De lo contrario, Exploratory
+        return NavigationStyle.Exploratory;
     }
 
-    // ── Log de resumen ─────────────────────────────────────────────────────────────
+    // ── Log de Depuración Detallado (Section 14) ───────────────────────────────────
 
-    private static void LogMetrics(KeyToGoalMetrics m)
+    private void LogSummary(KeyToGoalMetrics m)
     {
         Debug.Log(
-            $"[KeyToGoalTracker] Segmento Llave→Meta completado.\n" +
-            $"  Tiempo: {m.keyToGoalTime:F2}s\n" +
-            $"  Pasos reales: {m.keyToGoalActualWalkingDistance} | Repetidos: {m.keyToGoalRepeatedCells}\n" +
-            $"  Costo real: {m.keyToGoalActualCost:F1}\n" +
-            $"  Cuevas usadas: {m.keyToGoalCaveUses} (parejas únicas: {m.keyToGoalUniqueCavePairsUsed})\n" +
-            $"  Ruta óptima caminando: costo={m.keyToGoalOptimalWalkingCost:F1} pasos={m.keyToGoalOptimalWalkingDistance}\n" +
-            $"  Ruta óptima con mecánicas: costo={m.keyToGoalOptimalMechanicCost:F1} portales={m.keyToGoalOptimalPortalUses}\n" +
-            $"  Ahorro potencial: {m.keyToGoalPotentialSaving:F1} | Ahorro real: {m.keyToGoalActualSaving:F1}\n" +
-            $"  Eficiencia caminando: {m.keyToGoalWalkingEfficiency:P0} | Con mecánicas: {m.keyToGoalMechanicEfficiency:P0}\n" +
-            $"  Usó cueva óptima: {m.keyToGoalUsedOptimalCave} | Ignoró atajo: {m.keyToGoalIgnoredUsefulCave}\n" +
-            $"  Estilo: {m.keyToGoalNavigationStyle}"
+            $"[KeyToGoal Tracker Summary]\n" +
+            $"  Distancia óptima: {m.keyToGoalOptimalDistance}\n" +
+            $"  Distancia real: {m.keyToGoalActualDistance}\n" +
+            $"  Distancia extra: {m.keyToGoalExtraDistance}\n" +
+            $"  Celdas repetidas: {m.keyToGoalRepeatedCells}\n" +
+            $"  Proporción repetida: {m.keyToGoalRepeatedCellRatio:P0}\n" +
+            $"  Eficiencia: {m.keyToGoalEfficiency:P0}\n" +
+            $"  Estado de navegación: {m.keyToGoalNavigationState}\n" +
+            $"  Cuevas usadas totales: {m.keyToGoalCaveUses} (Únicas: {m.keyToGoalUniqueCavePairsUsed})\n" +
+            $"  - Útiles: {m.keyToGoalUsefulCaveUses}\n" +
+            $"  - Neutras: {m.keyToGoalNeutralCaveUses}\n" +
+            $"  - Improductivas: {m.keyToGoalUnproductiveCaveUses}\n" +
+            $"  - No evaluadas: {m.keyToGoalUnevaluatedCaveUses} (Misión: {m.keyToGoalMandatoryCaveUses})"
         );
     }
 }

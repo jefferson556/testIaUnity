@@ -133,6 +133,10 @@ public class DynamicLevelManager : MonoBehaviour
 
     public static DynamicLevelManager Instance { get; private set; }
 
+    public Vector2Int MetaCell => metaCell;
+    public HashSet<Vector2Int> BarrierCells => barrierCells;
+    public List<PortalConnection> ActivePortalConnections => activePortalConnections;
+
     private void Awake()
     {
         if (Instance == null)

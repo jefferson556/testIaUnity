@@ -6,167 +6,121 @@ using UnityEngine;
 /// Se calculan en dos momentos:
 ///   1. Al recoger la llave: rutas óptimas (datos de referencia).
 ///   2. Al llegar a la meta: comportamiento real del jugador.
-///
-/// Estas métricas describen comportamiento dentro del juego.
-/// No deben interpretarse como diagnóstico psicológico.
 /// </summary>
 [System.Serializable]
 public class KeyToGoalMetrics
 {
+    // ── NUEVAS MÉTRICAS PRINCIPALES ───────────────────────────────────────────────
+
     /// <summary>
-    /// Indica si las rutas óptimas fueron calculadas exitosamente.
-    /// False si el pathfinder no pudo encontrar ruta.
+    /// True únicamente cuando el pathfinding encuentre correctamente una ruta desde la posición
+    /// del jugador al recoger la llave hasta la celda real de acceso a la meta.
     /// </summary>
     public bool keyToGoalPathDataValid = false;
-
-    /// <summary>
-    /// Costo Dijkstra de llave→meta ignorando todos los portales opcionales.
-    /// Solo cuenta pasos de celda normales.
-    /// </summary>
-    public float keyToGoalOptimalWalkingCost;
-
-    /// <summary>
-    /// Costo Dijkstra de llave→meta usando todos los portales opcionales activos.
-    /// Puede ser igual o menor que keyToGoalOptimalWalkingCost.
-    /// Si caminar es más barato, ambos serán iguales y keyToGoalOptimalUsesCaves = false.
-    /// </summary>
-    public float keyToGoalOptimalMechanicCost;
-
-    /// <summary>
-    /// Número de pasos (celdas) de la ruta óptima caminando (sin portales).
-    /// </summary>
-    public int keyToGoalOptimalWalkingDistance;
-
-    /// <summary>
-    /// Número de pasos caminados en la ruta óptima con mecánicas.
-    /// Excluye los saltos de portal; solo cuenta las celdas físicamente recorridas.
-    /// </summary>
-    public int keyToGoalOptimalMechanicWalkingDistance;
-
-    /// <summary>Número de portales que usa la ruta óptima con mecánicas.</summary>
-    public int keyToGoalOptimalPortalUses;
-
-    /// <summary>
-    /// True si la ruta óptima con mecánicas usa al menos un portal.
-    /// False si caminar directamente es igual o más barato.
-    /// </summary>
-    public bool keyToGoalOptimalUsesCaves;
-
-    /// <summary>
-    /// Ahorro potencial: keyToGoalOptimalWalkingCost - keyToGoalOptimalMechanicCost.
-    /// 0 si no hay ningún portal que mejore la ruta.
-    /// No puede ser negativo (se clampea a 0).
-    /// </summary>
-    public float keyToGoalPotentialSaving;
-
-    // ── Recorrido real del jugador ─────────────────────────────────────────────────
 
     /// <summary>Tiempo real (segundos) desde que recogió la llave hasta que llegó a la meta.</summary>
     public float keyToGoalTime;
 
-    /// <summary>
-    /// Total de pasos de celda recorridos realmente (incluyendo celdas repetidas por backtracking).
-    /// </summary>
-    public int keyToGoalActualWalkingDistance;
+    /// <summary>Distancia mínima válida (en celdas) desde la celda real del jugador al recoger la llave hasta la meta.</summary>
+    public int keyToGoalOptimalDistance;
 
-    /// <summary>
-    /// Estimación del costo real del recorrido:
-    ///   actualWalkingSteps * normalStepCost + caveUses * teleportCost
-    /// </summary>
-    public float keyToGoalActualCost;
+    /// <summary>Total de pasos de celda recorridos realmente por el jugador (excluye teletransporte).</summary>
+    public int keyToGoalActualDistance;
 
-    /// <summary>Número total de teletransportes realizados en el segmento llave→meta.</summary>
-    public int keyToGoalCaveUses;
+    /// <summary>Distancia adicional recorrida: max(0, actualDistance - optimalDistance).</summary>
+    public int keyToGoalExtraDistance;
 
-    /// <summary>
-    /// Número de parejas de portal distintas utilizadas (no el total de usos).
-    /// Ejemplo: usar la pareja 0 dos veces cuenta como 1.
-    /// </summary>
-    public int keyToGoalUniqueCavePairsUsed;
-
-    /// <summary>
-    /// Índices (PairIndex) de las parejas de portal utilizadas.
-    /// Permite saber exactamente qué portales usó el jugador.
-    /// </summary>
-    public List<int> keyToGoalCavePairIndicesUsed = new List<int>();
-
-    /// <summary>
-    /// Número de celdas visitadas más de una vez (indicador de backtracking).
-    /// </summary>
+    /// <summary>Número de celdas visitadas más de una vez durante llave → meta.</summary>
     public int keyToGoalRepeatedCells;
 
-    // ── Eficiencias ────────────────────────────────────────────────────────────────
+    /// <summary>Proporción de celdas repetidas: repeatedCells / actualDistance.</summary>
+    public float keyToGoalRepeatedCellRatio;
 
-    /// <summary>
-    /// Eficiencia de navegación caminando: optWalkingDistance / actualDistance.
-    /// 1.0 = perfecto, < 1.0 = el jugador recorrió más distancia de la mínima.
-    /// Clampado a [0, 1]. 0 si actualDistance == 0.
-    /// Solo significativo cuando caveUses == 0.
-    /// </summary>
-    public float keyToGoalWalkingEfficiency;
+    /// <summary>Eficiencia del trayecto: optimalDistance / actualDistance.</summary>
+    public float keyToGoalEfficiency;
 
-    /// <summary>
-    /// Eficiencia de la mecánica: optMechanicCost / actualCost.
-    /// 1.0 = jugó de forma óptima con o sin portales.
-    /// Clampado a [0, 1]. 0 si actualCost == 0.
-    /// </summary>
-    public float keyToGoalMechanicEfficiency;
+    /// <summary>Clasificación del estilo de navegación del jugador.</summary>
+    public NavigationStyle keyToGoalNavigationState;
 
-    // ── Ahorro real ────────────────────────────────────────────────────────────────
+    /// <summary>Cantidad total de teletransportes válidos completados.</summary>
+    public int keyToGoalCaveUses;
 
-    /// <summary>
-    /// Ahorro real comparado con la ruta caminando óptima:
-    ///   keyToGoalOptimalWalkingCost - keyToGoalActualCost
-    /// Positivo si el jugador fue más eficiente (usó un portal que ayudó).
-    /// Negativo si el jugador tardó más de lo que hubiera tardado caminando directamente.
-    /// </summary>
-    public float keyToGoalActualSaving;
+    /// <summary>Cantidad de parejas de portal distintas utilizadas.</summary>
+    public int keyToGoalUniqueCavePairsUsed;
 
-    // ── Indicadores de comportamiento ─────────────────────────────────────────────
+    /// <summary>Teletransportes opcionales que redujeron significativamente el costo restante.</summary>
+    public int keyToGoalUsefulCaveUses;
 
-    /// <summary>
-    /// True si el jugador usó al menos un portal que también estaba en la ruta óptima con mecánicas.
-    /// Indica que el jugador descubrió y aprovechó un atajo válido.
-    /// </summary>
+    /// <summary>Teletransportes opcionales que cambiaron poco el costo restante.</summary>
+    public int keyToGoalNeutralCaveUses;
+
+    /// <summary>Teletransportes opcionales que aumentaron el costo restante.</summary>
+    public int keyToGoalUnproductiveCaveUses;
+
+    /// <summary>Teletransportes que no pudieron ser evaluados con datos válidos (incluyendo cuevas obligatorias).</summary>
+    public int keyToGoalUnevaluatedCaveUses;
+
+    /// <summary>Registro específico del número de usos de la cueva obligatoria de misión.</summary>
+    public int keyToGoalMandatoryCaveUses;
+
+    // ── DIAGNÓSTICO Y COMPATIBILIDAD HISTÓRICA (OBSOLETOS) ─────────────────────────
+
+    [System.Obsolete("Usar keyToGoalOptimalDistance en su lugar.")]
+    public int keyToGoalOptimalWalkingDistance;
+
+    [System.Obsolete("Usar keyToGoalActualDistance en su lugar.")]
+    public int keyToGoalActualWalkingDistance;
+
+    [System.Obsolete("Usar keyToGoalNavigationState en su lugar.")]
+    public NavigationStyle keyToGoalNavigationStyle;
+
+    [System.Obsolete("Usar keyToGoalUsefulCaveUses / keyToGoalNeutralCaveUses / keyToGoalUnproductiveCaveUses en su lugar.")]
     public bool keyToGoalUsedOptimalCave;
 
-    /// <summary>
-    /// True si había un ahorro potencial disponible (keyToGoalPotentialSaving > 0)
-    /// y el jugador no usó ningún portal.
-    /// No es un error; puede indicar que el jugador prefirió caminar o no encontró el portal.
-    /// </summary>
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public float keyToGoalOptimalWalkingCost;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public float keyToGoalOptimalMechanicCost;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public int keyToGoalOptimalMechanicWalkingDistance;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public int keyToGoalOptimalPortalUses;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public bool keyToGoalOptimalUsesCaves;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public float keyToGoalPotentialSaving;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public float keyToGoalActualCost;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public float keyToGoalActualSaving;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public float keyToGoalWalkingEfficiency;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
+    public float keyToGoalMechanicEfficiency;
+
+    [System.Obsolete("Campos de costo antiguo obsoletos.")]
     public bool keyToGoalIgnoredUsefulCave;
 
-    // ── Clasificación de comportamiento ───────────────────────────────────────────
-
-    /// <summary>
-    /// Clasificación del estilo de navegación del jugador en el segmento llave→meta.
-    /// Solo describe comportamiento observable dentro del juego, no intención ni habilidad.
-    /// </summary>
-    public NavigationStyle keyToGoalNavigationStyle;
+    /// <summary>Mantenido únicamente para diagnóstico/gizmos.</summary>
+    public List<int> keyToGoalCavePairIndicesUsed = new List<int>();
 }
 
 /// <summary>
 /// Clasificación del estilo de navegación en el segmento llave→meta.
-/// Basada únicamente en datos observables del juego.
 /// </summary>
 public enum NavigationStyle
 {
-    /// <summary>Caminó eficientemente sin usar portales (efficiency >= 0.8).</summary>
-    Efficient,
-
-    /// <summary>Usó un portal que estaba en la ruta óptima y llegó eficientemente.</summary>
-    EfficientWithCave,
-
-    /// <summary>No usó portales aunque había uno que hubiera ahorrado distancia.</summary>
-    MissedShortcut,
-
-    /// <summary>Usó un portal pero no el que estaba en la ruta óptima.</summary>
-    SuboptimalCave,
-
-    /// <summary>La eficiencia general fue muy baja (muchos desvíos).</summary>
-    Lost,
-
-    /// <summary>Valor por defecto / no calculado todavía.</summary>
-    Unknown
+    NotEvaluated = 0,
+    Efficient = 1,
+    Exploratory = 2,
+    Struggling = 3
 }
