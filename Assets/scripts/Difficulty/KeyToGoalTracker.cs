@@ -407,21 +407,6 @@ public class KeyToGoalTracker : MonoBehaviour
             m.keyToGoalEfficiency = m.keyToGoalActualDistance > 0 
                 ? (float)m.keyToGoalOptimalDistance / m.keyToGoalActualDistance 
                 : 0f;
-
-            // Llenar variables obsoletas para compatibilidad histórica
-#pragma warning disable 618
-            m.keyToGoalOptimalWalkingDistance = m.keyToGoalOptimalDistance;
-            m.keyToGoalActualWalkingDistance = m.keyToGoalActualDistance;
-            m.keyToGoalWalkingEfficiency = m.keyToGoalEfficiency;
-            m.keyToGoalUsedOptimalCave = usefulCaveUses > 0;
-            m.keyToGoalOptimalWalkingCost = optimalWalkingPath.TotalCost;
-            m.keyToGoalOptimalMechanicCost = optimalMechanicPath != null && optimalMechanicPath.PathExists ? optimalMechanicPath.TotalCost : optimalWalkingPath.TotalCost;
-            m.keyToGoalPotentialSaving = Mathf.Max(0f, m.keyToGoalOptimalWalkingCost - m.keyToGoalOptimalMechanicCost);
-            m.keyToGoalActualCost = (m.keyToGoalActualDistance * normalStepCost) + (totalCaveUses * teleportCost);
-            m.keyToGoalActualSaving = m.keyToGoalOptimalWalkingCost - m.keyToGoalActualCost;
-            m.keyToGoalMechanicEfficiency = m.keyToGoalActualCost > 0 ? m.keyToGoalOptimalMechanicCost / m.keyToGoalActualCost : 0f;
-            m.keyToGoalIgnoredUsefulCave = m.keyToGoalPotentialSaving > 0f && totalCaveUses == 0;
-#pragma warning restore 618
         }
         else
         {
@@ -431,12 +416,6 @@ public class KeyToGoalTracker : MonoBehaviour
             m.keyToGoalRepeatedCells = repeatedCellsCount;
             m.keyToGoalRepeatedCellRatio = 0f;
             m.keyToGoalEfficiency = 0f;
-
-#pragma warning disable 618
-            m.keyToGoalWalkingEfficiency = 0f;
-            m.keyToGoalMechanicEfficiency = 0f;
-            m.keyToGoalActualSaving = 0f;
-#pragma warning restore 618
         }
 
         // Llenar variables de teletransporte
@@ -447,14 +426,9 @@ public class KeyToGoalTracker : MonoBehaviour
         m.keyToGoalUnproductiveCaveUses = unproductiveCaveUses;
         m.keyToGoalUnevaluatedCaveUses = unevaluatedCaveUses;
         m.keyToGoalMandatoryCaveUses = mandatoryCaveUses;
-        m.keyToGoalCavePairIndicesUsed = new List<int>(usedPairIndices);
 
         // Clasificar estilo de navegación
         m.keyToGoalNavigationState = ClassifyNavigation(m);
-
-#pragma warning disable 618
-        m.keyToGoalNavigationStyle = m.keyToGoalNavigationState; // Mantener histórico alineado
-#pragma warning restore 618
 
         return m;
     }

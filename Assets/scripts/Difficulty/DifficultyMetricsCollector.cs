@@ -22,6 +22,18 @@ public class DifficultyMetricsCollector : MonoBehaviour
     private bool isMovingLastFrame;
     private bool isCollecting;
 
+    public float CurrentLevelElapsedTime
+    {
+        get
+        {
+            if (isCollecting)
+            {
+                return Time.time - levelStartTime;
+            }
+            return metrics != null ? metrics.totalLevelTime : 0f;
+        }
+    }
+
     public DifficultyMetrics CurrentMetrics => metrics;
 
     private void Awake()

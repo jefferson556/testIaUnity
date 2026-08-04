@@ -43,5 +43,5 @@ MonoBehaviour:
     showDirectionIndicator: 1
     zoomOutMaxDuration: 4
     zoomOutCooldown: 3
-    zoomOutSize: 9
+    zoomOutSize: 30
     normalZoomSize: 4

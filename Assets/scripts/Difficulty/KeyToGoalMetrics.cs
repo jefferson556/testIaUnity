@@ -1,17 +1,12 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
 /// Métricas del segmento llave → meta del jugador.
-/// Se calculan en dos momentos:
-///   1. Al recoger la llave: rutas óptimas (datos de referencia).
-///   2. Al llegar a la meta: comportamiento real del jugador.
+/// Se calculan al llegar a la meta.
 /// </summary>
 [System.Serializable]
 public class KeyToGoalMetrics
 {
-    // ── NUEVAS MÉTRICAS PRINCIPALES ───────────────────────────────────────────────
-
     /// <summary>
     /// True únicamente cuando el pathfinding encuentre correctamente una ruta desde la posición
     /// del jugador al recoger la llave hasta la celda real de acceso a la meta.
@@ -62,56 +57,6 @@ public class KeyToGoalMetrics
 
     /// <summary>Registro específico del número de usos de la cueva obligatoria de misión.</summary>
     public int keyToGoalMandatoryCaveUses;
-
-    // ── DIAGNÓSTICO Y COMPATIBILIDAD HISTÓRICA (OBSOLETOS) ─────────────────────────
-
-    [System.Obsolete("Usar keyToGoalOptimalDistance en su lugar.")]
-    public int keyToGoalOptimalWalkingDistance;
-
-    [System.Obsolete("Usar keyToGoalActualDistance en su lugar.")]
-    public int keyToGoalActualWalkingDistance;
-
-    [System.Obsolete("Usar keyToGoalNavigationState en su lugar.")]
-    public NavigationStyle keyToGoalNavigationStyle;
-
-    [System.Obsolete("Usar keyToGoalUsefulCaveUses / keyToGoalNeutralCaveUses / keyToGoalUnproductiveCaveUses en su lugar.")]
-    public bool keyToGoalUsedOptimalCave;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public float keyToGoalOptimalWalkingCost;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public float keyToGoalOptimalMechanicCost;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public int keyToGoalOptimalMechanicWalkingDistance;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public int keyToGoalOptimalPortalUses;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public bool keyToGoalOptimalUsesCaves;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public float keyToGoalPotentialSaving;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public float keyToGoalActualCost;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public float keyToGoalActualSaving;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public float keyToGoalWalkingEfficiency;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public float keyToGoalMechanicEfficiency;
-
-    [System.Obsolete("Campos de costo antiguo obsoletos.")]
-    public bool keyToGoalIgnoredUsefulCave;
-
-    /// <summary>Mantenido únicamente para diagnóstico/gizmos.</summary>
-    public List<int> keyToGoalCavePairIndicesUsed = new List<int>();
 }
 
 /// <summary>

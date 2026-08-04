@@ -2796,26 +2796,21 @@ MonoBehaviour:
     objectivesCollected: 0
     keyToGoal:
       keyToGoalPathDataValid: 0
-      keyToGoalOptimalWalkingCost: 0
-      keyToGoalOptimalMechanicCost: 0
-      keyToGoalOptimalWalkingDistance: 0
-      keyToGoalOptimalMechanicWalkingDistance: 0
-      keyToGoalOptimalPortalUses: 0
-      keyToGoalOptimalUsesCaves: 0
-      keyToGoalPotentialSaving: 0
       keyToGoalTime: 0
-      keyToGoalActualWalkingDistance: 0
-      keyToGoalActualCost: 0
+      keyToGoalOptimalDistance: 0
+      keyToGoalActualDistance: 0
+      keyToGoalExtraDistance: 0
+      keyToGoalRepeatedCells: 0
+      keyToGoalRepeatedCellRatio: 0
+      keyToGoalEfficiency: 0
+      keyToGoalNavigationState: 0
       keyToGoalCaveUses: 0
       keyToGoalUniqueCavePairsUsed: 0
-      keyToGoalCavePairIndicesUsed: 
-      keyToGoalRepeatedCells: 0
-      keyToGoalWalkingEfficiency: 0
-      keyToGoalMechanicEfficiency: 0
-      keyToGoalActualSaving: 0
-      keyToGoalUsedOptimalCave: 0
-      keyToGoalIgnoredUsefulCave: 0
-      keyToGoalNavigationStyle: 0
+      keyToGoalUsefulCaveUses: 0
+      keyToGoalNeutralCaveUses: 0
+      keyToGoalUnproductiveCaveUses: 0
+      keyToGoalUnevaluatedCaveUses: 0
+      keyToGoalMandatoryCaveUses: 0
 --- !u!114 &1197096179
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2828,7 +2823,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6350901b494a394096eacb1d5b4174c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
-  defaultProfile: {fileID: 11400000, guid: d44bb35ab2f3a5440b63fa7699b827ef, type: 2}
+  defaultProfile: {fileID: 11400000, guid: 1781d70b841870e479d271cb1536600c, type: 2}
   constraints:
     mapWidth:
       minimum: 9
