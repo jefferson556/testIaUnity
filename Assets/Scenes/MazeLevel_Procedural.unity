@@ -2764,6 +2764,7 @@ MonoBehaviour:
   hardProfile: {fileID: 11400000, guid: f891ab89c2f3a5440b63fa7699b827ea, type: 2}
   targetScore: 0.237
   customMapWidth: 19
+  customExtraConnections: 5
   customDestructiblesHealth: 3
 --- !u!114 &1197096178
 MonoBehaviour:
@@ -2824,6 +2825,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
   defaultProfile: {fileID: 11400000, guid: d44bb35ab2f3a5440b63fa7699b827ef, type: 2}
+  availableProfiles: []
   constraints:
     mapWidth:
       minimum: 9
@@ -2973,7 +2975,7 @@ MonoBehaviour:
     zoomOutCooldown: 3
     zoomOutSize: 9
     normalZoomSize: 4
-  difficultyScore: 0.141
+  difficultyScore: 0.335
   history: []
 --- !u!4 &1197096180
 Transform:

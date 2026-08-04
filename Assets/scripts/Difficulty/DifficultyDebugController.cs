@@ -22,6 +22,9 @@ public class DifficultyDebugController : MonoBehaviour
     [SerializeField]
     private int customMapWidth = 19;
 
+    [SerializeField]
+    private int customExtraConnections = 5;
+
 #pragma warning disable 0414
     [SerializeField]
     private int customDestructiblesHealth = 3;
@@ -48,6 +51,10 @@ public class DifficultyDebugController : MonoBehaviour
         else if (keyboard.f4Key.wasPressedThisFrame)
         {
             PrintCurrentState();
+        }
+        else if (keyboard.f5Key.wasPressedThisFrame)
+        {
+            LoadConfigFromJSONNow();
         }
     }
 
@@ -76,29 +83,108 @@ public class DifficultyDebugController : MonoBehaviour
         }
     }
 
-    [ContextMenu("Aplicar Dificultad por Score")]
+    [ContextMenu("Aplicar Dificultad por Score (Inmediato)")]
     public void ApplyTargetScore()
     {
         SimulateScoreRequest(targetScore, "Ajuste manual desde menú contextual");
         RegenerateCurrentLevel();
     }
 
-    [ContextMenu("Cargar Perfil Fácil")]
-    public void LoadEasy()
+    [ContextMenu("Cargar Perfil 'Easy' por Nombre")]
+    public void LoadEasyByName()
     {
-        ApplyProfileOrScore(easyProfile, 0.0f, "Menú Contextual: Fácil");
+        if (DifficultyManager.Instance != null)
+        {
+            DifficultyManager.Instance.LoadProfileByName("Easy");
+            RegenerateCurrentLevel();
+        }
     }
 
-    [ContextMenu("Cargar Perfil Normal")]
-    public void LoadNormal()
+    [ContextMenu("Cargar Perfil 'Normal' por Nombre")]
+    public void LoadNormalByName()
     {
-        ApplyProfileOrScore(normalProfile, 0.5f, "Menú Contextual: Normal");
+        if (DifficultyManager.Instance != null)
+        {
+            DifficultyManager.Instance.LoadProfileByName("Normal");
+            RegenerateCurrentLevel();
+        }
     }
 
-    [ContextMenu("Cargar Perfil Difícil")]
-    public void LoadHard()
+    [ContextMenu("Cargar Perfil 'Hard' por Nombre")]
+    public void LoadHardByName()
     {
-        ApplyProfileOrScore(hardProfile, 1.0f, "Menú Contextual: Difícil");
+        if (DifficultyManager.Instance != null)
+        {
+            DifficultyManager.Instance.LoadProfileByName("Hard");
+            RegenerateCurrentLevel();
+        }
+    }
+
+    [ContextMenu("📄 Cargar Configuración desde JSON (level_config_request.json)")]
+    public void LoadConfigFromJSONNow()
+    {
+        if (DifficultyManager.Instance != null)
+        {
+            bool loaded = DifficultyManager.Instance.TryLoadConfigFromJSONFile();
+            if (loaded)
+            {
+                RegenerateCurrentLevel();
+            }
+        }
+    }
+
+    [ContextMenu("🧪 Probar Caso 1: Carga por Perfil 'Normal'")]
+    public void TestPayloadCase1()
+    {
+        string json = "{\"takeDifficultyScore\": false, \"nameLevel\": \"Normal\", \"applyImmediately\": false}";
+        LevelLoadConfig config = JsonUtility.FromJson<LevelLoadConfig>(json);
+        if (DifficultyManager.Instance != null && config != null)
+        {
+            DifficultyManager.Instance.ApplyLevelLoadConfig(config);
+            RegenerateCurrentLevel();
+        }
+    }
+
+    [ContextMenu("🧪 Probar Caso 2: Carga por Score '0.3'")]
+    public void TestPayloadCase2()
+    {
+        string json = "{\"takeDifficultyScore\": true, \"difficultyScore\": 0.3, \"applyImmediately\": false}";
+        LevelLoadConfig config = JsonUtility.FromJson<LevelLoadConfig>(json);
+        if (DifficultyManager.Instance != null && config != null)
+        {
+            DifficultyManager.Instance.ApplyLevelLoadConfig(config);
+            RegenerateCurrentLevel();
+        }
+    }
+
+    [ContextMenu("🧪 Probar Caso 3: Carga Perfil 'Easy' con Overrides (25x25)")]
+    public void TestPayloadCase3()
+    {
+        string json = "{\"takeDifficultyScore\": false, \"nameLevel\": \"easy\", \"customSettings\": {\"overrideMapWidth\": true, \"mapWidth\": 25, \"overrideMapHeight\": true, \"mapHeight\": 25, \"overrideExtraConnections\": true, \"extraConnections\": 8, \"overridePlayerMoveSpeed\": true, \"playerMoveSpeed\": 8.0}}";
+        LevelLoadConfig config = JsonUtility.FromJson<LevelLoadConfig>(json);
+        if (DifficultyManager.Instance != null && config != null)
+        {
+            DifficultyManager.Instance.ApplyLevelLoadConfig(config);
+            RegenerateCurrentLevel();
+        }
+    }
+
+    [ContextMenu("Aumentar Extra Connections (+3) en Configuración Actual")]
+    public void RequestExtraConnectionsAdd()
+    {
+        if (DifficultyManager.Instance == null) return;
+
+        DifficultyAdjustmentRequest request = new DifficultyAdjustmentRequest
+        {
+            mode = DifficultyAdjustmentMode.Relative,
+            overrideExtraConnections = true,
+            extraConnections = customExtraConnections,
+            reason = "Aumento relativo de extraConnections (+" + customExtraConnections + ")",
+            requesterId = "DebugController",
+            applyImmediately = true
+        };
+
+        DifficultyManager.Instance.ApplyAdjustment(request);
     }
 
     [ContextMenu("Simular Cambio de Ancho de Mapa (Absoluto)")]
@@ -109,9 +195,11 @@ public class DifficultyDebugController : MonoBehaviour
         DifficultyAdjustmentRequest request = new DifficultyAdjustmentRequest
         {
             mode = DifficultyAdjustmentMode.Absolute,
+            overrideMapWidth = true,
             mapWidth = customMapWidth,
             reason = "Ajuste manual de ancho de mapa a " + customMapWidth,
-            requesterId = "DebugController"
+            requesterId = "DebugController",
+            applyImmediately = true
         };
         
         DifficultyManager.Instance.ApplyAdjustment(request);
@@ -125,9 +213,11 @@ public class DifficultyDebugController : MonoBehaviour
         DifficultyAdjustmentRequest request = new DifficultyAdjustmentRequest
         {
             mode = DifficultyAdjustmentMode.Relative,
+            overrideMissionDestructiblesHealth = true,
             missionDestructiblesHealth = 2,
             reason = "Aumento relativo de vida de destructibles (+2)",
-            requesterId = "DebugController"
+            requesterId = "DebugController",
+            applyImmediately = true
         };
 
         DifficultyManager.Instance.ApplyAdjustment(request);
@@ -154,7 +244,8 @@ public class DifficultyDebugController : MonoBehaviour
             adjustByScore = true,
             targetScore = score,
             reason = reason,
-            requesterId = "DebugController"
+            requesterId = "DebugController",
+            applyImmediately = false
         };
 
         DifficultyManager.Instance.ApplyAdjustment(request);

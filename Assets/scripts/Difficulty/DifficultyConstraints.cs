@@ -8,13 +8,16 @@ public class IntDifficultyConstraint
     public int maximumChangePerLevel;
     public int defaultValue;
 
-    public int Clamp(int previous, int requested)
+    public int Clamp(int previous, int requested, bool enforceRateLimit = true)
     {
         int clamped = Mathf.Clamp(requested, minimum, maximum);
-        int change = clamped - previous;
-        if (Mathf.Abs(change) > maximumChangePerLevel)
+        if (enforceRateLimit)
         {
-            clamped = previous + (int)Mathf.Sign(change) * maximumChangePerLevel;
+            int change = clamped - previous;
+            if (Mathf.Abs(change) > maximumChangePerLevel)
+            {
+                clamped = previous + (int)Mathf.Sign(change) * maximumChangePerLevel;
+            }
         }
         return clamped;
     }
@@ -28,13 +31,16 @@ public class FloatDifficultyConstraint
     public float maximumChangePerLevel;
     public float defaultValue;
 
-    public float Clamp(float previous, float requested)
+    public float Clamp(float previous, float requested, bool enforceRateLimit = true)
     {
         float clamped = Mathf.Clamp(requested, minimum, maximum);
-        float change = clamped - previous;
-        if (Mathf.Abs(change) > maximumChangePerLevel)
+        if (enforceRateLimit)
         {
-            clamped = previous + Mathf.Sign(change) * maximumChangePerLevel;
+            float change = clamped - previous;
+            if (Mathf.Abs(change) > maximumChangePerLevel)
+            {
+                clamped = previous + Mathf.Sign(change) * maximumChangePerLevel;
+            }
         }
         return clamped;
     }
@@ -68,6 +74,8 @@ public class DifficultyConstraints
 
     [Header("Jugador y Ayudas")]
     public FloatDifficultyConstraint playerMoveSpeed = new FloatDifficultyConstraint { minimum = 2f, maximum = 8f, maximumChangePerLevel = 1f, defaultValue = 4f };
+
+    // [FUTURO / HINTS]
     public IntDifficultyConstraint hintsAvailable = new IntDifficultyConstraint { minimum = 0, maximum = 10, maximumChangePerLevel = 1, defaultValue = 3 };
     public FloatDifficultyConstraint hintDelaySeconds = new FloatDifficultyConstraint { minimum = 5f, maximum = 60f, maximumChangePerLevel = 5f, defaultValue = 15f };
     public FloatDifficultyConstraint hintIntensity = new FloatDifficultyConstraint { minimum = 0.1f, maximum = 1.0f, maximumChangePerLevel = 0.2f, defaultValue = 1.0f };

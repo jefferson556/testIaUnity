@@ -1,0 +1,14 @@
+{
+  "takeDifficultyScore": false,
+  "nameLevel": "easy",
+  "customSettings": {
+    "overrideMapWidth": true,
+    "mapWidth": 10,
+    "overrideMapHeight": true,
+    "mapHeight": 10,
+    "overrideExtraConnections": true,
+    "extraConnections": 5,
+    "overridePlayerMoveSpeed": true,
+    "playerMoveSpeed": 10
+  }
+}

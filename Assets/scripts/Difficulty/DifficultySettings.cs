@@ -33,8 +33,7 @@ public class DifficultySettings
     [Tooltip("Activa o desactiva la generación de cuevas opcionales de atajo.")]
     public bool enableTravelCaves = true;
 
-    [Tooltip("Número máximo de parejas de cuevas opcionales a generar. " +
-             "La cantidad real depende del tamaño del mapa.")]
+    [Tooltip("Número máximo de parejas de cuevas opcionales a generar. La cantidad real depende del tamaño del mapa.")]
     public int maximumTravelCavePairs = 1;
 
     [Tooltip("Ancho mínimo del mapa para habilitar cuevas opcionales.")]
@@ -58,8 +57,7 @@ public class DifficultySettings
     [Tooltip("Ahorro mínimo requerido (NormalPathDistance - TeleportCost) para crear una pareja.")]
     public int minimumShortcutSaving = 4;
 
-    [Tooltip("Costo de usar un portal en unidades del pathfinder. " +
-             "Si es igual al costo de un paso normal (1), se usa BFS; si difiere, se usa Dijkstra.")]
+    [Tooltip("Costo de usar un portal en unidades del pathfinder. Si es igual al costo de un paso normal (1), se usa BFS; si difiere, se usa Dijkstra.")]
     public float teleportCost = 3f;
 
     [Tooltip("Tamaño de la zona de acceso al hacha (ancho y alto).")]
@@ -81,13 +79,14 @@ public class DifficultySettings
     [Tooltip("Velocidad de movimiento del jugador.")]
     public float playerMoveSpeed = 4f;
 
-    [Tooltip("Cantidad de pistas disponibles.")]
+    // [FUTURO / HINTS] Lógica de pistas reservada para cuando se implemente la mecánica visual de ayudas.
+    [Tooltip("[FUTURO] Cantidad de pistas disponibles.")]
     public int hintsAvailable = 3;
 
-    [Tooltip("Tiempo en segundos antes de mostrar una pista.")]
+    [Tooltip("[FUTURO] Tiempo en segundos antes de mostrar una pista.")]
     public float hintDelaySeconds = 15f;
 
-    [Tooltip("Intensidad de las pistas (opaco, brillo, etc.).")]
+    [Tooltip("[FUTURO] Intensidad de las pistas (opaco, brillo, etc.).")]
     [Range(0f, 1f)]
     public float hintIntensity = 1f;
 

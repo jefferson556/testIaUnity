@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class DifficultyManager : MonoBehaviour
@@ -9,6 +10,10 @@ public class DifficultyManager : MonoBehaviour
     [Header("Perfiles y Carga Inicial")]
     [SerializeField]
     private DifficultyProfile defaultProfile;
+
+    [Tooltip("Lista de perfiles de dificultad disponibles para selección (Fácil, Normal, Difícil, etc.)")]
+    [SerializeField]
+    private List<DifficultyProfile> availableProfiles = new List<DifficultyProfile>();
 
     [SerializeField]
     private DifficultyConstraints constraints = new DifficultyConstraints();
@@ -31,6 +36,7 @@ public class DifficultyManager : MonoBehaviour
     public DifficultySettings CurrentSettings => currentSettings != null ? currentSettings.Clone() : null;
     public float DifficultyScore => difficultyScore;
     public IReadOnlyList<DifficultyHistoryEntry> History => history;
+    public IReadOnlyList<DifficultyProfile> AvailableProfiles => availableProfiles;
 
     // Eventos
     public event Action<DifficultySettings> OnDifficultyChanged;
@@ -53,19 +59,178 @@ public class DifficultyManager : MonoBehaviour
 
     private void InitializeDifficulty()
     {
+        if (defaultProfile == null && availableProfiles != null && availableProfiles.Count > 0)
+        {
+            defaultProfile = availableProfiles[0];
+        }
+
         if (defaultProfile != null)
         {
             currentSettings = defaultProfile.Settings.Clone();
             CalculateScoreFromSettings();
-            Debug.Log($"[DifficultyManager] Inicializado con el perfil: {defaultProfile.name}. Score: {difficultyScore:F2}");
+            Debug.Log($"[DifficultyManager] Inicializado con el perfil: {defaultProfile.ProfileName}. Score: {difficultyScore:F2}");
         }
         else
         {
-            // Usar valores predeterminados de las restricciones
             currentSettings = GetSettingsFromScore(0.5f);
             difficultyScore = 0.5f;
             Debug.LogWarning("[DifficultyManager] No se especificó perfil por defecto. Inicializado con dificultad Normal (0.5).");
         }
+    }
+
+    /// <summary>
+    /// Intenta leer la configuración enviada externamente desde el archivo JSON level_config_request.json.
+    /// </summary>
+    public bool TryLoadConfigFromJSONFile()
+    {
+        try
+        {
+            string folderPath = Path.Combine(Application.dataPath, "MetricsLogs");
+            string filePath = Path.Combine(folderPath, "level_config_request.json");
+
+            if (!File.Exists(filePath))
+            {
+                // Fallback a persistentDataPath para builds ejecutables fuera del editor
+                filePath = Path.Combine(Application.persistentDataPath, "level_config_request.json");
+            }
+
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+
+            string jsonContent = File.ReadAllText(filePath);
+            if (string.IsNullOrWhiteSpace(jsonContent))
+            {
+                return false;
+            }
+
+            LevelLoadConfig config = JsonUtility.FromJson<LevelLoadConfig>(jsonContent);
+            if (config != null)
+            {
+                Debug.Log($"[DifficultyManager] 📄 Leyendo y aplicando configuración desde archivo JSON: {filePath}");
+                bool result = ApplyLevelLoadConfig(config);
+
+                if (result)
+                {
+                    Debug.Log($"[DifficultyManager] 🎯 CONFIGURACIÓN APLICADA DESDE JSON:\n" +
+                              $"  ➜ Perfil Base: '{config.nameLevel}' (takeDifficultyScore={config.takeDifficultyScore})\n" +
+                              $"  ➜ mapWidth: {currentSettings.mapWidth}\n" +
+                              $"  ➜ mapHeight: {currentSettings.mapHeight}\n" +
+                              $"  ➜ extraConnections: {currentSettings.extraConnections}\n" +
+                              $"  ➜ playerMoveSpeed: {currentSettings.playerMoveSpeed:F1}\n" +
+                              $"  ➜ destructibleWallsPercentage: {currentSettings.destructibleWallsPercentage:P0}");
+                }
+
+                return result;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[DifficultyManager] Error al procesar el archivo JSON de configuración de nivel: {ex.Message}");
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Aplica la configuración dual de nivel (Por Score vs Por Nombre de Perfil) y luego sus overrides personalizados.
+    /// </summary>
+    public bool ApplyLevelLoadConfig(LevelLoadConfig config)
+    {
+        if (config == null) return false;
+
+        bool baseApplied = false;
+
+        // 1. Establecer la Dificultad Base (Por Score o Por Nombre)
+        if (config.takeDifficultyScore)
+        {
+            SetDifficultyScore(config.difficultyScore, $"Carga Dual JSON por Score ({config.difficultyScore:F2})", enforceRateLimit: false);
+            baseApplied = true;
+        }
+        else
+        {
+            baseApplied = LoadProfileByName(config.nameLevel);
+            if (!baseApplied)
+            {
+                Debug.LogWarning($"[DifficultyManager] No se pudo cargar la base por nombre '{config.nameLevel}'. Manteniendo configuración actual.");
+            }
+        }
+
+        // 2. Aplicar Ajustes Personalizados (si vienen en customSettings)
+        if (config.customSettings != null)
+        {
+            config.customSettings.reason = $"Ajustes personalizados desde JSON sobre base (Score={config.takeDifficultyScore}, Name='{config.nameLevel}')";
+            config.customSettings.requesterId = "JSON_Config";
+            ApplyAdjustment(config.customSettings, enforceRateLimit: false);
+        }
+
+        if (config.applyImmediately)
+        {
+            DynamicLevelManager levelManager = UnityEngine.Object.FindAnyObjectByType<DynamicLevelManager>();
+            if (levelManager != null)
+            {
+                levelManager.StartGeneration();
+            }
+        }
+
+        return true;
+    }
+
+    public void SetDifficultyScore(float targetScore, string reason = "Score change request", bool enforceRateLimit = true)
+    {
+        DifficultyAdjustmentRequest request = new DifficultyAdjustmentRequest
+        {
+            adjustByScore = true,
+            targetScore = Mathf.Clamp01(targetScore),
+            reason = reason,
+            requesterId = "ScoreManager"
+        };
+        ApplyAdjustment(request, enforceRateLimit);
+    }
+
+    public bool LoadProfileByName(string profileName)
+    {
+        if (string.IsNullOrWhiteSpace(profileName)) return false;
+
+        DifficultyProfile profile = availableProfiles.Find(p => p != null && string.Equals(p.ProfileName, profileName, StringComparison.OrdinalIgnoreCase));
+        
+        if (profile == null)
+        {
+            profile = availableProfiles.Find(p => p != null && string.Equals(p.name, profileName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (profile == null && defaultProfile != null && (string.Equals(defaultProfile.ProfileName, profileName, StringComparison.OrdinalIgnoreCase) || string.Equals(defaultProfile.name, profileName, StringComparison.OrdinalIgnoreCase)))
+        {
+            profile = defaultProfile;
+        }
+
+#if UNITY_EDITOR
+        if (profile == null)
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("t:DifficultyProfile");
+            foreach (string guid in guids)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                DifficultyProfile p = UnityEditor.AssetDatabase.LoadAssetAtPath<DifficultyProfile>(path);
+                if (p != null && (string.Equals(p.ProfileName, profileName, StringComparison.OrdinalIgnoreCase) || string.Equals(p.name, profileName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    profile = p;
+                    if (!availableProfiles.Contains(p)) availableProfiles.Add(p);
+                    break;
+                }
+            }
+        }
+#endif
+
+        if (profile != null)
+        {
+            LoadProfile(profile);
+            return true;
+        }
+
+        Debug.LogWarning($"[DifficultyManager] No se encontró el perfil de dificultad con el nombre: '{profileName}'");
+        return false;
     }
 
     public void LoadProfile(DifficultyProfile profile)
@@ -76,21 +241,51 @@ public class DifficultyManager : MonoBehaviour
         currentSettings = profile.Settings.Clone();
         CalculateScoreFromSettings();
 
-        // Registrar en el historial
         RegisterHistoryEntry(
             previous,
             currentSettings,
             currentSettings,
-            $"Perfil cargado: {profile.name}",
+            $"Perfil cargado: {profile.ProfileName}",
             "System",
             false
         );
 
         OnDifficultyChanged?.Invoke(CurrentSettings);
-        Debug.Log($"[DifficultyManager] Perfil '{profile.name}' cargado con éxito.");
+        Debug.Log($"[DifficultyManager] Perfil '{profile.ProfileName}' cargado con éxito.");
     }
 
-    public bool ApplyAdjustment(DifficultyAdjustmentRequest request)
+    public bool ModifyCurrentSettings(Action<DifficultySettings> modifyAction, string reason = "Custom modification")
+    {
+        if (modifyAction == null) return false;
+
+        DifficultySettings previous = CurrentSettings;
+        DifficultySettings target = previous.Clone();
+        modifyAction(target);
+
+        List<string> errors;
+        if (!ValidateSettings(target, out errors))
+        {
+            string errorMessage = $"Modificación rechazada. Configuración inválida: {string.Join(", ", errors)}";
+            Debug.LogError($"[DifficultyManager] {errorMessage}");
+            OnAdjustmentRejected?.Invoke(errorMessage);
+            return false;
+        }
+
+        DifficultySettings clampedSettings = LimitChanges(previous, target, enforceRateLimit: false);
+        bool wasClamped = CheckIfClamped(target, clampedSettings);
+
+        currentSettings = clampedSettings;
+        CalculateScoreFromSettings();
+
+        var entry = RegisterHistoryEntry(previous, target, currentSettings, reason, "CustomModify", wasClamped);
+        OnDifficultyChanged?.Invoke(CurrentSettings);
+        OnAdjustmentApplied?.Invoke(entry);
+
+        Debug.Log($"[DifficultyManager] Modificación directa aplicada con éxito. Score actual: {difficultyScore:F2}. Razón: {reason}");
+        return true;
+    }
+
+    public bool ApplyAdjustment(DifficultyAdjustmentRequest request, bool enforceRateLimit = false)
     {
         if (request == null)
         {
@@ -103,41 +298,58 @@ public class DifficultyManager : MonoBehaviour
 
         if (request.adjustByScore)
         {
-            // Ajustar usando el score general
             float targetScore = Mathf.Clamp01(request.targetScore);
             targetSettings = GetSettingsFromScore(targetScore);
         }
         else
         {
-            // Ajustar individualmente
             targetSettings = previous.Clone();
             if (request.mode == DifficultyAdjustmentMode.Absolute)
             {
-                if (request.mapWidth > 0) targetSettings.mapWidth = request.mapWidth;
-                if (request.mapHeight > 0) targetSettings.mapHeight = request.mapHeight;
-                if (request.extraConnections >= 0) targetSettings.extraConnections = request.extraConnections;
-                if (request.minPlayerToCaveADistance > 0) targetSettings.minPlayerToCaveADistance = request.minPlayerToCaveADistance;
-                if (request.minAxeToStartAndMetaDistance > 0) targetSettings.minAxeToStartAndMetaDistance = request.minAxeToStartAndMetaDistance;
-                if (request.destructibleWallsPercentage >= 0) targetSettings.destructibleWallsPercentage = request.destructibleWallsPercentage;
-                if (request.missionDestructiblesHealth > 0) targetSettings.missionDestructiblesHealth = request.missionDestructiblesHealth;
-                if (request.playerMoveSpeed > 0) targetSettings.playerMoveSpeed = request.playerMoveSpeed;
-                if (request.hintDelaySeconds > 0) targetSettings.hintDelaySeconds = request.hintDelaySeconds;
+                if (request.overrideMapWidth || request.mapWidth > 0) targetSettings.mapWidth = request.mapWidth;
+                if (request.overrideMapHeight || request.mapHeight > 0) targetSettings.mapHeight = request.mapHeight;
+                if (request.overrideExtraConnections || request.extraConnections != 0) targetSettings.extraConnections = request.extraConnections;
+                if (request.overridePlayerMoveSpeed || request.playerMoveSpeed > 0) targetSettings.playerMoveSpeed = request.playerMoveSpeed;
+                if (request.overrideDestructibleWallsPercentage || request.destructibleWallsPercentage > 0) targetSettings.destructibleWallsPercentage = request.destructibleWallsPercentage;
+                if (request.overrideMissionDestructiblesHealth || request.missionDestructiblesHealth > 0) targetSettings.missionDestructiblesHealth = request.missionDestructiblesHealth;
+
+                if (request.overrideMinPlayerToCaveADistance || request.minPlayerToCaveADistance > 0) targetSettings.minPlayerToCaveADistance = request.minPlayerToCaveADistance;
+                if (request.overrideMinAxeToStartAndMetaDistance || request.minAxeToStartAndMetaDistance > 0) targetSettings.minAxeToStartAndMetaDistance = request.minAxeToStartAndMetaDistance;
+                if (request.overrideMinKeyToAxeDistance || request.minKeyToAxeDistance > 0) targetSettings.minKeyToAxeDistance = request.minKeyToAxeDistance;
+                if (request.overrideMinKeyToMetaDistance || request.minKeyToMetaDistance > 0) targetSettings.minKeyToMetaDistance = request.minKeyToMetaDistance;
+                if (request.overrideMinPlayerToMetaDistance || request.minPlayerToMetaDistance > 0) targetSettings.minPlayerToMetaDistance = request.minPlayerToMetaDistance;
+
+                if (request.overrideEnableTravelCaves) targetSettings.enableTravelCaves = request.enableTravelCaves;
+                if (request.overrideMaximumTravelCavePairs || request.maximumTravelCavePairs > 0) targetSettings.maximumTravelCavePairs = request.maximumTravelCavePairs;
+                if (request.overrideAxeZoneSize && request.axeZoneSize != Vector2Int.zero) targetSettings.axeZoneSize = request.axeZoneSize;
+
+                // [FUTURO / HINTS]
+                if (request.overrideHintsAvailable || request.hintsAvailable > 0) targetSettings.hintsAvailable = request.hintsAvailable;
+                if (request.overrideHintDelaySeconds || request.hintDelaySeconds > 0) targetSettings.hintDelaySeconds = request.hintDelaySeconds;
             }
             else // Relative
             {
-                targetSettings.mapWidth += request.mapWidth;
-                targetSettings.mapHeight += request.mapHeight;
-                targetSettings.extraConnections += request.extraConnections;
-                targetSettings.minPlayerToCaveADistance += request.minPlayerToCaveADistance;
-                targetSettings.minAxeToStartAndMetaDistance += request.minAxeToStartAndMetaDistance;
-                targetSettings.destructibleWallsPercentage += request.destructibleWallsPercentage;
-                targetSettings.missionDestructiblesHealth += request.missionDestructiblesHealth;
-                targetSettings.playerMoveSpeed += request.playerMoveSpeed;
-                targetSettings.hintDelaySeconds += request.hintDelaySeconds;
+                if (request.overrideMapWidth || request.mapWidth != 0) targetSettings.mapWidth += request.mapWidth;
+                if (request.overrideMapHeight || request.mapHeight != 0) targetSettings.mapHeight += request.mapHeight;
+                if (request.overrideExtraConnections || request.extraConnections != 0) targetSettings.extraConnections += request.extraConnections;
+                if (request.overridePlayerMoveSpeed || request.playerMoveSpeed != 0) targetSettings.playerMoveSpeed += request.playerMoveSpeed;
+                if (request.overrideDestructibleWallsPercentage || request.destructibleWallsPercentage != 0) targetSettings.destructibleWallsPercentage += request.destructibleWallsPercentage;
+                if (request.overrideMissionDestructiblesHealth || request.missionDestructiblesHealth != 0) targetSettings.missionDestructiblesHealth += request.missionDestructiblesHealth;
+
+                if (request.overrideMinPlayerToCaveADistance || request.minPlayerToCaveADistance != 0) targetSettings.minPlayerToCaveADistance += request.minPlayerToCaveADistance;
+                if (request.overrideMinAxeToStartAndMetaDistance || request.minAxeToStartAndMetaDistance != 0) targetSettings.minAxeToStartAndMetaDistance += request.minAxeToStartAndMetaDistance;
+                if (request.overrideMinKeyToAxeDistance || request.minKeyToAxeDistance != 0) targetSettings.minKeyToAxeDistance += request.minKeyToAxeDistance;
+                if (request.overrideMinKeyToMetaDistance || request.minKeyToMetaDistance != 0) targetSettings.minKeyToMetaDistance += request.minKeyToMetaDistance;
+                if (request.overrideMinPlayerToMetaDistance || request.minPlayerToMetaDistance != 0) targetSettings.minPlayerToMetaDistance += request.minPlayerToMetaDistance;
+
+                if (request.overrideMaximumTravelCavePairs || request.maximumTravelCavePairs != 0) targetSettings.maximumTravelCavePairs += request.maximumTravelCavePairs;
+
+                // [FUTURO / HINTS]
+                if (request.overrideHintsAvailable || request.hintsAvailable != 0) targetSettings.hintsAvailable += request.hintsAvailable;
+                if (request.overrideHintDelaySeconds || request.hintDelaySeconds != 0) targetSettings.hintDelaySeconds += request.hintDelaySeconds;
             }
         }
 
-        // 1. Validar la configuración solicitada
         List<string> errors;
         if (!ValidateSettings(targetSettings, out errors))
         {
@@ -147,17 +359,12 @@ public class DifficultyManager : MonoBehaviour
             return false;
         }
 
-        // 2. Limitar cambios bruscos y aplicar restricciones (Clamp)
-        DifficultySettings clampedSettings = LimitChanges(previous, targetSettings);
-
-        // Comprobar si hubo valores limitados
+        DifficultySettings clampedSettings = LimitChanges(previous, targetSettings, enforceRateLimit);
         bool wasClamped = CheckIfClamped(targetSettings, clampedSettings);
 
-        // 3. Aplicar configuración final
         currentSettings = clampedSettings;
         CalculateScoreFromSettings();
 
-        // 4. Registrar en historial
         var entry = RegisterHistoryEntry(
             previous,
             targetSettings,
@@ -171,6 +378,16 @@ public class DifficultyManager : MonoBehaviour
         OnAdjustmentApplied?.Invoke(entry);
 
         Debug.Log($"[DifficultyManager] Ajuste aplicado con éxito. Score actual: {difficultyScore:F2}. Razón: {request.reason}");
+
+        if (request.applyImmediately)
+        {
+            DynamicLevelManager levelManager = UnityEngine.Object.FindAnyObjectByType<DynamicLevelManager>();
+            if (levelManager != null)
+            {
+                levelManager.StartGeneration();
+            }
+        }
+
         return true;
     }
 
@@ -184,13 +401,11 @@ public class DifficultyManager : MonoBehaviour
             return false;
         }
 
-        // 1. Dimensiones del mapa
         if (settings.mapWidth < 5 || settings.mapHeight < 5)
         {
             errors.Add("El mapa es demasiado pequeño (debe ser al menos 5x5).");
         }
 
-        // 2. Distancia máxima física del mapa
         int maxGridDistance = (settings.mapWidth - 2) + (settings.mapHeight - 2);
 
         if (settings.minPlayerToCaveADistance > maxGridDistance)
@@ -208,10 +423,9 @@ public class DifficultyManager : MonoBehaviour
             errors.Add($"La distancia del Jugador a la Meta ({settings.minPlayerToMetaDistance}) excede el tamaño del mapa ({maxGridDistance}).");
         }
 
-        // 3. Área libre requerida vs tamaño del mapa
         int totalArea = settings.mapWidth * settings.mapHeight;
         int estimatedWalkable = totalArea / 2;
-        int requiredArea = 1 + (settings.axeZoneSize.x * settings.axeZoneSize.y) + 4; // spawn + axeZone + cave entrances + key + goal
+        int requiredArea = 1 + (settings.axeZoneSize.x * settings.axeZoneSize.y) + 4;
         
         if (requiredArea >= estimatedWalkable)
         {
@@ -226,44 +440,46 @@ public class DifficultyManager : MonoBehaviour
         return errors.Count == 0;
     }
 
-    private DifficultySettings LimitChanges(DifficultySettings prev, DifficultySettings req)
+    private DifficultySettings LimitChanges(DifficultySettings prev, DifficultySettings req, bool enforceRateLimit = true)
     {
         DifficultySettings result = req.Clone();
 
-        result.mapWidth = constraints.mapWidth.Clamp(prev.mapWidth, req.mapWidth);
-        if (result.mapWidth % 2 == 0) result.mapWidth++; // Mantener impar para el algoritmo de laberinto
+        result.mapWidth = constraints.mapWidth.Clamp(prev.mapWidth, req.mapWidth, enforceRateLimit);
+        if (result.mapWidth % 2 == 0) result.mapWidth++;
 
-        result.mapHeight = constraints.mapHeight.Clamp(prev.mapHeight, req.mapHeight);
-        if (result.mapHeight % 2 == 0) result.mapHeight++; // Mantener impar
+        result.mapHeight = constraints.mapHeight.Clamp(prev.mapHeight, req.mapHeight, enforceRateLimit);
+        if (result.mapHeight % 2 == 0) result.mapHeight++;
 
-        result.extraConnections = constraints.extraConnections.Clamp(prev.extraConnections, req.extraConnections);
-        result.minPlayerToCaveADistance = constraints.minPlayerToCaveADistance.Clamp(prev.minPlayerToCaveADistance, req.minPlayerToCaveADistance);
-        result.minAxeToStartAndMetaDistance = constraints.minAxeToStartAndMetaDistance.Clamp(prev.minAxeToStartAndMetaDistance, req.minAxeToStartAndMetaDistance);
-        result.minKeyToAxeDistance = constraints.minKeyToAxeDistance.Clamp(prev.minKeyToAxeDistance, req.minKeyToAxeDistance);
-        result.minKeyToMetaDistance = constraints.minKeyToMetaDistance.Clamp(prev.minKeyToMetaDistance, req.minKeyToMetaDistance);
-        result.minPlayerToMetaDistance = constraints.minPlayerToMetaDistance.Clamp(prev.minPlayerToMetaDistance, req.minPlayerToMetaDistance);
+        result.extraConnections = constraints.extraConnections.Clamp(prev.extraConnections, req.extraConnections, enforceRateLimit);
+        result.minPlayerToCaveADistance = constraints.minPlayerToCaveADistance.Clamp(prev.minPlayerToCaveADistance, req.minPlayerToCaveADistance, enforceRateLimit);
+        result.minAxeToStartAndMetaDistance = constraints.minAxeToStartAndMetaDistance.Clamp(prev.minAxeToStartAndMetaDistance, req.minAxeToStartAndMetaDistance, enforceRateLimit);
+        result.minKeyToAxeDistance = constraints.minKeyToAxeDistance.Clamp(prev.minKeyToAxeDistance, req.minKeyToAxeDistance, enforceRateLimit);
+        result.minKeyToMetaDistance = constraints.minKeyToMetaDistance.Clamp(prev.minKeyToMetaDistance, req.minKeyToMetaDistance, enforceRateLimit);
+        result.minPlayerToMetaDistance = constraints.minPlayerToMetaDistance.Clamp(prev.minPlayerToMetaDistance, req.minPlayerToMetaDistance, enforceRateLimit);
         
-        result.minimumPathDistanceBetweenTravelCaves = constraints.minimumPathDistanceBetweenTravelCaves.Clamp(prev.minimumPathDistanceBetweenTravelCaves, req.minimumPathDistanceBetweenTravelCaves);
-        result.minimumShortcutSaving = constraints.minimumShortcutSaving.Clamp(prev.minimumShortcutSaving, req.minimumShortcutSaving);
-        result.maximumTravelCavePairs = constraints.maximumTravelCavePairs.Clamp(prev.maximumTravelCavePairs, req.maximumTravelCavePairs);
+        result.minimumPathDistanceBetweenTravelCaves = constraints.minimumPathDistanceBetweenTravelCaves.Clamp(prev.minimumPathDistanceBetweenTravelCaves, req.minimumPathDistanceBetweenTravelCaves, enforceRateLimit);
+        result.minimumShortcutSaving = constraints.minimumShortcutSaving.Clamp(prev.minimumShortcutSaving, req.minimumShortcutSaving, enforceRateLimit);
+        result.maximumTravelCavePairs = constraints.maximumTravelCavePairs.Clamp(prev.maximumTravelCavePairs, req.maximumTravelCavePairs, enforceRateLimit);
         
         result.axeZoneSize = new Vector2Int(
-            constraints.axeZoneSizeX.Clamp(prev.axeZoneSize.x, req.axeZoneSize.x),
-            constraints.axeZoneSizeY.Clamp(prev.axeZoneSize.y, req.axeZoneSize.y)
+            constraints.axeZoneSizeX.Clamp(prev.axeZoneSize.x, req.axeZoneSize.x, enforceRateLimit),
+            constraints.axeZoneSizeY.Clamp(prev.axeZoneSize.y, req.axeZoneSize.y, enforceRateLimit)
         );
 
-        result.destructibleWallsPercentage = constraints.destructibleWallsPercentage.Clamp(prev.destructibleWallsPercentage, req.destructibleWallsPercentage);
-        result.missionDestructiblesHealth = constraints.missionDestructiblesHealth.Clamp(prev.missionDestructiblesHealth, req.missionDestructiblesHealth);
+        result.destructibleWallsPercentage = constraints.destructibleWallsPercentage.Clamp(prev.destructibleWallsPercentage, req.destructibleWallsPercentage, enforceRateLimit);
+        result.missionDestructiblesHealth = constraints.missionDestructiblesHealth.Clamp(prev.missionDestructiblesHealth, req.missionDestructiblesHealth, enforceRateLimit);
         
-        result.playerMoveSpeed = constraints.playerMoveSpeed.Clamp(prev.playerMoveSpeed, req.playerMoveSpeed);
-        result.hintsAvailable = constraints.hintsAvailable.Clamp(prev.hintsAvailable, req.hintsAvailable);
-        result.hintDelaySeconds = constraints.hintDelaySeconds.Clamp(prev.hintDelaySeconds, req.hintDelaySeconds);
-        result.hintIntensity = constraints.hintIntensity.Clamp(prev.hintIntensity, req.hintIntensity);
+        result.playerMoveSpeed = constraints.playerMoveSpeed.Clamp(prev.playerMoveSpeed, req.playerMoveSpeed, enforceRateLimit);
 
-        result.zoomOutMaxDuration = constraints.zoomOutMaxDuration.Clamp(prev.zoomOutMaxDuration, req.zoomOutMaxDuration);
-        result.zoomOutCooldown = constraints.zoomOutCooldown.Clamp(prev.zoomOutCooldown, req.zoomOutCooldown);
-        result.zoomOutSize = constraints.zoomOutSize.Clamp(prev.zoomOutSize, req.zoomOutSize);
-        result.normalZoomSize = constraints.normalZoomSize.Clamp(prev.normalZoomSize, req.normalZoomSize);
+        // [FUTURO / HINTS]
+        result.hintsAvailable = constraints.hintsAvailable.Clamp(prev.hintsAvailable, req.hintsAvailable, enforceRateLimit);
+        result.hintDelaySeconds = constraints.hintDelaySeconds.Clamp(prev.hintDelaySeconds, req.hintDelaySeconds, enforceRateLimit);
+        result.hintIntensity = constraints.hintIntensity.Clamp(prev.hintIntensity, req.hintIntensity, enforceRateLimit);
+
+        result.zoomOutMaxDuration = constraints.zoomOutMaxDuration.Clamp(prev.zoomOutMaxDuration, req.zoomOutMaxDuration, enforceRateLimit);
+        result.zoomOutCooldown = constraints.zoomOutCooldown.Clamp(prev.zoomOutCooldown, req.zoomOutCooldown, enforceRateLimit);
+        result.zoomOutSize = constraints.zoomOutSize.Clamp(prev.zoomOutSize, req.zoomOutSize, enforceRateLimit);
+        result.normalZoomSize = constraints.normalZoomSize.Clamp(prev.normalZoomSize, req.normalZoomSize, enforceRateLimit);
 
         return result;
     }
@@ -291,7 +507,6 @@ public class DifficultyManager : MonoBehaviour
         settings.mapHeight = Mathf.RoundToInt(Mathf.Lerp(constraints.mapHeight.minimum, constraints.mapHeight.maximum, score));
         if (settings.mapHeight % 2 == 0) settings.mapHeight++;
 
-        // extraConnections: más conexiones = laberinto más abierto y fácil. Invertimos dirección.
         settings.extraConnections = Mathf.RoundToInt(Mathf.Lerp(constraints.extraConnections.maximum, constraints.extraConnections.minimum, score));
 
         settings.minPlayerToCaveADistance = Mathf.Lerp(constraints.minPlayerToCaveADistance.minimum, constraints.minPlayerToCaveADistance.maximum, score);
@@ -314,26 +529,18 @@ public class DifficultyManager : MonoBehaviour
         settings.missionDestructiblesHealth = Mathf.RoundToInt(Mathf.Lerp(constraints.missionDestructiblesHealth.minimum, constraints.missionDestructiblesHealth.maximum, score));
         settings.spawnDestructibles = true;
 
-        // playerMoveSpeed: más rápido = más fácil. Invertimos dirección.
         settings.playerMoveSpeed = Mathf.Lerp(constraints.playerMoveSpeed.maximum, constraints.playerMoveSpeed.minimum, score);
 
-        // hintsAvailable: más pistas = más fácil. Invertimos dirección.
+        // [FUTURO / HINTS]
         settings.hintsAvailable = Mathf.RoundToInt(Mathf.Lerp(constraints.hintsAvailable.maximum, constraints.hintsAvailable.minimum, score));
-        
         settings.hintDelaySeconds = Mathf.Lerp(constraints.hintDelaySeconds.minimum, constraints.hintDelaySeconds.maximum, score);
-        
-        // hintIntensity: menos intenso = más difícil. Invertimos dirección.
         settings.hintIntensity = Mathf.Lerp(constraints.hintIntensity.maximum, constraints.hintIntensity.minimum, score);
 
         settings.highlightObjectives = score < 0.6f;
         settings.showDirectionIndicator = score < 0.5f;
 
-        // zoomOutMaxDuration: más tiempo = más fácil. Invertimos dirección.
         settings.zoomOutMaxDuration = Mathf.Lerp(constraints.zoomOutMaxDuration.maximum, constraints.zoomOutMaxDuration.minimum, score);
-        
-        // zoomOutCooldown: más cooldown = más difícil.
         settings.zoomOutCooldown = Mathf.Lerp(constraints.zoomOutCooldown.minimum, constraints.zoomOutCooldown.maximum, score);
-        
         settings.zoomOutSize = Mathf.Lerp(constraints.zoomOutSize.minimum, constraints.zoomOutSize.maximum, score);
         settings.normalZoomSize = Mathf.Lerp(constraints.normalZoomSize.minimum, constraints.normalZoomSize.maximum, score);
 
@@ -348,12 +555,11 @@ public class DifficultyManager : MonoBehaviour
             return;
         }
 
-        // Promedio ponderado o interpolación simple del tamaño de mapa y velocidad para estimar el score de vuelta
         float widthNorm = Mathf.InverseLerp(constraints.mapWidth.minimum, constraints.mapWidth.maximum, currentSettings.mapWidth);
         float heightNorm = Mathf.InverseLerp(constraints.mapHeight.minimum, constraints.mapHeight.maximum, currentSettings.mapHeight);
-        float speedNorm = Mathf.InverseLerp(constraints.playerMoveSpeed.maximum, constraints.playerMoveSpeed.minimum, currentSettings.playerMoveSpeed); // invertido
+        float speedNorm = Mathf.InverseLerp(constraints.playerMoveSpeed.maximum, constraints.playerMoveSpeed.minimum, currentSettings.playerMoveSpeed);
         
-        difficultyScore = (widthNorm + heightNorm + speedNorm) / 3f;
+        difficultyScore = Mathf.Clamp01((widthNorm + heightNorm + speedNorm) / 3f);
     }
 
     public void RegisterLevelCompletion(DifficultyMetrics metrics)
@@ -362,7 +568,6 @@ public class DifficultyManager : MonoBehaviour
 
         DifficultySettings current = CurrentSettings != null ? CurrentSettings : new DifficultySettings();
 
-        // 1. Registrar la entrada en el historial interno
         RegisterHistoryEntry(
             current,
             current,
@@ -372,12 +577,10 @@ public class DifficultyManager : MonoBehaviour
             false
         );
 
-        // 2. Almacenar automáticamente los archivos JSON en disco
         SaveMetricsToJsonFiles(metrics, current);
 
         Debug.Log($"[DifficultyManager] Métricas del nivel {currentLevelNumber} registradas y guardadas en JSON.");
         
-        // Aumentar el número de nivel para la siguiente generación
         currentLevelNumber++;
     }
 
@@ -385,12 +588,10 @@ public class DifficultyManager : MonoBehaviour
     {
         try
         {
-            // Se guardan en la carpeta Assets/MetricsLogs para fácil acceso en el editor,
-            // y fallback a persistentDataPath si es un build.
-            string folderPath = System.IO.Path.Combine(Application.dataPath, "MetricsLogs");
-            if (!System.IO.Directory.Exists(folderPath))
+            string folderPath = Path.Combine(Application.dataPath, "MetricsLogs");
+            if (!Directory.Exists(folderPath))
             {
-                System.IO.Directory.CreateDirectory(folderPath);
+                Directory.CreateDirectory(folderPath);
             }
 
             var exportData = new LevelMetricsDataFile
@@ -404,14 +605,12 @@ public class DifficultyManager : MonoBehaviour
 
             string jsonContent = JsonUtility.ToJson(exportData, true);
 
-            // 1. Archivo JSON individual para este nivel específico
             string fileName = $"metrics_level_{(currentLevelNumber):D3}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-            string filePath = System.IO.Path.Combine(folderPath, fileName);
-            System.IO.File.WriteAllText(filePath, jsonContent);
+            string filePath = Path.Combine(folderPath, fileName);
+            File.WriteAllText(filePath, jsonContent);
 
-            // 2. Archivo JSON acumulativo con todo el historial de la sesión
-            string historyFilePath = System.IO.Path.Combine(folderPath, "metrics_history_all.json");
-            System.IO.File.WriteAllText(historyFilePath, ExportHistoryToJson());
+            string historyFilePath = Path.Combine(folderPath, "metrics_history_all.json");
+            File.WriteAllText(historyFilePath, ExportHistoryToJson());
 
 #if UNITY_EDITOR
             UnityEditor.AssetDatabase.Refresh();
@@ -450,7 +649,6 @@ public class DifficultyManager : MonoBehaviour
         return entry;
     }
 
-    // Métodos para convertir datos a JSON para persistencia futura
     public string ExportHistoryToJson()
     {
         return JsonUtility.ToJson(new HistoryWrapper { entries = history }, true);

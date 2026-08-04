@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca307e59e6e391643861bea554642083, type: 3}
   m_Name: Easy
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyProfile
+  profileName: 
   settings:
     mapWidth: 9
     mapHeight: 9
-    extraConnections: 10
+    extraConnections: 2
     minPlayerToCaveADistance: 2
     minAxeToStartAndMetaDistance: 3
     minKeyToAxeDistance: 4
@@ -35,7 +36,7 @@ MonoBehaviour:
     destructibleWallsPercentage: 0.434
     missionDestructiblesHealth: 1
     spawnDestructibles: 1
-    playerMoveSpeed: 5
+    playerMoveSpeed: 4
     hintsAvailable: 5
     hintDelaySeconds: 5
     hintIntensity: 1

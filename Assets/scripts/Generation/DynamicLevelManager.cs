@@ -196,6 +196,7 @@ public class DynamicLevelManager : MonoBehaviour
         DifficultySettings settings = null;
         if (DifficultyManager.Instance != null)
         {
+            DifficultyManager.Instance.TryLoadConfigFromJSONFile();
             settings = DifficultyManager.Instance.CurrentSettings;
         }
         if (settings == null)
