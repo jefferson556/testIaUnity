@@ -2823,7 +2823,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6350901b494a394096eacb1d5b4174c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyManager
-  defaultProfile: {fileID: 11400000, guid: 1781d70b841870e479d271cb1536600c, type: 2}
+  defaultProfile: {fileID: 11400000, guid: d44bb35ab2f3a5440b63fa7699b827ef, type: 2}
   constraints:
     mapWidth:
       minimum: 9
@@ -2973,7 +2973,7 @@ MonoBehaviour:
     zoomOutCooldown: 3
     zoomOutSize: 9
     normalZoomSize: 4
-  difficultyScore: 0.48
+  difficultyScore: 0.141
   history: []
 --- !u!4 &1197096180
 Transform:

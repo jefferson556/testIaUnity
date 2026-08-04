@@ -15,7 +15,7 @@ MonoBehaviour:
   settings:
     mapWidth: 9
     mapHeight: 9
-    extraConnections: 15
+    extraConnections: 10
     minPlayerToCaveADistance: 2
     minAxeToStartAndMetaDistance: 3
     minKeyToAxeDistance: 4
