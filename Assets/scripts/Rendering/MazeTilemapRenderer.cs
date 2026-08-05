@@ -2,6 +2,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+public enum OuterBorderFillMode
+{
+    WallsAndDecorations,
+    GroundAndDecorationsOnly,
+    MixedDecorations
+}
+
 public class MazeTilemapRenderer : MonoBehaviour
 {
     [Header("Main Tilemaps")]
@@ -40,6 +47,19 @@ public class MazeTilemapRenderer : MonoBehaviour
     [Header("Accessible Zone Settings")]
     [SerializeField]
     private TileBase accessibleZoneTile;
+
+    [Header("Outer Border / Margin Settings")]
+    [SerializeField]
+    [Tooltip("Número de celdas lógicas extra alrededor del laberinto para cubrir el fondo de la cámara.")]
+    private int outerMarginPadding = 6;
+
+    [SerializeField]
+    [Tooltip("Modo de relleno para el margen exterior del mapa.")]
+    private OuterBorderFillMode outerFillMode = OuterBorderFillMode.MixedDecorations;
+
+    [SerializeField, Range(0.1f, 3f)]
+    [Tooltip("Multiplicador de densidad de decoraciones en el margen exterior.")]
+    private float outerDecorationDensity = 1.8f;
 
     [Header("Map Position")]
     [SerializeField]
@@ -217,26 +237,58 @@ public class MazeTilemapRenderer : MonoBehaviour
         int mazeWidth = maze.GetLength(0);
         int mazeHeight = maze.GetLength(1);
 
-        for (int mazeX = 0;
-             mazeX < mazeWidth;
-             mazeX++)
-        {
-            for (int mazeY = 0;
-                 mazeY < mazeHeight;
-                 mazeY++)
-            {
-                Vector2Int mazeCell =
-                    new Vector2Int(
-                        mazeX,
-                        mazeY
-                    );
+        int minX = -outerMarginPadding;
+        int maxX = mazeWidth + outerMarginPadding;
+        int minY = -outerMarginPadding;
+        int maxY = mazeHeight + outerMarginPadding;
 
-                PaintLogicalCell(
-                    mazeCell,
-                    maze[mazeX, mazeY],
-                    random
-                );
+        for (int mazeX = minX; mazeX < maxX; mazeX++)
+        {
+            for (int mazeY = minY; mazeY < maxY; mazeY++)
+            {
+                Vector2Int mazeCell = new Vector2Int(mazeX, mazeY);
+                bool isInsideMaze = mazeX >= 0 && mazeX < mazeWidth && mazeY >= 0 && mazeY < mazeHeight;
+
+                if (isInsideMaze)
+                {
+                    PaintLogicalCell(mazeCell, maze[mazeX, mazeY], random);
+                }
+                else
+                {
+                    PaintOuterLogicalCell(mazeCell, random);
+                }
             }
+        }
+    }
+
+    private void PaintOuterLogicalCell(Vector2Int mazeCell, System.Random random)
+    {
+        Vector3Int blockOrigin = GetTilePosition(mazeCell);
+
+        // Siempre pintar suelo de fondo para tapar la cámara azul
+        PaintGroundBlock(blockOrigin, random);
+
+        if (outerFillMode == OuterBorderFillMode.WallsAndDecorations)
+        {
+            PaintWallBlock(blockOrigin, random);
+            TryPaintWallPattern(blockOrigin, random);
+        }
+        else if (outerFillMode == OuterBorderFillMode.MixedDecorations)
+        {
+            // 60% Muro con patrón / 40% Suelo base para dar espacio a vegetación y adornos
+            if (random.NextDouble() < 0.60)
+            {
+                PaintWallBlock(blockOrigin, random);
+                TryPaintWallPattern(blockOrigin, random);
+            }
+            else
+            {
+                PaintPathBlock(blockOrigin, random);
+            }
+        }
+        else // GroundAndDecorationsOnly
+        {
+            PaintPathBlock(blockOrigin, random);
         }
     }
 
@@ -496,45 +548,38 @@ public class MazeTilemapRenderer : MonoBehaviour
         int mazeWidth = maze.GetLength(0);
         int mazeHeight = maze.GetLength(1);
 
-        for (int mazeX = 0;
-             mazeX < mazeWidth;
-             mazeX++)
+        int minX = -outerMarginPadding;
+        int maxX = mazeWidth + outerMarginPadding;
+        int minY = -outerMarginPadding;
+        int maxY = mazeHeight + outerMarginPadding;
+
+        for (int mazeX = minX; mazeX < maxX; mazeX++)
         {
-            for (int mazeY = 0;
-                 mazeY < mazeHeight;
-                 mazeY++)
+            for (int mazeY = minY; mazeY < maxY; mazeY++)
             {
                 // Evitar pintar decoraciones en la celda de inicio y sus adyacentes inmediatas
                 if (Mathf.Abs(mazeX - startCell.x) <= 1 && Mathf.Abs(mazeY - startCell.y) <= 1)
                 {
                     continue;
                 }
-                Vector3Int blockOrigin =
-                    GetTilePosition(
-                        new Vector2Int(
-                            mazeX,
-                            mazeY
-                        )
-                    );
 
-                bool isMapBorder =
-                    mazeX == 0 ||
-                    mazeY == 0 ||
-                    mazeX == mazeWidth - 1 ||
-                    mazeY == mazeHeight - 1;
+                Vector3Int blockOrigin = GetTilePosition(new Vector2Int(mazeX, mazeY));
 
-                if (isMapBorder)
+                bool isInsideMaze = mazeX >= 0 && mazeX < mazeWidth && mazeY >= 0 && mazeY < mazeHeight;
+
+                if (!isInsideMaze)
                 {
-                    PaintBorderDecorations(
-                        blockOrigin,
-                        random
-                    );
-
+                    PaintOuterDecorations(blockOrigin, random);
                     continue;
                 }
 
-                if (maze[mazeX, mazeY] ==
-                    MazeCellType.Path)
+                if (mazeX == 0 || mazeY == 0 || mazeX == mazeWidth - 1 || mazeY == mazeHeight - 1)
+                {
+                    PaintBorderDecorations(blockOrigin, random);
+                    continue;
+                }
+
+                if (maze[mazeX, mazeY] == MazeCellType.Path)
                 {
                     TryPaintDecoration(
                         decorationSet.PathBackPatterns,
@@ -543,14 +588,10 @@ public class MazeTilemapRenderer : MonoBehaviour
                         blockOrigin,
                         random
                     );
-
                     continue;
                 }
 
-                PaintInteriorWallDecorations(
-                    blockOrigin,
-                    random
-                );
+                PaintInteriorWallDecorations(blockOrigin, random);
             }
         }
     }
@@ -571,6 +612,51 @@ public class MazeTilemapRenderer : MonoBehaviour
             decorationSet.BorderFrontPatterns,
             decorationSet.BorderFrontProbability,
             decorationFrontTilemap,
+            blockOrigin,
+            random
+        );
+    }
+
+    private void PaintOuterDecorations(
+        Vector3Int blockOrigin,
+        System.Random random)
+    {
+        TryPaintDecoration(
+            decorationSet.BorderBackPatterns,
+            decorationSet.BorderBackProbability * outerDecorationDensity,
+            decorationBackTilemap,
+            blockOrigin,
+            random
+        );
+
+        TryPaintDecoration(
+            decorationSet.BorderFrontPatterns,
+            decorationSet.BorderFrontProbability * outerDecorationDensity,
+            decorationFrontTilemap,
+            blockOrigin,
+            random
+        );
+
+        TryPaintDecoration(
+            decorationSet.WallBackPatterns,
+            decorationSet.WallBackProbability * outerDecorationDensity,
+            decorationBackTilemap,
+            blockOrigin,
+            random
+        );
+
+        TryPaintDecoration(
+            decorationSet.WallFrontPatterns,
+            decorationSet.WallFrontProbability * outerDecorationDensity,
+            decorationFrontTilemap,
+            blockOrigin,
+            random
+        );
+
+        TryPaintDecoration(
+            decorationSet.PathBackPatterns,
+            decorationSet.PathBackProbability * outerDecorationDensity,
+            decorationBackTilemap,
             blockOrigin,
             random
         );

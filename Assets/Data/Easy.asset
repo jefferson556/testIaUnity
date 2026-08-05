@@ -36,13 +36,13 @@ MonoBehaviour:
     destructibleWallsPercentage: 0.434
     missionDestructiblesHealth: 1
     spawnDestructibles: 1
-    playerMoveSpeed: 4
+    playerMoveSpeed: 6
     hintsAvailable: 5
     hintDelaySeconds: 5
     hintIntensity: 1
     highlightObjectives: 1
     showDirectionIndicator: 1
-    zoomOutMaxDuration: 4
-    zoomOutCooldown: 3
-    zoomOutSize: 30
-    normalZoomSize: 4
+    zoomOutMaxDuration: 15
+    zoomOutCooldown: 4
+    zoomOutSize: 70
+    normalZoomSize: 20

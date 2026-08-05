@@ -133,7 +133,7 @@ public class MazeData : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"MazeData: ¡La celda de inicio {startCell} NO es transitable o está bloqueada por obstáculos (aislada)! El jugador podría quedar atascado.", this);
+            Debug.LogWarning($"MazeData: La celda de inicio {startCell} no es transitable o está aislada en esta iteración de prueba.", this);
         }
     }
 

@@ -33,6 +33,7 @@ public class DifficultyManager : MonoBehaviour
     private int currentLevelNumber = 1;
     private DifficultyMetrics lastLevelMetrics;
 
+    public string CurrentDifficultyName { get; private set; } = "Custom";
     public DifficultySettings CurrentSettings => currentSettings != null ? currentSettings.Clone() : null;
     public float DifficultyScore => difficultyScore;
     public IReadOnlyList<DifficultyHistoryEntry> History => history;
@@ -67,6 +68,7 @@ public class DifficultyManager : MonoBehaviour
         if (defaultProfile != null)
         {
             currentSettings = defaultProfile.Settings.Clone();
+            CurrentDifficultyName = defaultProfile.ProfileName;
             CalculateScoreFromSettings();
             Debug.Log($"[DifficultyManager] Inicializado con el perfil: {defaultProfile.ProfileName}. Score: {difficultyScore:F2}");
         }
@@ -239,6 +241,7 @@ public class DifficultyManager : MonoBehaviour
 
         DifficultySettings previous = CurrentSettings;
         currentSettings = profile.Settings.Clone();
+        CurrentDifficultyName = profile.ProfileName;
         CalculateScoreFromSettings();
 
         RegisterHistoryEntry(
@@ -596,6 +599,8 @@ public class DifficultyManager : MonoBehaviour
 
             var exportData = new LevelMetricsDataFile
             {
+                levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
+                difficultyName = CurrentDifficultyName,
                 levelNumber = currentLevelNumber,
                 timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 difficultyScore = difficultyScore,
@@ -669,6 +674,8 @@ public class DifficultyManager : MonoBehaviour
 [Serializable]
 public class LevelMetricsDataFile
 {
+    public string levelName;
+    public string difficultyName;
     public int levelNumber;
     public string timestamp;
     public float difficultyScore;

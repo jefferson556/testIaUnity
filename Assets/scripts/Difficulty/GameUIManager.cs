@@ -1,25 +1,62 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
 {
-    public static GameUIManager Instance { get; private set; }
+    private static GameUIManager instance;
+    public static GameUIManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = Object.FindAnyObjectByType<GameUIManager>();
+                if (instance == null)
+                {
+                    GameObject go = new GameObject("GameUIManager");
+                    instance = go.AddComponent<GameUIManager>();
+                }
+            }
+            return instance;
+        }
+    }
 
     private Canvas hudCanvas;
     private Text controlsText;
     private Text zoomStatusText;
     private Text timerText;
 
+    // Elementos de la Pantalla de Carga
+    private GameObject loadingOverlayGO;
+    private CanvasGroup loadingCanvasGroup;
+    private Text loadingTitleText;
+    private Text loadingSubText;
+
+    private Coroutine fadeCoroutine;
+
     private void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
-            CreateHUD();
+            instance = this;
+            EnsureHUDAndOverlay();
         }
-        else
+        else if (instance != this)
         {
             Destroy(gameObject);
+        }
+    }
+
+    private void EnsureHUDAndOverlay()
+    {
+        if (hudCanvas == null)
+        {
+            CreateHUD();
+        }
+        if (loadingOverlayGO == null)
+        {
+            CreateLoadingOverlay();
         }
     }
 
@@ -31,6 +68,7 @@ public class GameUIManager : MonoBehaviour
         
         hudCanvas = canvasGO.AddComponent<Canvas>();
         hudCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        hudCanvas.sortingOrder = 100; // Mantener sobre la escena de juego
         
         canvasGO.AddComponent<CanvasScaler>();
         canvasGO.AddComponent<GraphicRaycaster>();
@@ -65,7 +103,7 @@ public class GameUIManager : MonoBehaviour
         controlsText.fontSize = 13;
         controlsText.alignment = TextAnchor.MiddleLeft;
         controlsText.color = Color.white;
-        controlsText.text = " CONTROLES: W, A, S, D / Flechas (Moverse)  |  E (Interactuar)  |  SHIFT (Zoom)";
+        controlsText.text = " CONTROLES: W, A, S, D / Flechas (Moverse)  |  E (Interactuar)  |  SHIFT (Zoom)  |  R (Reintentar)";
 
         RectTransform controlsRect = controlsGO.GetComponent<RectTransform>();
         controlsRect.anchorMin = new Vector2(0.01f, 0.5f);
@@ -74,7 +112,7 @@ public class GameUIManager : MonoBehaviour
         controlsRect.offsetMin = Vector2.zero;
         controlsRect.offsetMax = Vector2.zero;
 
-        // 4. Crear Texto de Temporizador (lado derecho en el mismo panel de botones/controles)
+        // 4. Crear Texto de Temporizador (lado derecho)
         GameObject timerGO = new GameObject("TimerLabel");
         timerGO.transform.SetParent(panelGO.transform, false);
         
@@ -110,10 +148,135 @@ public class GameUIManager : MonoBehaviour
         zoomRect.pivot = new Vector2(0f, 0.5f);
         zoomRect.offsetMin = Vector2.zero;
         zoomRect.offsetMax = Vector2.zero;
+
+
+    }
+
+    private void CreateLoadingOverlay()
+    {
+        if (hudCanvas == null) return;
+
+        Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (font == null) font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+
+        // Panel de Pantalla Completa Oscura (Orden de Render superior)
+        loadingOverlayGO = new GameObject("LoadingOverlayPanel");
+        loadingOverlayGO.transform.SetParent(hudCanvas.transform, false);
+
+        RectTransform rect = loadingOverlayGO.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        Image bgImage = loadingOverlayGO.AddComponent<Image>();
+        bgImage.color = new Color(0.06f, 0.08f, 0.12f, 1f); // Oscuro 100% opaco
+
+        loadingCanvasGroup = loadingOverlayGO.AddComponent<CanvasGroup>();
+        loadingCanvasGroup.alpha = 1f;
+        loadingCanvasGroup.blocksRaycasts = true;
+
+        // Texto Título
+        GameObject titleGO = new GameObject("LoadingTitleText");
+        titleGO.transform.SetParent(loadingOverlayGO.transform, false);
+
+        loadingTitleText = titleGO.AddComponent<Text>();
+        loadingTitleText.font = font;
+        loadingTitleText.fontSize = 28;
+        loadingTitleText.fontStyle = FontStyle.Bold;
+        loadingTitleText.alignment = TextAnchor.MiddleCenter;
+        loadingTitleText.color = new Color(1f, 0.85f, 0.3f); // Dorado brillante
+        loadingTitleText.text = "CARGANDO MAPA PROCEDURAL";
+
+        RectTransform titleRect = titleGO.GetComponent<RectTransform>();
+        titleRect.anchorMin = new Vector2(0.1f, 0.5f);
+        titleRect.anchorMax = new Vector2(0.9f, 0.65f);
+        titleRect.offsetMin = Vector2.zero;
+        titleRect.offsetMax = Vector2.zero;
+
+        // Texto Subtítulo / Detalles
+        GameObject subGO = new GameObject("LoadingSubText");
+        subGO.transform.SetParent(loadingOverlayGO.transform, false);
+
+        loadingSubText = subGO.AddComponent<Text>();
+        loadingSubText.font = font;
+        loadingSubText.fontSize = 16;
+        loadingSubText.alignment = TextAnchor.MiddleCenter;
+        loadingSubText.color = Color.white;
+        loadingSubText.text = "Generando laberinto y verificando rutas de navegación...";
+
+        RectTransform subRect = subGO.GetComponent<RectTransform>();
+        subRect.anchorMin = new Vector2(0.1f, 0.35f);
+        subRect.anchorMax = new Vector2(0.9f, 0.48f);
+        subRect.offsetMin = Vector2.zero;
+        subRect.offsetMax = Vector2.zero;
+
+        // Inicializar activo por defecto al cargar la escena
+        loadingOverlayGO.SetActive(true);
+    }
+
+    /// <summary>
+    /// Muestra la pantalla de carga opaca cubriendo toda la pantalla.
+    /// </summary>
+    public void ShowLoadingScreen(string message = "Cargando mapa procedural...")
+    {
+        EnsureHUDAndOverlay();
+
+        if (loadingOverlayGO == null) return;
+
+        if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
+
+        if (loadingSubText != null && !string.IsNullOrEmpty(message))
+        {
+            loadingSubText.text = message;
+        }
+
+        loadingOverlayGO.SetActive(true);
+        loadingCanvasGroup.alpha = 1f;
+        loadingCanvasGroup.blocksRaycasts = true;
+    }
+
+    /// <summary>
+    /// Oculta la pantalla de carga con una transición suave (fade out).
+    /// </summary>
+    public void HideLoadingScreen(float fadeDuration = 0.4f)
+    {
+        if (loadingOverlayGO == null || !loadingOverlayGO.activeSelf) return;
+
+        if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
+        fadeCoroutine = StartCoroutine(FadeOutLoadingScreenRoutine(fadeDuration));
+    }
+
+    private IEnumerator FadeOutLoadingScreenRoutine(float duration)
+    {
+        float timer = 0f;
+        float startAlpha = loadingCanvasGroup.alpha;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            loadingCanvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, timer / duration);
+            yield return null;
+        }
+
+        loadingCanvasGroup.alpha = 0f;
+        loadingCanvasGroup.blocksRaycasts = false;
+        loadingOverlayGO.SetActive(false);
+        fadeCoroutine = null;
     }
 
     private void Update()
     {
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            if (DifficultyMetricsCollector.Instance != null)
+                DifficultyMetricsCollector.Instance.RecordRestart();
+            
+            DynamicLevelManager levelManager = Object.FindAnyObjectByType<DynamicLevelManager>();
+            if (levelManager != null)
+                levelManager.StartGeneration();
+        }
+
         // Actualizar temporizador de nivel en segundos directos
         if (timerText != null && DifficultyMetricsCollector.Instance != null)
         {

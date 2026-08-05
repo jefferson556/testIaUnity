@@ -21,6 +21,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
     private float idleTimer;
     private bool isMovingLastFrame;
     private bool isCollecting;
+    private int currentSessionRestarts = 0;
 
     public float CurrentLevelElapsedTime
     {
@@ -52,6 +53,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
     public void StartCollecting()
     {
         metrics = new DifficultyMetrics();
+        metrics.restartCount = currentSessionRestarts;
         visitedCells.Clear();
         levelStartTime = Time.time;
         idleTimer = 0f;
@@ -283,11 +285,13 @@ public class DifficultyMetricsCollector : MonoBehaviour
         {
             DifficultyManager.Instance.RegisterLevelCompletion(metrics);
         }
+        currentSessionRestarts = 0;
     }
 
     public void RecordRestart()
     {
-        metrics.restartCount++;
+        currentSessionRestarts++;
+        metrics.restartCount = currentSessionRestarts;
     }
 
     public void RecordError()

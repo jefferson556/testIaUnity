@@ -25,7 +25,8 @@ MonoBehaviour:
   wallFrontProbability: 0.841
   borderBackPatterns:
   - {fileID: 11400000, guid: 08dc8092661795f48a1c934b7574f7e5, type: 2}
-  borderBackProbability: 0.778
+  borderBackProbability: 0.52
   borderFrontPatterns:
   - {fileID: 11400000, guid: eabaa96aff7b9d64692dca7066810916, type: 2}
-  borderFrontProbability: 0.772
+  - {fileID: 11400000, guid: 69d38b00dc9a7bf4f9d3582a550b35cd, type: 2}
+  borderFrontProbability: 0.21

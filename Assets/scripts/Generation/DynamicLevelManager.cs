@@ -151,6 +151,10 @@ public class DynamicLevelManager : MonoBehaviour
 
     private void Start()
     {
+        if (GameUIManager.Instance != null)
+        {
+            GameUIManager.Instance.ShowLoadingScreen("Cargando mapa procedural...");
+        }
         StartGeneration();
     }
 
@@ -174,12 +178,19 @@ public class DynamicLevelManager : MonoBehaviour
     {
         if (levelObjectSpawner != null && gameplayObjectSpawner != null)
         {
-            Debug.LogError("[LevelGeneration] AMBOS spawners (LevelObjectSpawner y GameplayObjectSpawner) están asignados en el Inspector. Esto puede provocar objetos duplicados o comportamiento indefinido. Por favor, asigna solo uno.", this);
+            Debug.LogWarning("[LevelGeneration] AMBOS spawners (LevelObjectSpawner y GameplayObjectSpawner) están asignados en el Inspector. Asegúrate de configurar las referencias correctamente.", this);
         }
     }
 
     private IEnumerator GenerateLevelRoutine()
     {
+        if (GameUIManager.Instance != null)
+        {
+            GameUIManager.Instance.ShowLoadingScreen("Generando mapa procedural...");
+        }
+
+        yield return null; // Garantizar 1 frame de renderizado de la interfaz negra antes del trabajo pesado
+
         if (mazeGenerator == null || mazeRenderer == null)
         {
             Debug.LogError("[LevelGeneration] ERROR - Faltan referencias del generador (MazeGenerator) o renderizador (MazeTilemapRenderer) en el Inspector.", this);
@@ -221,6 +232,11 @@ public class DynamicLevelManager : MonoBehaviour
 
         ValidateSpawners();
         DisablePlayerControl();
+
+        if (GameUIManager.Instance != null)
+        {
+            GameUIManager.Instance.ShowLoadingScreen("Generando mapa procedural...");
+        }
 
         bool levelAccepted = false;
         int baseSeed = mazeGenerator.LastUsedSeed;
@@ -465,6 +481,16 @@ public class DynamicLevelManager : MonoBehaviour
             Debug.Log($"[LevelGeneration] Nivel válido en intento {(acceptedSeed - baseSeed)}. Seed: {acceptedSeed}.");
             Debug.Log($"[LevelGeneration] Direcciones libres: {finalFreeDirs}/4.");
             Debug.Log($"[LevelGeneration] Celdas alcanzables: {finalReachableCells}.");
+
+            // Pausa breve para una transición fluida al ocultar la pantalla de carga
+            yield return new WaitForSeconds(0.4f);
+
+            // Rehabilitar control y ocultar pantalla de carga
+            EnablePlayerControl();
+            if (GameUIManager.Instance != null)
+            {
+                GameUIManager.Instance.HideLoadingScreen();
+            }
         }
 
         generationCoroutine = null;
@@ -1616,14 +1642,18 @@ public class DynamicLevelManager : MonoBehaviour
         return count;
     }
 
-    private List<Vector2Int> GetWalkableNeighborsList(Vector2Int cell, MazeData mazeData)
+    private List<Vector2Int> GetWalkableNeighborsList(Vector2Int cell, MazeData mazeData, bool ignoreOccupied = false)
     {
         List<Vector2Int> list = new List<Vector2Int>();
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
         foreach (var dir in directions)
         {
             Vector2Int neighbor = cell + dir;
-            if (mazeData.IsCellWalkable(neighbor.x, neighbor.y))
+            bool walkable = ignoreOccupied 
+                ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y)
+                : mazeData.IsCellWalkable(neighbor.x, neighbor.y);
+
+            if (walkable)
             {
                 list.Add(neighbor);
             }
@@ -1750,12 +1780,12 @@ public class DynamicLevelManager : MonoBehaviour
         bool startInBounds = startCellForPath.x >= 0 && startCellForPath.x < width && startCellForPath.y >= 0 && startCellForPath.y < height;
         bool startWalkable = mazeData.IsWalkable(startCellForPath.x, startCellForPath.y);
         bool startOccupied = !startWalkable;
-        int startNeighbors = GetWalkableNeighborsList(startCellForPath, mazeData).Count;
+        int startNeighbors = GetWalkableNeighborsList(startCellForPath, mazeData, true).Count;
 
         bool goalInBounds = goalCellForPath.x >= 0 && goalCellForPath.x < width && goalCellForPath.y >= 0 && goalCellForPath.y < height;
         bool goalWalkable = mazeData.IsCellWalkableIgnoreOccupied(goalCellForPath.x, goalCellForPath.y);
         bool goalOccupied = false;
-        int goalNeighbors = GetWalkableNeighborsList(goalCellForPath, mazeData).Count;
+        int goalNeighbors = GetWalkableNeighborsList(goalCellForPath, mazeData, true).Count;
 
         int activeDestructiblesCount = spawnedMissionDestructibles != null ? spawnedMissionDestructibles.Count : 0;
         int activePortalPairsCount = travelCavePairManager != null ? travelCavePairManager.GeneratedPairs.Count : 0;
@@ -1960,11 +1990,19 @@ public class DynamicLevelManager : MonoBehaviour
             }
         }
 
-        // Validación crítica de desarrollo de inconsistencia
-        if (keyToGoalWalkingResult == null || !keyToGoalWalkingResult.PathExists)
+        // Validación de finalización de nivel
+        bool pathExistedOrMechanic = (keyToGoalWalkingResult != null && keyToGoalWalkingResult.PathExists) ||
+                                     (keyToGoalMechanicResult != null && keyToGoalMechanicResult.PathExists);
+        bool hadBarriersToBreak = barrierCells != null && barrierCells.Count > 0;
+
+        if (!pathExistedOrMechanic && !hadBarriersToBreak)
         {
-            Debug.LogError($"[CRITICAL INCONSISTENCY] El jugador llegó a la meta pero el pathfinder no encontró ruta navegable caminando.\n" +
-                           $"  StartCell: {keyCell}, GoalCell: {metaCell}, Barreras activas: {barrierCells?.Count}");
+            Debug.LogWarning($"[LevelGeneration] Advertencia: El jugador llegó a la meta sin una ruta directa caminable registrada previamente.\n" +
+                             $"  StartCell: {keyCell}, GoalCell: {metaCell}");
+        }
+        else
+        {
+            Debug.Log($"[LevelGeneration] ¡Nivel completado exitosamente! El jugador abrió la puerta de la meta.");
         }
 
         if (DifficultyMetricsCollector.Instance != null)

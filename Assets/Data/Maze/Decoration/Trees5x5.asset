@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd458c13073388d418615125ead98ad1, type: 3}
+  m_Name: Trees5x5
+  m_EditorClassIdentifier: Assembly-CSharp::MazeDecorationPattern
+  width: 5
+  height: 5
+  tiles:
+  - {fileID: 11400000, guid: 5d498c0a4df396844927f5aaaef1f550, type: 2}
+  - {fileID: 11400000, guid: 84f24ccd97f15b344a47e6ad448a5cd8, type: 2}
+  - {fileID: 11400000, guid: 6e139f068187c3d43ad778b2a7c7d9c0, type: 2}
+  - {fileID: 11400000, guid: f7cb1ab2fcaaa594eb32ddbf729ca45d, type: 2}
+  - {fileID: 11400000, guid: 33b981772da02c549bfcb08a1f587769, type: 2}
+  - {fileID: 11400000, guid: 4944130292df84c4986cd726ee258e3f, type: 2}
+  - {fileID: 11400000, guid: 29dd411dab49ffa4187ecdd4f025fa46, type: 2}
+  - {fileID: 11400000, guid: d0006b8382c89d94890abe5746878d05, type: 2}
+  - {fileID: 11400000, guid: ff5b159e608a4d140bc8dc644784bc7b, type: 2}
+  - {fileID: 11400000, guid: a759732f086f56443a4e2470ee9041b2, type: 2}
+  - {fileID: 11400000, guid: a5c130e3baa33154cbf1d1678c708fd6, type: 2}
+  - {fileID: 11400000, guid: 14389d2bd6cc3be409b9b34468c7857e, type: 2}
+  - {fileID: 11400000, guid: b87a07f8698d7b946a093d1dacb57d8e, type: 2}
+  - {fileID: 11400000, guid: 9dd3757aee2ea8444a27d784312bd861, type: 2}
+  - {fileID: 11400000, guid: cf0252d7fb8cff647a299dd07082187e, type: 2}
+  - {fileID: 11400000, guid: d22885ea9f0356f419c97917f0fd0c9c, type: 2}
+  - {fileID: 11400000, guid: d3e33595b9cff864f8023f01b5c6e04f, type: 2}
+  - {fileID: 11400000, guid: d03954a6cc5ccd644a33b5e3f7899d7e, type: 2}
+  - {fileID: 11400000, guid: 3c47c345a30f602498952edcef914330, type: 2}
+  - {fileID: 11400000, guid: 05db8270f01f7f3448238438482408ba, type: 2}
+  - {fileID: 11400000, guid: 4e1efd3098562fb4ebea25dd75b356d9, type: 2}
+  - {fileID: 11400000, guid: ffb252835b4b802408869d527990f12b, type: 2}
+  - {fileID: 11400000, guid: 13e7756268610cd49a6af9de2bfbf546, type: 2}
+  - {fileID: 11400000, guid: 1f824041d003fab49823f735194a27ac, type: 2}
+  - {fileID: 11400000, guid: 28c5759224af94b459efb3ac3dddf22b, type: 2}

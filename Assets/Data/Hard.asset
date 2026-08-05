@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca307e59e6e391643861bea554642083, type: 3}
   m_Name: Hard
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyProfile
+  profileName: 
   settings:
     mapWidth: 21
     mapHeight: 21
@@ -21,11 +22,17 @@ MonoBehaviour:
     minKeyToAxeDistance: 10
     minKeyToMetaDistance: 8
     minPlayerToMetaDistance: 15
-    enableTravelCaves: 0
+    enableTravelCaves: 1
+    maximumTravelCavePairs: 10
+    minimumMapWidthForTravelCaves: 10
+    minimumMapHeightForTravelCaves: 10
+    minWalkableCellsForOnePair: 40
+    minWalkableCellsForTwoPairs: 90
+    minWalkableCellsForThreePairs: 150
     minimumPathDistanceBetweenTravelCaves: 10
     minimumShortcutSaving: 8
-    travelCavePairs: 1
-    axeZoneSize: {x: 5, y: 5}
+    teleportCost: 3
+    axeZoneSize: {x: 2, y: 2}
     destructibleWallsPercentage: 0.65
     missionDestructiblesHealth: 2
     spawnDestructibles: 1
