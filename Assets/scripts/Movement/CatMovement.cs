@@ -18,7 +18,7 @@ public class CatMovement : MonoBehaviour
     private Rigidbody2D rb;
     private CatInputReader inputReader;
     private Vector2 movement;
-    public Vector2 FacingDirection { get; private set; } = Vector2.down;
+    public Vector2 FacingDirection { get; set; } = Vector2.down;
 
     private void Awake()
     {

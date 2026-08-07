@@ -143,9 +143,47 @@ public class DynamicLevelManager : MonoBehaviour
         {
             Instance = this;
         }
-        else if (Instance != this)
+
+        // Auto-resolver referencias serializadas al contenedor local (para entrenamiento paralelo)
+        ResolveLocalReferences();
+    }
+
+    /// <summary>
+    /// Busca los componentes locales dentro del mismo contenedor padre (TrainingArea).
+    /// Esto permite que cada DynamicLevelManager duplicado se vincule a sus propios
+    /// componentes locales sin necesidad de reasignar manualmente en el Inspector.
+    /// Solo sobrescribe si encuentra un componente local válido.
+    /// </summary>
+    private void ResolveLocalReferences()
+    {
+        Transform root = transform.parent != null ? transform.parent : transform;
+
+        // Resolver MazeGenerator local
+        MazeGenerator localGenerator = root.GetComponentInChildren<MazeGenerator>();
+        if (localGenerator != null)
         {
-            Destroy(gameObject);
+            mazeGenerator = localGenerator;
+        }
+
+        // Resolver MazeTilemapRenderer local
+        MazeTilemapRenderer localRenderer = root.GetComponentInChildren<MazeTilemapRenderer>();
+        if (localRenderer != null)
+        {
+            mazeRenderer = localRenderer;
+        }
+
+        // Resolver LevelObjectSpawner local
+        LevelObjectSpawner localSpawner = root.GetComponentInChildren<LevelObjectSpawner>();
+        if (localSpawner != null)
+        {
+            levelObjectSpawner = localSpawner;
+        }
+
+        // Resolver playerTransform (CatMovement) local
+        CatMovement localCat = root.GetComponentInChildren<CatMovement>();
+        if (localCat != null)
+        {
+            playerTransform = localCat.transform;
         }
     }
 
@@ -248,10 +286,12 @@ public class DynamicLevelManager : MonoBehaviour
         // Respaldar configuración de semilla original del MazeGenerator para no romper configuraciones en el Inspector
         bool originalUseRandomSeed = true;
         int originalSeed = 12345;
-        
+
+
         var useRandomSeedField = typeof(MazeGenerator).GetField("useRandomSeed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var seedField = typeof(MazeGenerator).GetField("seed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
+
         if (useRandomSeedField != null && seedField != null)
         {
             originalUseRandomSeed = (bool)useRandomSeedField.GetValue(mazeGenerator);
@@ -538,7 +578,16 @@ public class DynamicLevelManager : MonoBehaviour
         // 4. Desactivar temporalmente el jugador
         if (playerTransform != null)
         {
-            playerTransform.gameObject.SetActive(false);
+            var mazeAgent = playerTransform.GetComponent<MazeAgent>();
+            if (mazeAgent == null || !mazeAgent.enabled)
+            {
+                playerTransform.gameObject.SetActive(false);
+            }
+            else
+            {
+                var rb = playerTransform.GetComponent<Rigidbody2D>();
+                if (rb != null) rb.simulated = false;
+            }
         }
 
         // Esperamos 1 frame para que Unity procese las destrucciones físicas y garbage collection de GameObjects
@@ -547,7 +596,14 @@ public class DynamicLevelManager : MonoBehaviour
 
     private void PreparePlayerForValidation(Vector3 spawnWorldPosition)
     {
-        if (playerTransform != null && !playerTransform.gameObject.scene.IsValid())
+        // Forzar siempre la asignación del gato local perteneciente al contenedor raíz
+        Transform root = transform.parent != null ? transform.parent : transform;
+        CatMovement localCat = root.GetComponentInChildren<CatMovement>();
+        if (localCat != null)
+        {
+            playerTransform = localCat.transform;
+        }
+        else if (playerTransform != null && !playerTransform.gameObject.scene.IsValid())
         {
             playerTransform = null;
         }
@@ -564,19 +620,27 @@ public class DynamicLevelManager : MonoBehaviour
         if (playerTransform == null && playerPrefab != null)
         {
             GameObject newPlayer = Instantiate(playerPrefab, spawnWorldPosition, Quaternion.identity);
+            if (transform.parent != null) newPlayer.transform.SetParent(transform.parent);
             playerTransform = newPlayer.transform;
         }
 
         if (playerTransform != null)
         {
             playerTransform.position = spawnWorldPosition;
-            playerTransform.gameObject.SetActive(true);
-
-            var rb = playerTransform.GetComponent<Rigidbody2D>();
-            if (rb != null)
+            var mazeAgent = playerTransform.GetComponent<MazeAgent>();
+            if (mazeAgent == null || !mazeAgent.enabled)
             {
-                rb.linearVelocity = Vector2.zero;
-                rb.angularVelocity = 0f;
+                playerTransform.gameObject.SetActive(true);
+                var rb = playerTransform.GetComponent<Rigidbody2D>();
+                if (rb != null) rb.bodyType = RigidbodyType2D.Kinematic;
+            }
+
+
+            var rbStatic = playerTransform.GetComponent<Rigidbody2D>();
+            if (rbStatic != null)
+            {
+                rbStatic.linearVelocity = Vector2.zero;
+                rbStatic.angularVelocity = 0f;
             }
         }
     }
@@ -605,10 +669,11 @@ public class DynamicLevelManager : MonoBehaviour
     {
         if (playerTransform != null)
         {
+            var mazeAgent = playerTransform.GetComponent<MazeAgent>();
             var movement = playerTransform.GetComponent<CatMovement>();
             if (movement != null)
             {
-                movement.enabled = true;
+                movement.enabled = (mazeAgent == null || !mazeAgent.enabled);
             }
 
             var rb = playerTransform.GetComponent<Rigidbody2D>();
@@ -617,6 +682,11 @@ public class DynamicLevelManager : MonoBehaviour
                 rb.simulated = true;
                 rb.linearVelocity = Vector2.zero;
                 rb.angularVelocity = 0f;
+            }
+
+            if (mazeAgent != null && mazeAgent.enabled)
+            {
+                mazeAgent.OnGenerationFinished();
             }
         }
     }
@@ -804,6 +874,16 @@ public class DynamicLevelManager : MonoBehaviour
 
     private bool TrySpawnDestructibles(MazeCellType[,] maze, int visualSeed, Vector2Int startCell, MazeData mazeData)
     {
+        TrainingModeInitializer trainingInit = FindAnyObjectByType<TrainingModeInitializer>();
+        if (trainingInit != null && trainingInit.enabled && trainingInit.Config != null && trainingInit.Config.trainingMode)
+        {
+            if (trainingInit.Config.destructiblePercentage <= 0f)
+            {
+                Debug.Log("[Training] Saltando generación de destructibles aleatorios (destructiblePercentage = 0).");
+                return true;
+            }
+        }
+
         Vector3Int playerSpawnCell = new Vector3Int(startCell.x, startCell.y, 0);
 
         BaseObjectSpawner spawner = levelObjectSpawner != null ? (BaseObjectSpawner)levelObjectSpawner : gameplayObjectSpawner;
@@ -944,7 +1024,7 @@ public class DynamicLevelManager : MonoBehaviour
             travelCavePairManager.ClearAllPairs();
 
         activePortalConnections.Clear();
-        keyToGoalWalkingResult  = null;
+        keyToGoalWalkingResult = null;
         keyToGoalMechanicResult = null;
         optimalPortalPairIndices.Clear();
 
@@ -971,8 +1051,9 @@ public class DynamicLevelManager : MonoBehaviour
     private void ResetMazeDataToBaseState(MazeCellType[,] maze, MazeData mazeData)
     {
         mazeData.Initialize(maze, mazeRenderer.CurrentOrigin, mazeRenderer.LogicalCellTileSize);
-        
+
         // Volver a marcar las celdas ocupadas por destructibles base del spawner
+
         BaseObjectSpawner spawnerToUse = levelObjectSpawner != null ? (BaseObjectSpawner)levelObjectSpawner : gameplayObjectSpawner;
         if (spawnerToUse == null)
         {
@@ -1134,7 +1215,8 @@ public class DynamicLevelManager : MonoBehaviour
         }
 
         // Ordenamos los candidatos de mayor a menor distancia respecto al punto de inicio (spawn)
-        candidatesForDoor.Sort((a, b) => {
+        candidatesForDoor.Sort((a, b) =>
+        {
             float distA = Vector2Int.Distance(a, startCell);
             float distB = Vector2Int.Distance(b, startCell);
             return distB.CompareTo(distA); // Orden descendente (más lejano primero)
@@ -1172,6 +1254,7 @@ public class DynamicLevelManager : MonoBehaviour
 
         metaCell = Vector2Int.zero;
         HashSet<Vector2Int> tempMetaBarriers = new HashSet<Vector2Int>();
+        HashSet<Vector2Int> tempBarriers = new HashSet<Vector2Int>();
         bool metaPlaced = false;
 
         foreach (var candidate in farDoorCandidates)
@@ -1268,7 +1351,7 @@ public class DynamicLevelManager : MonoBehaviour
         bool foundB = false;
         foreach (var cell in axeZoneCells)
         {
-            if (cell != axeCell)
+            if (cell != axeCell && !tempBarriers.Contains(cell) && !tempMetaBarriers.Contains(cell) && !destructibleWallsCells.Contains(cell))
             {
                 cuevaB = cell;
                 foundB = true;
@@ -1289,7 +1372,7 @@ public class DynamicLevelManager : MonoBehaviour
             for (int y = 1; y < mazeHeight - 1; y++)
             {
                 Vector2Int cell = new Vector2Int(x, y);
-                if (cell == startCell || cell == metaCell || tempMetaBarriers.Contains(cell) || axeZoneCells.Contains(cell)) continue;
+                if (cell == startCell || cell == metaCell || tempMetaBarriers.Contains(cell) || tempBarriers.Contains(cell) || axeZoneCells.Contains(cell) || destructibleWallsCells.Contains(cell)) continue;
 
                 if (mazeData.IsCellWalkableAndMain(x, y) && Vector2Int.Distance(cell, startCell) >= settings.minPlayerToCaveADistance)
                 {
@@ -1357,7 +1440,7 @@ public class DynamicLevelManager : MonoBehaviour
         }
 
         keyCell = Vector2Int.zero;
-        HashSet<Vector2Int> tempBarriers = new HashSet<Vector2Int>();
+        tempBarriers.Clear();
         bool keyPlaced = false;
 
         // Desordenar candidatos para selección aleatoria estructurada
@@ -1378,7 +1461,8 @@ public class DynamicLevelManager : MonoBehaviour
             bool neighborProtected = false;
             foreach (var neighbor in neighbors)
             {
-                if (neighbor == startCell || neighbor == cuevaA || neighbor == cuevaB || neighbor == axeCell || 
+                if (neighbor == startCell || neighbor == cuevaA || neighbor == cuevaB || neighbor == axeCell ||
+
                     neighbor == metaCell || tempMetaBarriers.Contains(neighbor) || tempProtectedPath.Contains(neighbor))
                 {
                     neighborProtected = true;
@@ -1404,7 +1488,7 @@ public class DynamicLevelManager : MonoBehaviour
             return false;
         }
 
-        // Combinamos las barreras de la llave, de la meta y las paredes destructibles para la validación lógica BFS y la instanciación física
+        // Combinamos las barreras de la llave, de la meta y las paredes destructibles
         HashSet<Vector2Int> allBarriers = new HashSet<Vector2Int>(tempBarriers);
         foreach (var b in tempMetaBarriers)
         {
@@ -1415,11 +1499,19 @@ public class DynamicLevelManager : MonoBehaviour
             allBarriers.Add(b);
         }
 
+        // Excluir de allBarriers las celdas reservadas especiales para que NINGUNA barrera se cree sobre cuevas, inicio, hacha, llave o meta
+        HashSet<Vector2Int> reservedKeyCells = new HashSet<Vector2Int>
+        {
+            startCell, cuevaA, cuevaB, axeCell, keyCell, metaCell
+        };
+        allBarriers.ExceptWith(reservedKeyCells);
+
         // --- VALIDACIÓN DE LOS 3 ESTADOS LÓGICOS DE MISIÓN ---
-        bool canReachCaveA = LevelValidator.CanPathfind(startCell, cuevaA, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
-        bool canReachAxeFromB = LevelValidator.CanPathfind(cuevaB, axeCell, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
-        bool canReachKeyWithoutAxe = LevelValidator.CanPathfind(startCell, keyCell, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
-        bool canReachMetaWithoutAxe = LevelValidator.CanPathfind(startCell, metaCell, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
+        TrainingConfig tConfig = Resources.Load<TrainingConfig>("TrainingConfig");
+        bool initialHasAxe = (tConfig != null && tConfig.trainingMode && tConfig.startWithAxe);
+
+        bool canReachCaveA = LevelValidator.CanPathfind(startCell, cuevaA, mazeData, initialHasAxe, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
+        bool canReachAxeFromB = LevelValidator.CanPathfind(cuevaB, axeCell, mazeData, initialHasAxe, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
 
         if (!canReachCaveA)
         {
@@ -1431,15 +1523,22 @@ public class DynamicLevelManager : MonoBehaviour
             Debug.LogWarning("[MissionGen] Falló la validación: El hacha no es alcanzable desde Cueva B.");
             return false;
         }
-        if (canReachKeyWithoutAxe)
+
+        if (!initialHasAxe)
         {
-            Debug.LogWarning("[MissionGen] Falló la validación: La llave es accesible SIN poseer el hacha.");
-            return false;
-        }
-        if (canReachMetaWithoutAxe)
-        {
-            Debug.LogWarning("[MissionGen] Falló la validación: La meta es accesible SIN poseer el hacha.");
-            return false;
+            bool canReachKeyWithoutAxe = LevelValidator.CanPathfind(startCell, keyCell, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
+            bool canReachMetaWithoutAxe = LevelValidator.CanPathfind(startCell, metaCell, mazeData, false, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
+
+            if (canReachKeyWithoutAxe)
+            {
+                Debug.LogWarning("[MissionGen] Falló la validación: La llave es accesible SIN poseer el hacha.");
+                return false;
+            }
+            if (canReachMetaWithoutAxe)
+            {
+                Debug.LogWarning("[MissionGen] Falló la validación: La meta es accesible SIN poseer el hacha.");
+                return false;
+            }
         }
 
         bool canReachKeyWithAxe = LevelValidator.CanPathfind(startCell, keyCell, mazeData, true, true, cuevaA, cuevaB, cuevaB, cuevaA, allBarriers, mazeWidth, mazeHeight);
@@ -1457,7 +1556,8 @@ public class DynamicLevelManager : MonoBehaviour
         }
 
         // --- TODO COMPROBADO Y VÁLIDO: PROCEDER A INSTANCIAR FÍSICAMENTE ---
-        
+
+
         foreach (var conn in blockedConnections)
         {
             mazeRenderer.PaintWallCell(conn, random);
@@ -1505,6 +1605,15 @@ public class DynamicLevelManager : MonoBehaviour
         Vector3 posMeta = mazeRenderer.GetWorldPosition(metaCell);
         spawnedDoorInstance = Instantiate(doorPrefab, posMeta, Quaternion.identity, itemsContainer);
         spawnedDoorInstance.name = "Maze_Goal_Door";
+        try
+        {
+            spawnedDoorInstance.tag = "Goal";
+            foreach (Transform child in spawnedDoorInstance.transform)
+            {
+                child.gameObject.tag = "Goal";
+            }
+        }
+        catch (System.Exception) { }
 
         BaseObjectSpawner spawnerToUse = levelObjectSpawner != null ? (BaseObjectSpawner)levelObjectSpawner : gameplayObjectSpawner;
         if (spawnerToUse == null)
@@ -1513,85 +1622,97 @@ public class DynamicLevelManager : MonoBehaviour
             if (spawnerToUse == null) spawnerToUse = FindAnyObjectByType<BaseObjectSpawner>();
         }
 
-        foreach (var bar in allBarriers)
+        TrainingModeInitializer trainingInit = FindAnyObjectByType<TrainingModeInitializer>();
+        bool skipMissionBarriers = (trainingInit != null && trainingInit.enabled && trainingInit.Config != null && trainingInit.Config.trainingMode && trainingInit.Config.disableMandatoryDestructibleBarrier);
+
+        if (!skipMissionBarriers)
         {
-            // Decidir la dirección de bloqueo en base a los vecinos de bar en el laberinto
-            bool hasHorizontalNeighbors = (bar.x > 0 && mazeData.IsCellWalkable(bar.x - 1, bar.y)) || 
-                                          (bar.x < mazeWidth - 1 && mazeData.IsCellWalkable(bar.x + 1, bar.y));
-
-            Vector3Int centerTile = new Vector3Int(
-                mazeRenderer.CurrentOrigin.x + bar.x * mazeRenderer.LogicalCellTileSize.x + mazeRenderer.LogicalCellTileSize.x / 2,
-                mazeRenderer.CurrentOrigin.y + bar.y * mazeRenderer.LogicalCellTileSize.y + mazeRenderer.LogicalCellTileSize.y / 2,
-                mazeRenderer.CurrentOrigin.z
-            );
-
-            // Bloqueamos la celda lógicamente completa pintando destructibles sobre todos sus tiles de camino internos (matriz completa)
-            int sizeX = mazeRenderer.LogicalCellTileSize.x;
-            int sizeY = mazeRenderer.LogicalCellTileSize.y;
-
-            List<Vector3Int> tileOffsets = new List<Vector3Int>();
-            int halfX = sizeX / 2;
-            int halfY = sizeY / 2;
-
-            for (int dx = -halfX; dx <= halfX; dx++)
+            foreach (var bar in allBarriers)
             {
-                for (int dy = -halfY; dy <= halfY; dy++)
+                // Decidir la dirección de bloqueo en base a los vecinos de bar en el laberinto
+                bool hasHorizontalNeighbors = (bar.x > 0 && mazeData.IsCellWalkable(bar.x - 1, bar.y)) ||
+
+                                              (bar.x < mazeWidth - 1 && mazeData.IsCellWalkable(bar.x + 1, bar.y));
+
+                Vector3Int centerTile = new Vector3Int(
+                    mazeRenderer.CurrentOrigin.x + bar.x * mazeRenderer.LogicalCellTileSize.x + mazeRenderer.LogicalCellTileSize.x / 2,
+                    mazeRenderer.CurrentOrigin.y + bar.y * mazeRenderer.LogicalCellTileSize.y + mazeRenderer.LogicalCellTileSize.y / 2,
+                    mazeRenderer.CurrentOrigin.z
+                );
+
+                // Bloqueamos la celda lógicamente completa pintando destructibles sobre todos sus tiles de camino internos (matriz completa)
+                int sizeX = mazeRenderer.LogicalCellTileSize.x;
+                int sizeY = mazeRenderer.LogicalCellTileSize.y;
+
+                List<Vector3Int> tileOffsets = new List<Vector3Int>();
+                int halfX = sizeX / 2;
+                int halfY = sizeY / 2;
+
+                for (int dx = -halfX; dx <= halfX; dx++)
                 {
-                    Vector3Int offset = new Vector3Int(dx, dy, 0);
+                    for (int dy = -halfY; dy <= halfY; dy++)
+                    {
+                        Vector3Int offset = new Vector3Int(dx, dy, 0);
+                        Vector3Int targetTile = centerTile + offset;
+
+                        if (mazeRenderer.PathTilemap != null && mazeRenderer.PathTilemap.HasTile(targetTile))
+                        {
+                            tileOffsets.Add(offset);
+                        }
+                    }
+                }
+
+                if (tileOffsets.Count == 0)
+                {
+                    tileOffsets.Add(Vector3Int.zero);
+                }
+
+                List<Vector3Int> reservedCells = new List<Vector3Int> { new Vector3Int(bar.x, bar.y, 0) };
+
+                // Obtener sorting layer y sorting order del spawner para garantizar visibilidad
+                string sLayer = "BreakableObjects";
+                int sOrder = 100;
+                if (spawnerToUse != null)
+                {
+                    sLayer = spawnerToUse.TargetSortingLayer;
+                    sOrder = spawnerToUse.TargetSortingOrder;
+                }
+                int layerID = !string.IsNullOrEmpty(sLayer) ? SortingLayer.NameToID(sLayer) : 0;
+                bool isValidLayer = SortingLayer.IsValid(layerID);
+
+                foreach (var offset in tileOffsets)
+                {
                     Vector3Int targetTile = centerTile + offset;
+                    Vector3 worldPos = mazeRenderer.PathTilemap != null ? mazeRenderer.PathTilemap.GetCellCenterWorld(targetTile) : mazeRenderer.GetWorldPosition(bar);
 
-                    if (mazeRenderer.PathTilemap != null && mazeRenderer.PathTilemap.HasTile(targetTile))
+                    GameObject spawnedBar = Instantiate(missionDestructiblePrefab, worldPos, Quaternion.identity, itemsContainer);
+                    spawnedBar.name = $"Mission_Barrier_{bar.x}_{bar.y}_{offset.x}_{offset.y}";
+                    spawnedMissionDestructibles.Add(spawnedBar);
+
+                    DestructibleObject comp = spawnedBar.GetComponent<DestructibleObject>();
+                    if (comp == null) comp = spawnedBar.AddComponent<DestructibleObject>();
+                    comp.SetReservedCells(reservedCells);
+                    comp.SetHealth(settings.missionDestructiblesHealth);
+
+                    // Configurar SpriteRenderers
+                    SpriteRenderer[] renderers = spawnedBar.GetComponentsInChildren<SpriteRenderer>();
+                    foreach (var sr in renderers)
                     {
-                        tileOffsets.Add(offset);
+                        if (isValidLayer)
+                        {
+                            sr.sortingLayerID = layerID;
+                        }
+                        sr.sortingOrder = sOrder;
                     }
                 }
+
+
+                mazeData.MarkCellsAsOccupied(bar, 1, 1);
             }
-
-            if (tileOffsets.Count == 0)
-            {
-                tileOffsets.Add(Vector3Int.zero);
-            }
-
-            List<Vector3Int> reservedCells = new List<Vector3Int> { new Vector3Int(bar.x, bar.y, 0) };
-
-            // Obtener sorting layer y sorting order del spawner para garantizar visibilidad
-            string sLayer = "BreakableObjects";
-            int sOrder = 100;
-            if (spawnerToUse != null)
-            {
-                sLayer = spawnerToUse.TargetSortingLayer;
-                sOrder = spawnerToUse.TargetSortingOrder;
-            }
-            int layerID = !string.IsNullOrEmpty(sLayer) ? SortingLayer.NameToID(sLayer) : 0;
-            bool isValidLayer = SortingLayer.IsValid(layerID);
-
-            foreach (var offset in tileOffsets)
-            {
-                Vector3Int targetTile = centerTile + offset;
-                Vector3 worldPos = mazeRenderer.PathTilemap != null ? mazeRenderer.PathTilemap.GetCellCenterWorld(targetTile) : mazeRenderer.GetWorldPosition(bar);
-
-                GameObject spawnedBar = Instantiate(missionDestructiblePrefab, worldPos, Quaternion.identity, itemsContainer);
-                spawnedBar.name = $"Mission_Barrier_{bar.x}_{bar.y}_{offset.x}_{offset.y}";
-                spawnedMissionDestructibles.Add(spawnedBar);
-
-                DestructibleObject comp = spawnedBar.GetComponent<DestructibleObject>();
-                if (comp == null) comp = spawnedBar.AddComponent<DestructibleObject>();
-                comp.SetReservedCells(reservedCells);
-                comp.SetHealth(settings.missionDestructiblesHealth);
-
-                // Configurar SpriteRenderers
-                SpriteRenderer[] renderers = spawnedBar.GetComponentsInChildren<SpriteRenderer>();
-                foreach (var sr in renderers)
-                {
-                    if (isValidLayer)
-                    {
-                        sr.sortingLayerID = layerID;
-                    }
-                    sr.sortingOrder = sOrder;
-                }
-            }
-            
-            mazeData.MarkCellsAsOccupied(bar, 1, 1);
+        }
+        else
+        {
+            Debug.Log("[DynamicLevelManager] 🚫 Omite la creación de barreras destructibles (Mission_Barrier) por TrainingConfig.");
         }
 
         mazeData.MarkCellsAsOccupied(cuevaA, 1, 1);
@@ -1649,7 +1770,8 @@ public class DynamicLevelManager : MonoBehaviour
         foreach (var dir in directions)
         {
             Vector2Int neighbor = cell + dir;
-            bool walkable = ignoreOccupied 
+            bool walkable = ignoreOccupied
+
                 ? mazeData.IsCellWalkableIgnoreOccupied(neighbor.x, neighbor.y)
                 : mazeData.IsCellWalkable(neighbor.x, neighbor.y);
 
@@ -1744,7 +1866,8 @@ public class DynamicLevelManager : MonoBehaviour
             settings = new DifficultySettings();
 
         // 1. Determinar celda inicial (priorizar posición actual del jugador, fallback a celda transitable más cercana o keyCell)
-        Vector2Int playerCell = playerTransform != null 
+        Vector2Int playerCell = playerTransform != null
+
             ? mazeRenderer.GetCellFromWorldPosition(playerTransform.position)
             : keyCell;
 
@@ -1835,7 +1958,7 @@ public class DynamicLevelManager : MonoBehaviour
                 keyToGoalWalkingResult,
                 keyToGoalMechanicResult,
                 mazeData,
-                stepCost:   1f,
+                stepCost: 1f,
                 portalCost: settings.teleportCost);
         }
     }

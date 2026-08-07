@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 [RequireComponent(typeof(CatInventory))]
 [RequireComponent(typeof(CatInputReader))]
@@ -35,6 +35,20 @@ public class AxeObstacleBreaker : MonoBehaviour
         {
             animator = GetComponentInChildren<Animator>();
         }
+        if (breakableTilemap == null)
+        {
+            breakableTilemap = FindAnyObjectByType<BreakableTilemap>();
+        }
+    }
+
+    private void Update()
+    {
+        // Detectar pulsación de la tecla E o Espacio mediante el paquete New Input System
+        var kb = UnityEngine.InputSystem.Keyboard.current;
+        if (kb != null && (kb.eKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
+        {
+            TryBreakObstacle();
+        }
     }
 
     private void OnEnable()
@@ -53,81 +67,112 @@ public class AxeObstacleBreaker : MonoBehaviour
         }
     }
 
-    private void TryBreakObstacle()
+    public void TryBreakObstacle()
     {
-        if (!inventory.HasAxe)
-        {
-            Debug.Log("Necesitas recoger el hacha primero.");
-            OnFailedHitNoAxe?.Invoke();
-            return;
-        }
+        ExecuteAxeAttack(Vector2.zero);
+    }
 
-        // Reproducir la animación de ataque Cat_Attack
-        if (animator == null)
-        {
-            animator = GetComponentInChildren<Animator>();
-        }
+    public bool TryBreakObstacleInDirection(Vector2 direction)
+    {
+        return ExecuteAxeAttack(direction);
+    }
 
+    public bool BreakSpecificObstacle(GameObject targetObj, Vector2 overrideDirection = default)
+    {
+        return ExecuteAxeAttack(overrideDirection);
+    }
+
+    public bool ExecuteAxeAttack(Vector2 directionOverride = default)
+    {
+        // 1. REPRODUCIR SIEMPRE LA ANIMACIÓN DE ATAQUE "Cat_Attack" AL PRESIONAR LA TECLA E
+        if (animator == null) animator = GetComponentInChildren<Animator>();
         if (animator != null)
         {
             animator.Play("Cat_Attack", 0, 0f);
         }
 
-        Vector2 offset = playerCollider != null ? playerCollider.offset : Vector2.zero;
-        Vector3 origin = transform.position + (Vector3)offset;
-        Vector3 targetPosition =
-            origin +
-            (Vector3)(
-                catMovement.FacingDirection *
-                interactionDistance
-            );
-
-        // 1. Detección de Objetos Destruibles 2D (Prefabs de árboles, rocas, etc.)
-        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(targetPosition, 0.5f);
-        foreach (var hitCollider in hitColliders)
+        if (inventory != null && !inventory.HasAxe)
         {
-            // Ignorar el colisionador del propio jugador
-            if (hitCollider.gameObject == gameObject || hitCollider.transform.IsChildOf(transform))
-            {
-                continue;
-            }
-
-            DestructibleObject destructible = hitCollider.GetComponentInParent<DestructibleObject>();
-            if (destructible != null)
-            {
-                destructible.Hit(1);
-                Debug.Log($"¡Obstáculo destructible cortado con animación Cat_Attack! ({destructible.gameObject.name})");
-                OnObstacleHit?.Invoke();
-                return;
-            }
+            Debug.Log("[AxeBreaker] ⚠️ Necesitas recoger el hacha primero.");
+            OnFailedHitNoAxe?.Invoke();
+            return false;
         }
 
-        // 2. Detección de Tilemaps destructibles
+        if (breakableTilemap == null)
+        {
+            breakableTilemap = FindAnyObjectByType<BreakableTilemap>();
+        }
+
+        Vector2 facing = directionOverride != Vector2.zero ? directionOverride : (catMovement != null ? catMovement.FacingDirection : Vector2.down);
+        if (facing == Vector2.zero) facing = Vector2.down;
+
+        Vector3 origin = transform.position;
+
+        // Puntos de prueba frontales: 1.0m, 0.7m y origen
+        Vector3[] testPoints = new Vector3[]
+        {
+            origin + (Vector3)(facing.normalized * 1.0f),
+            origin + (Vector3)(facing.normalized * 0.7f),
+            origin
+        };
+
+        // 2. Detección en BreakableTilemap
         if (breakableTilemap != null)
         {
-            // Para el tilemap usamos transform.position directamente como origen para evitar desfases de celdas
-            Vector3 tilemapTargetPosition =
-                transform.position +
-                (Vector3)(
-                    catMovement.FacingDirection *
-                    interactionDistance
-                );
-
-            bool obstacleRemoved =
-                breakableTilemap.TryBreakAtWorldPosition(
-                    tilemapTargetPosition,
-                    out Vector3Int removedCell
-                );
-
-            if (obstacleRemoved)
+            foreach (var testPos in testPoints)
             {
-                Debug.Log($"¡Obstáculo de Tilemap cortado con animación Cat_Attack! Celda eliminada: {removedCell}");
-                OnObstacleHit?.Invoke();
-                return;
+                bool obstacleRemoved = breakableTilemap.TryBreakAtWorldPosition(testPos, out Vector3Int removedCell);
+                if (obstacleRemoved)
+                {
+                    Debug.Log($"¡Obstáculo de Tilemap cortado! Celda eliminada: {removedCell} en dirección {facing}");
+                    OnObstacleHit?.Invoke();
+                    return true;
+                }
             }
         }
 
-        Debug.Log("No hay un obstáculo cortable delante.");
+        // 3. Detección en Objetos Destruibles (Prefabs)
+        foreach (var testPos in testPoints)
+        {
+            Collider2D[] hitColliders = Physics2D.OverlapCircleAll(testPos, 0.6f);
+            foreach (var hitCollider in hitColliders)
+            {
+                if (hitCollider.gameObject == gameObject || hitCollider.transform.IsChildOf(transform))
+                {
+                    continue;
+                }
+
+                DestructibleObject destructible = hitCollider.GetComponentInParent<DestructibleObject>();
+                if (destructible == null) destructible = hitCollider.GetComponent<DestructibleObject>();
+                if (destructible != null)
+                {
+                    destructible.Hit(1);
+                    Debug.Log($"¡Obstáculo destructible cortado! ({destructible.gameObject.name})");
+                    OnObstacleHit?.Invoke();
+                    return true;
+                }
+            }
+        }
+
+        // 4. Fallback omnidireccional en las 4 direcciones si está pegado a la pared
+        if (breakableTilemap != null)
+        {
+            Vector3[] fallbackDirs = { Vector3.up, Vector3.down, Vector3.left, Vector3.right };
+            foreach (var fDir in fallbackDirs)
+            {
+                Vector3 fallbackPos = origin + fDir * 0.8f;
+                bool obstacleRemoved = breakableTilemap.TryBreakAtWorldPosition(fallbackPos, out Vector3Int removedCell);
+                if (obstacleRemoved)
+                {
+                    Debug.Log($"¡Obstáculo de Tilemap cortado! Celda eliminada por cercanía: {removedCell}");
+                    OnObstacleHit?.Invoke();
+                    return true;
+                }
+            }
+        }
+
+        Debug.Log("No hay un obstáculo cortable cerca.");
+        return false;
     }
 
     private void OnDrawGizmosSelected()

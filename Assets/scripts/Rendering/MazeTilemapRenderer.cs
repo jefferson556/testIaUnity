@@ -74,8 +74,35 @@ public class MazeTilemapRenderer : MonoBehaviour
     public Vector2Int LogicalCellTileSize => logicalCellTileSize;
     public Tilemap PathTilemap => pathTilemap;
 
+    private void Awake()
+    {
+        EnsureWallTagAndLayer();
+    }
+
+    public void EnsureWallTagAndLayer()
+    {
+        if (wallTilemap != null)
+        {
+            if (!wallTilemap.gameObject.CompareTag("Wall"))
+            {
+                try
+                {
+                    wallTilemap.gameObject.tag = "Wall";
+                }
+                catch (System.Exception) { }
+            }
+
+            int wallLayer = LayerMask.NameToLayer("Wall");
+            if (wallLayer != -1 && wallTilemap.gameObject.layer != wallLayer)
+            {
+                wallTilemap.gameObject.layer = wallLayer;
+            }
+        }
+    }
+
     public void PreCalculateOrigin(MazeCellType[,] maze)
     {
+        EnsureWallTagAndLayer();
         if (maze == null || !ValidateMainReferences(maze)) return;
         int mazeWidth = maze.GetLength(0);
         int mazeHeight = maze.GetLength(1);
@@ -89,6 +116,7 @@ public class MazeTilemapRenderer : MonoBehaviour
         int visualSeed,
         Vector2Int startCell)
     {
+        EnsureWallTagAndLayer();
         if (!ValidateMainReferences(maze))
         {
             return;

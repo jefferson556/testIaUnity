@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7550479716123476169}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: House
-  m_TagString: Untagged
+  m_TagString: Goal
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -46,7 +46,7 @@ GameObject:
   - component: {fileID: 826197416081828467}
   - component: {fileID: 3869948817535349413}
   - component: {fileID: 3069178764466448960}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Door
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -224,7 +224,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5300153641528065815}
   - component: {fileID: 4935419722549071869}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Main House sheet_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
