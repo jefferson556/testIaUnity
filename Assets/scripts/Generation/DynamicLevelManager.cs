@@ -83,6 +83,15 @@ public class DynamicLevelManager : MonoBehaviour
     private GameObject spawnedDoorInstance;
     private List<GameObject> spawnedMissionDestructibles = new List<GameObject>();
 
+    // Temporizador de Nivel (solo para el modo jugador)
+    private float currentLevelTimeLimit;
+    private bool isTimerActive;
+    private bool isTrainingModeActive;
+
+    public float CurrentLevelTimeLimit => currentLevelTimeLimit;
+    public bool IsTimerActive => isTimerActive;
+    public bool IsTrainingModeActive => isTrainingModeActive;
+
     // La configuración de cuevas opcionales se lee de DifficultySettings.
     // El Inspector local ya no muestra campos separados para travel caves;
     // todos se configuran en DifficultySettings (o DifficultyProfile).
@@ -252,6 +261,12 @@ public class DynamicLevelManager : MonoBehaviour
         {
             settings = new DifficultySettings();
         }
+
+        TrainingConfig tConfig = Resources.Load<TrainingConfig>("TrainingConfig");
+        isTrainingModeActive = (tConfig != null && tConfig.trainingMode);
+        
+        currentLevelTimeLimit = settings.maxTimeLimitInSeconds;
+        isTimerActive = false;
 
         // Detener recopilación activa de métricas por si acaso
         if (DifficultyMetricsCollector.Instance != null)
@@ -665,6 +680,35 @@ public class DynamicLevelManager : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (isTimerActive && !isTrainingModeActive)
+        {
+            currentLevelTimeLimit -= Time.deltaTime;
+            if (currentLevelTimeLimit <= 0)
+            {
+                TriggerTimeOut();
+            }
+        }
+    }
+
+    private void TriggerTimeOut()
+    {
+        isTimerActive = false;
+        DisablePlayerControl();
+        if (GameUIManager.Instance != null)
+        {
+            GameUIManager.Instance.ShowLoadingScreen("Goal not reached. Restarting map...");
+        }
+        StartCoroutine(TimeOutRestartRoutine());
+    }
+
+    private IEnumerator TimeOutRestartRoutine()
+    {
+        yield return new WaitForSeconds(2.5f);
+        StartGeneration();
+    }
+
     private void EnablePlayerControl()
     {
         if (playerTransform != null)
@@ -679,6 +723,7 @@ public class DynamicLevelManager : MonoBehaviour
             var rb = playerTransform.GetComponent<Rigidbody2D>();
             if (rb != null)
             {
+                rb.bodyType = RigidbodyType2D.Dynamic;
                 rb.simulated = true;
                 rb.linearVelocity = Vector2.zero;
                 rb.angularVelocity = 0f;
@@ -687,6 +732,16 @@ public class DynamicLevelManager : MonoBehaviour
             if (mazeAgent != null && mazeAgent.enabled)
             {
                 mazeAgent.OnGenerationFinished();
+            }
+
+            if (!isTrainingModeActive)
+            {
+                isTimerActive = true;
+                Debug.Log($"[ProceduralTimer] Temporizador ACTIVADO. Límite: {currentLevelTimeLimit}s.");
+            }
+            else
+            {
+                Debug.Log("[ProceduralTimer] Temporizador DESACTIVADO porque Training Mode está activo.");
             }
         }
     }

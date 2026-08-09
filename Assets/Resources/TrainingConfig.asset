@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5402b025776ba5645b359bc30fcee674, type: 3}
   m_Name: TrainingConfig
   m_EditorClassIdentifier: Assembly-CSharp::TrainingConfig
-  trainingMode: 1
+  trainingMode: 0
   disableMandatoryDestructibleBarrier: 0
   startWithAxe: 0
   destructiblePercentage: 0.15

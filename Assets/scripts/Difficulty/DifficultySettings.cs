@@ -13,6 +13,10 @@ public class DifficultySettings
     [Tooltip("Cantidad de caminos alternativos. A mayor valor, laberinto más fácil y menos lineal.")]
     public int extraConnections = 2;
 
+    [Header("Tiempo Límite (Gameplay)")]
+    [Tooltip("Tiempo máximo en segundos antes de reiniciar el mapa si no se alcanza la meta. (Solo afecta al modo jugador)")]
+    public float maxTimeLimitInSeconds = 180f;
+
     [Header("Distancias y Posiciones")]
     [Tooltip("Distancia mínima entre el jugador y Cueva A.")]
     public float minPlayerToCaveADistance = 2f;

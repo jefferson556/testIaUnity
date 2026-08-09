@@ -277,11 +277,23 @@ public class GameUIManager : MonoBehaviour
                 levelManager.StartGeneration();
         }
 
-        // Actualizar temporizador de nivel en segundos directos
-        if (timerText != null && DifficultyMetricsCollector.Instance != null)
+        // Actualizar temporizador de nivel
+        if (timerText != null)
         {
-            float elapsed = DifficultyMetricsCollector.Instance.CurrentLevelElapsedTime;
-            timerText.text = $"TIEMPO: {Mathf.FloorToInt(elapsed)}s";
+            DynamicLevelManager levelManager = FindAnyObjectByType<DynamicLevelManager>();
+            if (levelManager != null && levelManager.IsTimerActive && !levelManager.IsTrainingModeActive)
+            {
+                // MODO PROCEDURAL: Mostrar cuenta regresiva
+                timerText.text = $"TIME LEFT: {Mathf.Max(0, Mathf.FloorToInt(levelManager.CurrentLevelTimeLimit))}s";
+                timerText.color = levelManager.CurrentLevelTimeLimit <= 10f ? Color.red : Color.yellow;
+            }
+            else if (DifficultyMetricsCollector.Instance != null)
+            {
+                // MODO ENTRENAMIENTO: Mostrar tiempo transcurrido normal
+                float elapsed = DifficultyMetricsCollector.Instance.CurrentLevelElapsedTime;
+                timerText.text = $"ELAPSED: {Mathf.FloorToInt(elapsed)}s";
+                timerText.color = Color.yellow;
+            }
         }
 
         if (zoomStatusText == null) return;

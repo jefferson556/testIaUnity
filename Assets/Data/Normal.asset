@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca307e59e6e391643861bea554642083, type: 3}
   m_Name: Normal
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyProfile
+  profileName: 
   settings:
     mapWidth: 15
     mapHeight: 15
     extraConnections: 2
+    maxTimeLimitInSeconds: 200
     minPlayerToCaveADistance: 3
     minAxeToStartAndMetaDistance: 8
     minKeyToAxeDistance: 8
