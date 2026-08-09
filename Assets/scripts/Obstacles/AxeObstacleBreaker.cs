@@ -37,7 +37,9 @@ public class AxeObstacleBreaker : MonoBehaviour
         }
         if (breakableTilemap == null)
         {
-            breakableTilemap = FindAnyObjectByType<BreakableTilemap>();
+            Transform root = transform.parent != null ? transform.parent : transform;
+            breakableTilemap = root.GetComponentInChildren<BreakableTilemap>();
+            if (breakableTilemap == null) breakableTilemap = FindAnyObjectByType<BreakableTilemap>();
         }
     }
 
@@ -84,18 +86,18 @@ public class AxeObstacleBreaker : MonoBehaviour
 
     public bool ExecuteAxeAttack(Vector2 directionOverride = default)
     {
-        // 1. REPRODUCIR SIEMPRE LA ANIMACIÓN DE ATAQUE "Cat_Attack" AL PRESIONAR LA TECLA E
-        if (animator == null) animator = GetComponentInChildren<Animator>();
-        if (animator != null)
-        {
-            animator.Play("Cat_Attack", 0, 0f);
-        }
-
         if (inventory != null && !inventory.HasAxe)
         {
             Debug.Log("[AxeBreaker] ⚠️ Necesitas recoger el hacha primero.");
             OnFailedHitNoAxe?.Invoke();
             return false;
+        }
+
+        // 1. REPRODUCIR LA ANIMACIÓN DE ATAQUE SOLO SI TIENE EL HACHA
+        if (animator == null) animator = GetComponentInChildren<Animator>();
+        if (animator != null)
+        {
+            animator.Play("Cat_Attack", 0, 0f);
         }
 
         if (breakableTilemap == null)
@@ -147,7 +149,7 @@ public class AxeObstacleBreaker : MonoBehaviour
                 if (destructible != null)
                 {
                     destructible.Hit(1);
-                    Debug.Log($"¡Obstáculo destructible cortado! ({destructible.gameObject.name})");
+                    Debug.Log($"[AxeBreaker] ¡Obstáculo destructible cortado! ({destructible.gameObject.name}) en dirección {facing}");
                     OnObstacleHit?.Invoke();
                     return true;
                 }

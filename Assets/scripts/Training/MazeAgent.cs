@@ -38,7 +38,9 @@ public class MazeAgent : Agent
     private float previousDistanceToKey;
     private Transform caveATransform;
     private Transform caveBTransform;
+    private Transform axeTransform;
     private float previousDistanceToAxe;
+    private bool hasTraversedCave = false;
     private Vector2 currentMoveDirection = Vector2.down;
 
     public bool IsGenerating { get; private set; } = false;
@@ -75,7 +77,24 @@ public class MazeAgent : Agent
             bp.BrainParameters.VectorObservationSize = 25;
             bp.BrainParameters.ActionSpec = Unity.MLAgents.Actuators.ActionSpec.MakeDiscrete(5, 2);
         }
-        MaxStep = maxStepsPerEpisode;
+
+        // 1. CORRECCIÓN DE CEGUERA: Asegurar que el sensor pueda ver los destructibles
+        var raySensor = GetComponent<Unity.MLAgents.Sensors.RayPerceptionSensorComponent2D>();
+        if (raySensor != null)
+        {
+            if (raySensor.DetectableTags != null && !raySensor.DetectableTags.Contains("Desctruct"))
+            {
+                raySensor.DetectableTags.Add("Desctruct");
+                Debug.Log($"[MazeAgent] Etiqueta 'Desctruct' inyectada en el sensor de {gameObject.name}");
+            }
+        }
+        
+        // Forzando el tiempo máximo a ~3 minutos (9000 pasos) ignorando el inspector
+        MaxStep = 9000;
+        maxStepsPerEpisode = 9000;
+        
+        // Forzando penalización de tiempo más fuerte ignorando el inspector
+        stepPenalty = -0.002f;
 
         inventory = GetComponent<CatInventory>();
         if (inventory == null) inventory = GetComponentInParent<CatInventory>();
@@ -119,7 +138,8 @@ public class MazeAgent : Agent
 
     private void HandleTeleport()
     {
-        AddReward(0.25f); // Recompensa por tomar el atajo automático de la cueva
+        hasTraversedCave = true;
+        AddReward(0.5f); // Recompensa por tomar el atajo automático de la cueva
         Debug.Log("[MazeAgent] 🌀 ¡Teletransporte automático por cueva completado!");
     }
 
@@ -157,6 +177,7 @@ public class MazeAgent : Agent
     public override void OnEpisodeBegin()
     {
         DisableHumanControls();
+        hasTraversedCave = false;
 
         IsGenerating = true;
 
@@ -188,10 +209,13 @@ public class MazeAgent : Agent
         FindGoalTransform();
         FindKeyTransform();
         FindCaveTransforms();
+        FindAxeTransform();
 
         // Entregar el hacha de entrenamiento después de que la generación finalice (evita race conditions con DynamicLevelManager)
         if (inventory != null)
         {
+            inventory.OnAxeCollected -= HandleAxeCollected;
+            inventory.OnAxeCollected += HandleAxeCollected;
             inventory.ResetInventory();
             if (trainingConfig != null && trainingConfig.startWithAxe)
             {
@@ -228,9 +252,13 @@ public class MazeAgent : Agent
             previousDistanceToKey = Vector3.Distance(transform.position, keyTransform.position);
         }
 
-        if (caveATransform != null)
+        if (!hasTraversedCave && caveATransform != null)
         {
             previousDistanceToAxe = Vector3.Distance(transform.position, caveATransform.position);
+        }
+        else if (axeTransform != null)
+        {
+            previousDistanceToAxe = Vector3.Distance(transform.position, axeTransform.position);
         }
 
         // Reiniciar velocidad
@@ -294,6 +322,16 @@ public class MazeAgent : Agent
         }
     }
 
+    private void FindAxeTransform()
+    {
+        axeTransform = null;
+        Transform root = transform.parent != null ? transform.parent : transform;
+        foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name.Contains("Axe") || child.name.Contains("Hacha")) axeTransform = child;
+        }
+    }
+
     public override void CollectObservations(VectorSensor sensor)
     {
         if (IsGenerating)
@@ -344,21 +382,25 @@ public class MazeAgent : Agent
             sensor.AddObservation(Vector3.zero);
         }
 
-        // Cueva relevante: posición y dirección (6 valores)
-        Transform relevantCave = null;
-        if (!hasAxe && caveATransform != null)
+        // Cueva o Hacha relevante: posición y dirección (6 valores)
+        Transform relevantTarget = null;
+        if (!hasAxe && !hasTraversedCave && caveATransform != null)
         {
-            relevantCave = caveATransform;
+            relevantTarget = caveATransform;
+        }
+        else if (!hasAxe && hasTraversedCave && axeTransform != null)
+        {
+            relevantTarget = axeTransform;
         }
         else if (hasAxe && caveBTransform != null)
         {
-            relevantCave = caveBTransform;
+            relevantTarget = caveBTransform;
         }
 
-        if (relevantCave != null)
+        if (relevantTarget != null)
         {
-            sensor.AddObservation(relevantCave.localPosition);
-            sensor.AddObservation((relevantCave.position - transform.position).normalized);
+            sensor.AddObservation(relevantTarget.localPosition);
+            sensor.AddObservation((relevantTarget.position - transform.position).normalized);
         }
         else
         {
@@ -403,6 +445,8 @@ public class MazeAgent : Agent
         // Si la IA decide accionar el botón de interacción (tecla E / Rama 1)
         if (interactAction == 1)
         {
+            // Debug temporal para saber si la IA intenta usar el botón de interactuar
+            Debug.Log($"[MazeAgent] IA accionó el botón E en dirección {currentMoveDirection}");
             ExecuteInteractAction();
         }
 
@@ -437,9 +481,15 @@ public class MazeAgent : Agent
         float refDist = 0f;
         int targetStage = 0; // 0=Axe/CaveA, 1=Key, 2=Goal
 
-        if (!hasAxe && caveATransform != null)
+        if (!hasAxe && !hasTraversedCave && caveATransform != null)
         {
             targetTransform = caveATransform;
+            refDist = previousDistanceToAxe;
+            targetStage = 0;
+        }
+        else if (!hasAxe && hasTraversedCave && axeTransform != null)
+        {
+            targetTransform = axeTransform;
             refDist = previousDistanceToAxe;
             targetStage = 0;
         }
@@ -528,7 +578,6 @@ public class MazeAgent : Agent
 
     private void ExecuteInteractAction()
     {
-        // Accionar hacha al presionar el botón de interacción (tecla E / Rama 1)
         var breaker = GetComponent<AxeObstacleBreaker>();
         if (breaker == null) breaker = GetComponentInChildren<AxeObstacleBreaker>();
         if (breaker != null)
@@ -539,6 +588,26 @@ public class MazeAgent : Agent
                 Debug.Log($"[IA Botón E] 🪓 ¡Impacto de hacha exitoso en dirección {currentMoveDirection}!");
                 AddReward(0.08f);
             }
+            else
+            {
+                // Penalización para evitar que spamee el hacha al aire o contra paredes normales
+                AddReward(-0.005f);
+                // Debug.Log($"[MazeAgent] Falló el intento de hacha en dirección {currentMoveDirection}. (Posiblemente no hay obstáculo o no lo alcanza)");
+            }
+        }
+        else
+        {
+            Debug.Log("[MazeAgent] No se encontró el componente AxeObstacleBreaker.");
+        }
+    }
+
+    private void HandleAxeCollected()
+    {
+        // Dar una gran recompensa cuando el agente recoge el hacha (solo si no empezó con ella)
+        if (trainingConfig != null && !trainingConfig.startWithAxe)
+        {
+            AddReward(1.0f);
+            Debug.Log("[MazeAgent] 🪓 ¡El agente encontró y recogió el hacha! (+1.0 recompensa)");
         }
     }
 }

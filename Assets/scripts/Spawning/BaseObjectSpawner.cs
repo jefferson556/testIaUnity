@@ -286,6 +286,17 @@ public abstract class BaseObjectSpawner : MonoBehaviour
 
         spawnedInstance.name = $"{pattern.DisplayName}_{originX}_{originY}";
 
+        // Asegurar que esté en la capa física 'Wall' para que el sensor RayPerception lo vea
+        int wallLayer = LayerMask.NameToLayer("Wall");
+        if (wallLayer != -1)
+        {
+            spawnedInstance.layer = wallLayer;
+            foreach (Transform child in spawnedInstance.GetComponentsInChildren<Transform>(true))
+            {
+                child.gameObject.layer = wallLayer;
+            }
+        }
+
         DestructibleObject destructibleComp = spawnedInstance.GetComponent<DestructibleObject>();
         if (destructibleComp == null)
         {

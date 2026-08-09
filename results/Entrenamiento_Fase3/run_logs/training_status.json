@@ -1,0 +1,65 @@
+{
+    "MazeAgent": {
+        "checkpoints": [
+            {
+                "steps": 1500018,
+                "file_path": "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1500018.onnx",
+                "reward": null,
+                "creation_time": 1786232125.2840304,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1500018.pt"
+                ]
+            },
+            {
+                "steps": 1503426,
+                "file_path": "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1503426.onnx",
+                "reward": null,
+                "creation_time": 1786232649.5063748,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1503426.pt"
+                ]
+            },
+            {
+                "steps": 1505090,
+                "file_path": "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1505090.onnx",
+                "reward": null,
+                "creation_time": 1786233018.0343676,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1505090.pt"
+                ]
+            },
+            {
+                "steps": 1511258,
+                "file_path": "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1511258.onnx",
+                "reward": null,
+                "creation_time": 1786233285.8394315,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1511258.pt"
+                ]
+            },
+            {
+                "steps": 1665410,
+                "file_path": "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1665410.onnx",
+                "reward": -17.661468163132668,
+                "creation_time": 1786238832.6591983,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1665410.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1665410,
+            "file_path": "results\\Entrenamiento_Fase3\\MazeAgent.onnx",
+            "reward": -17.661468163132668,
+            "creation_time": 1786238832.6591983,
+            "auxillary_file_paths": [
+                "results\\Entrenamiento_Fase3\\MazeAgent\\MazeAgent-1665410.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

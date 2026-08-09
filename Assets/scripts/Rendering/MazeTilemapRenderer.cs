@@ -76,7 +76,33 @@ public class MazeTilemapRenderer : MonoBehaviour
 
     private void Awake()
     {
+        ResolveLocalTilemaps();
         EnsureWallTagAndLayer();
+    }
+
+    /// <summary>
+    /// Busca los Tilemaps locales dentro del mismo contenedor padre (TrainingArea).
+    /// Esto permite que cada MazeTilemapRenderer duplicado se vincule a sus propios tilemaps
+    /// sin necesidad de reasignar manualmente en el Inspector.
+    /// </summary>
+    private void ResolveLocalTilemaps()
+    {
+        Transform root = transform.parent != null ? transform.parent : transform;
+        Grid localGrid = root.GetComponentInChildren<Grid>();
+        if (localGrid == null) return;
+        
+        foreach (Tilemap tm in localGrid.GetComponentsInChildren<Tilemap>(true))
+        {
+            switch (tm.gameObject.name)
+            {
+                case "Ground": groundTilemap = tm; break;
+                case "Paths": pathTilemap = tm; break;
+                case "Walls":
+                case "Walls ": wallTilemap = tm; break;
+                case "DecorationBack": decorationBackTilemap = tm; break;
+                case "DecorationFront": decorationFrontTilemap = tm; break;
+            }
+        }
     }
 
     public void EnsureWallTagAndLayer()

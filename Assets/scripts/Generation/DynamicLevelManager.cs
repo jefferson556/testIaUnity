@@ -1564,12 +1564,13 @@ public class DynamicLevelManager : MonoBehaviour
         }
         mazeRenderer.PaintAccessibleZone(axeZoneCells);
 
+        Transform safeContainer = itemsContainer != null ? itemsContainer : transform;
         Vector3 posA = mazeRenderer.GetWorldPosition(cuevaA);
-        spawnedCuevaAInstance = Instantiate(cavePrefab, posA, Quaternion.identity, itemsContainer);
+        spawnedCuevaAInstance = Instantiate(cavePrefab, posA, Quaternion.identity, safeContainer);
         spawnedCuevaAInstance.name = "Cave_A_Entrance";
 
         Vector3 posB = mazeRenderer.GetWorldPosition(cuevaB);
-        spawnedCuevaBInstance = Instantiate(cavePrefab, posB, Quaternion.identity, itemsContainer);
+        spawnedCuevaBInstance = Instantiate(cavePrefab, posB, Quaternion.identity, safeContainer);
         spawnedCuevaBInstance.name = "Cave_B_Exit";
 
         CavePortal portalA = spawnedCuevaAInstance.GetComponentInChildren<CavePortal>();
@@ -1599,11 +1600,11 @@ public class DynamicLevelManager : MonoBehaviour
         SetupAxe(posAxe);
 
         Vector3 posKey = mazeRenderer.GetWorldPosition(keyCell);
-        spawnedKeyInstance = Instantiate(keyPrefab, posKey, Quaternion.identity, itemsContainer);
+        spawnedKeyInstance = Instantiate(keyPrefab, posKey, Quaternion.identity, safeContainer);
         spawnedKeyInstance.name = "Mission_Key";
 
         Vector3 posMeta = mazeRenderer.GetWorldPosition(metaCell);
-        spawnedDoorInstance = Instantiate(doorPrefab, posMeta, Quaternion.identity, itemsContainer);
+        spawnedDoorInstance = Instantiate(doorPrefab, posMeta, Quaternion.identity, safeContainer);
         spawnedDoorInstance.name = "Maze_Goal_Door";
         try
         {
@@ -1685,9 +1686,20 @@ public class DynamicLevelManager : MonoBehaviour
                     Vector3Int targetTile = centerTile + offset;
                     Vector3 worldPos = mazeRenderer.PathTilemap != null ? mazeRenderer.PathTilemap.GetCellCenterWorld(targetTile) : mazeRenderer.GetWorldPosition(bar);
 
-                    GameObject spawnedBar = Instantiate(missionDestructiblePrefab, worldPos, Quaternion.identity, itemsContainer);
+                    GameObject spawnedBar = Instantiate(missionDestructiblePrefab, worldPos, Quaternion.identity, safeContainer);
                     spawnedBar.name = $"Mission_Barrier_{bar.x}_{bar.y}_{offset.x}_{offset.y}";
                     spawnedMissionDestructibles.Add(spawnedBar);
+
+                    // Asegurar que esté en la capa física 'Wall' para que el sensor RayPerception lo vea
+                    int wallLayer = LayerMask.NameToLayer("Wall");
+                    if (wallLayer != -1)
+                    {
+                        spawnedBar.layer = wallLayer;
+                        foreach (Transform child in spawnedBar.GetComponentsInChildren<Transform>(true))
+                        {
+                            child.gameObject.layer = wallLayer;
+                        }
+                    }
 
                     DestructibleObject comp = spawnedBar.GetComponent<DestructibleObject>();
                     if (comp == null) comp = spawnedBar.AddComponent<DestructibleObject>();
