@@ -1,0 +1,29 @@
+{
+    "MazeAgent": {
+        "checkpoints": [
+            {
+                "steps": 448,
+                "file_path": "results\\GatoNocturno\\MazeAgent\\MazeAgent-448.onnx",
+                "reward": null,
+                "creation_time": 1786310361.4054854,
+                "auxillary_file_paths": [
+                    "results\\GatoNocturno\\MazeAgent\\MazeAgent-448.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 448,
+            "file_path": "results\\GatoNocturno\\MazeAgent.onnx",
+            "reward": null,
+            "creation_time": 1786310361.4054854,
+            "auxillary_file_paths": [
+                "results\\GatoNocturno\\MazeAgent\\MazeAgent-448.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

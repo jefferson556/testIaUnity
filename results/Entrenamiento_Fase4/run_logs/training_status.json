@@ -2,22 +2,58 @@
     "MazeAgent": {
         "checkpoints": [
             {
-                "steps": 26672,
-                "file_path": "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-26672.onnx",
+                "steps": 2700911,
+                "file_path": "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2700911.onnx",
                 "reward": null,
-                "creation_time": 1786239466.922508,
+                "creation_time": 1786277926.6672857,
                 "auxillary_file_paths": [
-                    "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-26672.pt"
+                    "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2700911.pt"
+                ]
+            },
+            {
+                "steps": 2703023,
+                "file_path": "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2703023.onnx",
+                "reward": null,
+                "creation_time": 1786278088.8300729,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2703023.pt"
+                ]
+            },
+            {
+                "steps": 2705135,
+                "file_path": "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2705135.onnx",
+                "reward": null,
+                "creation_time": 1786281962.622977,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2705135.pt"
+                ]
+            },
+            {
+                "steps": 2707247,
+                "file_path": "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2707247.onnx",
+                "reward": null,
+                "creation_time": 1786284485.656471,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2707247.pt"
+                ]
+            },
+            {
+                "steps": 2709359,
+                "file_path": "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2709359.onnx",
+                "reward": null,
+                "creation_time": 1786287954.0530574,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2709359.pt"
                 ]
             }
         ],
         "final_checkpoint": {
-            "steps": 26672,
+            "steps": 2709359,
             "file_path": "results\\Entrenamiento_Fase4\\MazeAgent.onnx",
             "reward": null,
-            "creation_time": 1786239466.922508,
+            "creation_time": 1786287954.0530574,
             "auxillary_file_paths": [
-                "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-26672.pt"
+                "results\\Entrenamiento_Fase4\\MazeAgent\\MazeAgent-2709359.pt"
             ]
         }
     },

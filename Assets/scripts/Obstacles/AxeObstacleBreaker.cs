@@ -108,7 +108,9 @@ public class AxeObstacleBreaker : MonoBehaviour
         Vector2 facing = directionOverride != Vector2.zero ? directionOverride : (catMovement != null ? catMovement.FacingDirection : Vector2.down);
         if (facing == Vector2.zero) facing = Vector2.down;
 
-        Vector3 origin = transform.position;
+        Collider2D col = GetComponent<Collider2D>();
+        Vector2 offset = col != null ? col.offset : Vector2.zero;
+        Vector3 origin = transform.position + (Vector3)offset;
 
         // Puntos de prueba frontales: 1.0m, 0.7m y origen
         Vector3[] testPoints = new Vector3[]
@@ -157,16 +159,38 @@ public class AxeObstacleBreaker : MonoBehaviour
         }
 
         // 4. Fallback omnidireccional en las 4 direcciones si está pegado a la pared
-        if (breakableTilemap != null)
+        Vector3[] fallbackDirs = { Vector3.up, Vector3.down, Vector3.left, Vector3.right };
+        foreach (var fDir in fallbackDirs)
         {
-            Vector3[] fallbackDirs = { Vector3.up, Vector3.down, Vector3.left, Vector3.right };
-            foreach (var fDir in fallbackDirs)
+            Vector3 fallbackPos = origin + fDir * 0.8f;
+
+            // 4a. Fallback en Tilemap
+            if (breakableTilemap != null)
             {
-                Vector3 fallbackPos = origin + fDir * 0.8f;
                 bool obstacleRemoved = breakableTilemap.TryBreakAtWorldPosition(fallbackPos, out Vector3Int removedCell);
                 if (obstacleRemoved)
                 {
                     Debug.Log($"¡Obstáculo de Tilemap cortado! Celda eliminada por cercanía: {removedCell}");
+                    OnObstacleHit?.Invoke();
+                    return true;
+                }
+            }
+
+            // 4b. Fallback en Prefabs
+            Collider2D[] fallbackColliders = Physics2D.OverlapCircleAll(fallbackPos, 0.4f);
+            foreach (var hitCollider in fallbackColliders)
+            {
+                if (hitCollider.gameObject == gameObject || hitCollider.transform.IsChildOf(transform))
+                {
+                    continue;
+                }
+
+                DestructibleObject destructible = hitCollider.GetComponentInParent<DestructibleObject>();
+                if (destructible == null) destructible = hitCollider.GetComponent<DestructibleObject>();
+                if (destructible != null)
+                {
+                    destructible.Hit(1);
+                    Debug.Log($"[AxeBreaker] ¡Obstáculo destructible cortado (Fallback)! ({destructible.gameObject.name})");
                     OnObstacleHit?.Invoke();
                     return true;
                 }

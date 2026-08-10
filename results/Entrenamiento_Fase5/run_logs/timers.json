@@ -1,0 +1,47 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1786310389",
+        "python_version": "3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:34:57) [MSC v.1936 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\USUARIO\\miniconda3\\envs\\mlagents31012\\Scripts\\mlagents-learn maze_config.yaml --run-id=Entrenamiento_Fase5",
+        "mlagents_version": "1.2.0.dev0",
+        "mlagents_envs_version": "1.2.0.dev0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.2.2+cu121",
+        "numpy_version": "1.23.5",
+        "end_time_seconds": "1786310391"
+    },
+    "total": 2.3656602000119165,
+    "count": 1,
+    "self": 0.0060743000358343124,
+    "children": {
+        "run_training.setup": {
+            "total": 0.09179350000340492,
+            "count": 1,
+            "self": 0.09179350000340492
+        },
+        "TrainerController.start_learning": {
+            "total": 2.2677923999726772,
+            "count": 1,
+            "self": 0.00039799994556233287,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 2.267379000026267,
+                    "count": 1,
+                    "self": 2.267379000026267
+                },
+                "trainer_threads": {
+                    "total": 8.00006091594696e-07,
+                    "count": 1,
+                    "self": 8.00006091594696e-07
+                },
+                "TrainerController._save_models": {
+                    "total": 1.4599994756281376e-05,
+                    "count": 1,
+                    "self": 1.4599994756281376e-05
+                }
+            }
+        }
+    }
+}

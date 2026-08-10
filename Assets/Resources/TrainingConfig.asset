@@ -17,3 +17,4 @@ MonoBehaviour:
   startWithAxe: 0
   destructiblePercentage: 0.15
   trainingPhase: 0
+  generateMetrics: 0

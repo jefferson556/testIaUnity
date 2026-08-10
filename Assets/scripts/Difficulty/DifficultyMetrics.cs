@@ -19,6 +19,19 @@ public class DifficultyMetrics
     public int errorCount;
     public int objectivesCollected;
 
+    // Nuevas metricas
+    public bool levelCompleted;
+    public float maxTimeLimitInSeconds;
+    
+    // Dataset Metrics
+    public bool axeCollected;
+    public bool keyCollected;
+    public string terminationReason;
+    public int maxEpisodeSteps;
+    public int episodeStepCount;
+    public string episodeId;
+    public string agentVersion;
+
     /// <summary>
     /// Métricas detalladas del segmento llave → meta.
     /// Calculadas por KeyToGoalTracker al finalizar dicho segmento.

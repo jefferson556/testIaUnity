@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca307e59e6e391643861bea554642083, type: 3}
+  m_Name: Adapt
+  m_EditorClassIdentifier: Assembly-CSharp::DifficultyProfile
+  profileName: 
+  settings:
+    mapWidth: 5
+    mapHeight: 5
+    extraConnections: 2
+    maxTimeLimitInSeconds: 300
+    minPlayerToCaveADistance: 3
+    minAxeToStartAndMetaDistance: 4
+    minKeyToAxeDistance: 4
+    minKeyToMetaDistance: 4
+    minPlayerToMetaDistance: 5
+    enableTravelCaves: 1
+    maximumTravelCavePairs: 5
+    minimumMapWidthForTravelCaves: 8
+    minimumMapHeightForTravelCaves: 8
+    minWalkableCellsForOnePair: 80
+    minWalkableCellsForTwoPairs: 160
+    minWalkableCellsForThreePairs: 280
+    minimumPathDistanceBetweenTravelCaves: 10
+    minimumShortcutSaving: 8
+    teleportCost: 3
+    axeZoneSize: {x: 2, y: 2}
+    destructibleWallsPercentage: 0.111
+    missionDestructiblesHealth: 1
+    spawnDestructibles: 1
+    playerMoveSpeed: 8
+    hintsAvailable: 5
+    hintDelaySeconds: 5
+    hintIntensity: 1
+    highlightObjectives: 1
+    showDirectionIndicator: 1
+    zoomOutMaxDuration: 4
+    zoomOutCooldown: 3
+    zoomOutSize: 30
+    normalZoomSize: 4

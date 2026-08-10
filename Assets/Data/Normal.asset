@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyProfile
   profileName: 
   settings:
-    mapWidth: 15
-    mapHeight: 15
+    mapWidth: 5
+    mapHeight: 5
     extraConnections: 2
-    maxTimeLimitInSeconds: 200
+    maxTimeLimitInSeconds: 300
     minPlayerToCaveADistance: 3
-    minAxeToStartAndMetaDistance: 8
-    minKeyToAxeDistance: 8
-    minKeyToMetaDistance: 6
-    minPlayerToMetaDistance: 10
+    minAxeToStartAndMetaDistance: 4
+    minKeyToAxeDistance: 4
+    minKeyToMetaDistance: 4
+    minPlayerToMetaDistance: 5
     enableTravelCaves: 1
     maximumTravelCavePairs: 5
-    minimumMapWidthForTravelCaves: 10
-    minimumMapHeightForTravelCaves: 10
+    minimumMapWidthForTravelCaves: 8
+    minimumMapHeightForTravelCaves: 8
     minWalkableCellsForOnePair: 80
     minWalkableCellsForTwoPairs: 160
     minWalkableCellsForThreePairs: 280
@@ -34,7 +34,7 @@ MonoBehaviour:
     minimumShortcutSaving: 8
     teleportCost: 3
     axeZoneSize: {x: 2, y: 2}
-    destructibleWallsPercentage: 0.539
+    destructibleWallsPercentage: 0.111
     missionDestructiblesHealth: 1
     spawnDestructibles: 1
     playerMoveSpeed: 8

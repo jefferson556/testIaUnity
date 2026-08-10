@@ -565,7 +565,7 @@ public class DifficultyManager : MonoBehaviour
         difficultyScore = Mathf.Clamp01((widthNorm + heightNorm + speedNorm) / 3f);
     }
 
-    public void RegisterLevelCompletion(DifficultyMetrics metrics)
+    public void RegisterLevelEnd(DifficultyMetrics metrics)
     {
         lastLevelMetrics = metrics;
 
@@ -575,19 +575,19 @@ public class DifficultyManager : MonoBehaviour
             current,
             current,
             current,
-            $"Nivel {currentLevelNumber} completado",
+            $"Nivel {currentLevelNumber} finalizado. Éxito: {metrics.levelCompleted}",
             "Player",
             false
         );
 
-        SaveMetricsToJsonFiles(metrics, current);
+        SaveMetricsToCsvFile(metrics, current);
 
-        Debug.Log($"[DifficultyManager] Métricas del nivel {currentLevelNumber} registradas y guardadas en JSON.");
+        Debug.Log($"[DifficultyManager] Métricas del nivel {currentLevelNumber} registradas y guardadas en CSV.");
         
         currentLevelNumber++;
     }
 
-    private void SaveMetricsToJsonFiles(DifficultyMetrics metrics, DifficultySettings settings)
+    private void SaveMetricsToCsvFile(DifficultyMetrics metrics, DifficultySettings settings)
     {
         try
         {
@@ -597,35 +597,94 @@ public class DifficultyManager : MonoBehaviour
                 Directory.CreateDirectory(folderPath);
             }
 
-            var exportData = new LevelMetricsDataFile
+            string filePath = Path.Combine(folderPath, "metrics_history_all.csv");
+            bool fileExists = File.Exists(filePath);
+
+            using (StreamWriter writer = new StreamWriter(filePath, true))
             {
-                levelName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name,
-                difficultyName = CurrentDifficultyName,
-                levelNumber = currentLevelNumber,
-                timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                difficultyScore = difficultyScore,
-                appliedSettings = settings,
-                metrics = metrics
-            };
+                if (!fileExists || new FileInfo(filePath).Length == 0)
+                {
+                    string header = "episodeId,agentVersion,difficultyScore,mapWidth,mapHeight,extraConnections,maxTimeLimitInSeconds,maxEpisodeSteps,episodeStepCount,missionDestructiblesHealth,destructibleWallsPercentage,minAxeToStartAndMetaDistance,minKeyToAxeDistance,minKeyToMetaDistance,playerMoveSpeed,hintsAvailable,totalLevelTime,axeCollected,timeToFindAxe,keyCollected,timeToFindKey,movementCount,idleCount,destructibleHits,failedHitsWithoutAxe,cavesUsed,explorationPercentage,hintsUsed,restartCount,errorCount,keyToGoalPathDataValid,keyToGoalTime,keyToGoalActualDistance,keyToGoalOptimalDistance,keyToGoalExtraDistance,keyToGoalRepeatedCells,keyToGoalRepeatedCellRatio,keyToGoalEfficiency,keyToGoalNavigationState,keyToGoalUsefulCaveUses,keyToGoalNeutralCaveUses,keyToGoalUnproductiveCaveUses,levelCompleted,terminationReason";
+                    writer.WriteLine(header);
+                }
 
-            string jsonContent = JsonUtility.ToJson(exportData, true);
+                var culture = System.Globalization.CultureInfo.InvariantCulture;
+                
+                string s_timeToFindAxe = metrics.axeCollected ? metrics.timeToFindAxe.ToString(culture) : "";
+                string s_timeToFindKey = metrics.keyCollected ? metrics.timeToFindKey.ToString(culture) : "";
+                
+                bool pValid = metrics.keyToGoal.keyToGoalPathDataValid;
+                string s_kgTime = pValid ? metrics.keyToGoal.keyToGoalTime.ToString(culture) : "";
+                string s_kgOptDist = pValid ? metrics.keyToGoal.keyToGoalOptimalDistance.ToString(culture) : "";
+                string s_kgExtDist = pValid ? metrics.keyToGoal.keyToGoalExtraDistance.ToString(culture) : "";
+                string s_kgEff = pValid ? metrics.keyToGoal.keyToGoalEfficiency.ToString(culture) : "";
+                string s_kgNav = pValid ? metrics.keyToGoal.keyToGoalNavigationState.ToString() : "";
+                
+                string s_episodeStepCount = metrics.agentVersion == "Human" ? "" : metrics.episodeStepCount.ToString(culture);
+                string s_maxEpisodeSteps = metrics.agentVersion == "Human" ? "" : metrics.maxEpisodeSteps.ToString(culture);
 
-            string fileName = $"metrics_level_{(currentLevelNumber):D3}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
-            string filePath = Path.Combine(folderPath, fileName);
-            File.WriteAllText(filePath, jsonContent);
+                string[] fields = new string[]
+                {
+                    metrics.episodeId,
+                    metrics.agentVersion,
+                    difficultyScore.ToString(culture),
+                    settings.mapWidth.ToString(culture),
+                    settings.mapHeight.ToString(culture),
+                    settings.extraConnections.ToString(culture),
+                    metrics.maxTimeLimitInSeconds.ToString(culture),
+                    s_maxEpisodeSteps,
+                    s_episodeStepCount,
+                    settings.missionDestructiblesHealth.ToString(culture),
+                    settings.destructibleWallsPercentage.ToString(culture),
+                    settings.minAxeToStartAndMetaDistance.ToString(culture),
+                    settings.minKeyToAxeDistance.ToString(culture),
+                    settings.minKeyToMetaDistance.ToString(culture),
+                    settings.playerMoveSpeed.ToString(culture),
+                    settings.hintsAvailable.ToString(culture),
+                    
+                    metrics.totalLevelTime.ToString(culture),
+                    
+                    metrics.axeCollected.ToString(),
+                    s_timeToFindAxe,
+                    
+                    metrics.keyCollected.ToString(),
+                    s_timeToFindKey,
+                    
+                    metrics.movementCount.ToString(culture),
+                    metrics.idleCount.ToString(culture),
+                    metrics.destructibleHits.ToString(culture),
+                    metrics.failedHitsWithoutAxe.ToString(culture),
+                    metrics.cavesUsed.ToString(culture),
+                    metrics.explorationPercentage.ToString(culture),
+                    metrics.hintsUsed.ToString(culture),
+                    metrics.restartCount.ToString(culture),
+                    metrics.errorCount.ToString(culture),
+                    
+                    metrics.keyToGoal.keyToGoalPathDataValid.ToString(),
+                    s_kgTime,
+                    metrics.keyToGoal.keyToGoalActualDistance.ToString(culture),
+                    s_kgOptDist,
+                    s_kgExtDist,
+                    metrics.keyToGoal.keyToGoalRepeatedCells.ToString(culture),
+                    metrics.keyToGoal.keyToGoalRepeatedCellRatio.ToString(culture),
+                    s_kgEff,
+                    s_kgNav,
+                    metrics.keyToGoal.keyToGoalUsefulCaveUses.ToString(culture),
+                    metrics.keyToGoal.keyToGoalNeutralCaveUses.ToString(culture),
+                    metrics.keyToGoal.keyToGoalUnproductiveCaveUses.ToString(culture),
+                    
+                    metrics.levelCompleted.ToString(),
+                    metrics.terminationReason ?? "OTHER"
+                };
 
-            string historyFilePath = Path.Combine(folderPath, "metrics_history_all.json");
-            File.WriteAllText(historyFilePath, ExportHistoryToJson());
+                writer.WriteLine(string.Join(",", fields));
+            }
 
-#if UNITY_EDITOR
-            UnityEditor.AssetDatabase.Refresh();
-#endif
-
-            Debug.Log($"[DifficultyManager] 📄 JSON de métricas guardado exitosamente:\n  ➜ Archivo individual: {filePath}\n  ➜ Historial completo: {historyFilePath}");
+            Debug.Log($"[DifficultyManager] 📄 CSV de métricas guardado exitosamente en: {filePath}");
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[DifficultyManager] Error al guardar el archivo JSON de métricas: {ex.Message}");
+            Debug.LogError($"[DifficultyManager] Error al guardar el archivo CSV de métricas: {ex.Message}");
         }
     }
 

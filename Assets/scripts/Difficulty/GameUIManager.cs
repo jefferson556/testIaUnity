@@ -270,7 +270,11 @@ public class GameUIManager : MonoBehaviour
         if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.rKey.wasPressedThisFrame)
         {
             if (DifficultyMetricsCollector.Instance != null)
+            {
+                DifficultyMetricsCollector.Instance.SetTerminationReason("RESTART");
+                DifficultyMetricsCollector.Instance.OnLevelEnded(false);
                 DifficultyMetricsCollector.Instance.RecordRestart();
+            }
             
             DynamicLevelManager levelManager = Object.FindAnyObjectByType<DynamicLevelManager>();
             if (levelManager != null)

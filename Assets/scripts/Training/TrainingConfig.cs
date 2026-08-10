@@ -19,4 +19,7 @@ public sealed class TrainingConfig : ScriptableObject
 
     [Header("Fase Actual")]
     public int trainingPhase = 0;
+    [Header("Métricas y Análisis")]
+    [Tooltip("Activa esto solo para recolectar datos JSON de las partidas jugadas por la IA. Consumirá CPU.")]
+    public bool generateMetrics = false;
 }

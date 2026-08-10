@@ -26,6 +26,9 @@ public class MazeAgent : Agent
     [SerializeField] private float wallPenalty = -0.01f;
     [SerializeField] private float stepPenalty = -0.0005f;
 
+    private int currentEpisodeStepCount = 0;
+    public int CurrentEpisodeStepCount => currentEpisodeStepCount;
+
     private Rigidbody2D rb;
     private Vector3 initialPosition;
     private Transform goalTransform;
@@ -89,10 +92,6 @@ public class MazeAgent : Agent
             }
         }
         
-        // Forzando el tiempo máximo a ~3 minutos (9000 pasos) ignorando el inspector
-        MaxStep = 9000;
-        maxStepsPerEpisode = 9000;
-        
         // Forzando penalización de tiempo más fuerte ignorando el inspector
         stepPenalty = -0.002f;
 
@@ -141,6 +140,13 @@ public class MazeAgent : Agent
         hasTraversedCave = true;
         AddReward(0.5f); // Recompensa por tomar el atajo automático de la cueva
         Debug.Log("[MazeAgent] 🌀 ¡Teletransporte automático por cueva completado!");
+        
+        // Actualizar la distancia de referencia al hacha desde la nueva posición (Cueva B)
+        // para evitar un pico de recompensa negativa por proximidad en el siguiente frame.
+        if (axeTransform != null)
+        {
+            previousDistanceToAxe = Vector3.Distance(transform.position, axeTransform.position);
+        }
     }
 
     private void DisableHumanControls()
@@ -174,8 +180,32 @@ public class MazeAgent : Agent
         }
     }
 
+    public void TriggerTimeoutFailure()
+    {
+        AddReward(-1.0f); // Penalización severa por no llegar a tiempo
+        Debug.Log("[MazeAgent] ⏱️ IA se quedó sin tiempo en el nivel.");
+        if (DifficultyMetricsCollector.Instance != null && DifficultyMetricsCollector.Instance.IsCollecting)
+        {
+            DifficultyMetricsCollector.Instance.SetTerminationReason("TIMEOUT");
+        }
+        EndEpisode();
+    }
+
     public override void OnEpisodeBegin()
     {
+        // Si el episodio comienza de nuevo pero estábamos recolectando datos, y el contador local > 0, 
+        // significa que Unity ML-Agents truncó el episodio internamente (ej. por MaxStep).
+        if (DifficultyMetricsCollector.Instance != null && DifficultyMetricsCollector.Instance.IsCollecting)
+        {
+            if (currentEpisodeStepCount > 0) 
+            {
+                DifficultyMetricsCollector.Instance.SetTerminationReason("TIMEOUT");
+                DifficultyMetricsCollector.Instance.OnLevelEnded(false);
+            }
+        }
+
+        currentEpisodeStepCount = 0;
+
         DisableHumanControls();
         hasTraversedCave = false;
 
@@ -371,7 +401,8 @@ public class MazeAgent : Agent
         sensor.AddObservation(hasKey ? 1f : 0f);
         sensor.AddObservation(hasAxe ? 1f : 0f);
         // Llave: posición y dirección (6 valores)
-        if (keyTransform != null && !hasKey)
+        // Ocultar la llave si no tiene el hacha para evitar que se salte el hacha y vaya directo a la llave.
+        if (keyTransform != null && !hasKey && hasAxe)
         {
             sensor.AddObservation(keyTransform.localPosition);
             sensor.AddObservation((keyTransform.position - transform.position).normalized);
@@ -382,15 +413,17 @@ public class MazeAgent : Agent
             sensor.AddObservation(Vector3.zero);
         }
 
-        // Cueva o Hacha relevante: posición y dirección (6 valores)
         Transform relevantTarget = null;
-        if (!hasAxe && !hasTraversedCave && caveATransform != null)
+        if (!hasAxe)
         {
-            relevantTarget = caveATransform;
-        }
-        else if (!hasAxe && hasTraversedCave && axeTransform != null)
-        {
-            relevantTarget = axeTransform;
+            if (!hasTraversedCave && caveATransform != null)
+            {
+                relevantTarget = caveATransform;
+            }
+            else if (axeTransform != null)
+            {
+                relevantTarget = axeTransform;
+            }
         }
         else if (hasAxe && caveBTransform != null)
         {
@@ -414,6 +447,8 @@ public class MazeAgent : Agent
     public override void OnActionReceived(ActionBuffers actions)
     {
         if (IsGenerating) return;
+
+        currentEpisodeStepCount++;
 
         DisableHumanControls();
 
@@ -459,10 +494,6 @@ public class MazeAgent : Agent
             else
             {
                 rb.linearVelocity = dir * moveSpeed;
-                if (dir != Vector2.zero)
-                {
-                    rb.MovePosition(rb.position + dir * moveSpeed * Time.fixedDeltaTime);
-                }
             }
         }
         else
@@ -481,17 +512,20 @@ public class MazeAgent : Agent
         float refDist = 0f;
         int targetStage = 0; // 0=Axe/CaveA, 1=Key, 2=Goal
 
-        if (!hasAxe && !hasTraversedCave && caveATransform != null)
+        if (!hasAxe)
         {
-            targetTransform = caveATransform;
-            refDist = previousDistanceToAxe;
-            targetStage = 0;
-        }
-        else if (!hasAxe && hasTraversedCave && axeTransform != null)
-        {
-            targetTransform = axeTransform;
-            refDist = previousDistanceToAxe;
-            targetStage = 0;
+            if (!hasTraversedCave && caveATransform != null)
+            {
+                targetTransform = caveATransform;
+                refDist = previousDistanceToAxe;
+                targetStage = 0;
+            }
+            else if (axeTransform != null)
+            {
+                targetTransform = axeTransform;
+                refDist = previousDistanceToAxe;
+                targetStage = 0;
+            }
         }
         else if (!hasKey && keyTransform != null)
         {
@@ -510,8 +544,9 @@ public class MazeAgent : Agent
         {
             float currentDist = Vector3.Distance(transform.position, targetTransform.position);
             float distDiff = refDist - currentDist;
-
-            AddReward(distDiff * 0.1f);
+            // Se restaura la recompensa Euclidiana pero atenuada, el Wall Fear fue eliminado
+            // por lo que ahora el agente podrá rodear paredes usando el step penalty como guía.
+            AddReward(distDiff * 0.02f); 
 
             if (targetStage == 0) previousDistanceToAxe = currentDist;
             else if (targetStage == 1) previousDistanceToKey = currentDist;
@@ -557,6 +592,13 @@ public class MazeAgent : Agent
             if (inventory != null && inventory.HasKey)
             {
                 AddReward(goalReward);
+                
+                if (DifficultyMetricsCollector.Instance != null && DifficultyMetricsCollector.Instance.IsCollecting)
+                {
+                    DifficultyMetricsCollector.Instance.SetTerminationReason("GOAL");
+                    DifficultyMetricsCollector.Instance.OnLevelEnded(true);
+                }
+
                 EndEpisode();
             }
             else
@@ -575,6 +617,9 @@ public class MazeAgent : Agent
             AddReward(wallPenalty);
         }
     }
+
+    // ELIMINADO: OnCollisionStay2D. Castigaba severamente (-0.005 por tick) el simple acto de deslizarse
+    // por las paredes. Esto causaba el "Wall Fear" (el agente daba vueltas para no tocar nada).
 
     private void ExecuteInteractAction()
     {

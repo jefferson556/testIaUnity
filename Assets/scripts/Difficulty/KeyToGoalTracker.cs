@@ -410,12 +410,14 @@ public class KeyToGoalTracker : MonoBehaviour
         }
         else
         {
-            m.keyToGoalOptimalDistance = 0;
+            m.keyToGoalOptimalDistance = -1;
             m.keyToGoalActualDistance = actualWalkingDistance;
-            m.keyToGoalExtraDistance = 0;
+            m.keyToGoalExtraDistance = -1;
             m.keyToGoalRepeatedCells = repeatedCellsCount;
-            m.keyToGoalRepeatedCellRatio = 0f;
-            m.keyToGoalEfficiency = 0f;
+            m.keyToGoalRepeatedCellRatio = m.keyToGoalActualDistance > 0 
+                ? (float)m.keyToGoalRepeatedCells / m.keyToGoalActualDistance 
+                : 0f;
+            m.keyToGoalEfficiency = -1f;
         }
 
         // Llenar variables de teletransporte

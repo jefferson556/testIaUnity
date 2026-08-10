@@ -53,7 +53,7 @@ behaviors:
     init_path: null
     keep_checkpoints: 5
     even_checkpoints: false
-    max_steps: 3000000
+    max_steps: 150000000
     time_horizon: 64
     summary_freq: 5000
     threaded: false
@@ -84,8 +84,8 @@ checkpoint_settings:
   run_id: Entrenamiento_Fase4
   initialize_from: null
   load_model: false
-  resume: false
-  force: true
+  resume: true
+  force: false
   train_model: false
   inference: false
   results_dir: results

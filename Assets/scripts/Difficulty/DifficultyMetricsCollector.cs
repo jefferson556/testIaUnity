@@ -23,6 +23,12 @@ public class DifficultyMetricsCollector : MonoBehaviour
     private bool isCollecting;
     private int currentSessionRestarts = 0;
 
+    // --- Variables de corrección de instrumentación ---
+    private Vector2Int lastCell = new Vector2Int(-1, -1);
+    private bool justTeleported = false;
+    private int cachedTotalWalkableCells = -1;
+    private bool isCurrentlyIdle = false;
+
     public float CurrentLevelElapsedTime
     {
         get
@@ -36,6 +42,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
     }
 
     public DifficultyMetrics CurrentMetrics => metrics;
+    public bool IsCollecting => isCollecting;
 
     private void Awake()
     {
@@ -53,11 +60,31 @@ public class DifficultyMetricsCollector : MonoBehaviour
     public void StartCollecting()
     {
         metrics = new DifficultyMetrics();
+        MazeAgent agent = FindAnyObjectByType<MazeAgent>();
+        if (agent != null)
+        {
+            metrics.maxTimeLimitInSeconds = agent.MaxStep * Time.fixedDeltaTime;
+            metrics.maxEpisodeSteps = agent.MaxStep;
+            metrics.agentVersion = "MazeAgent_v2"; // Se asume este nombre por defecto para IA
+        }
+        else
+        {
+            metrics.maxEpisodeSteps = 0;
+            metrics.agentVersion = "Human";
+        }
+        
+        metrics.episodeId = System.Guid.NewGuid().ToString();
+
         metrics.restartCount = currentSessionRestarts;
         visitedCells.Clear();
         levelStartTime = Time.time;
         idleTimer = 0f;
         isMovingLastFrame = false;
+        
+        lastCell = new Vector2Int(-1, -1);
+        justTeleported = false;
+        cachedTotalWalkableCells = -1;
+        isCurrentlyIdle = false;
         
         playerMovement = FindAnyObjectByType<CatMovement>();
         if (playerMovement != null)
@@ -106,31 +133,46 @@ public class DifficultyMetricsCollector : MonoBehaviour
             return;
         }
 
-        // Registrar distancia recorrida
-        Vector3 currentPos = playerMovement.transform.position;
+        // Registrar distancia recorrida y idle
+        Rigidbody2D rb = playerMovement.GetComponent<Rigidbody2D>();
+        Vector3 currentPos = rb != null ? (Vector3)rb.position : playerMovement.transform.position;
         float dist = Vector3.Distance(lastPosition, currentPos);
-        if (dist > 0.01f)
+        bool hasMovedPhysical = dist > 0.01f;
+        
+        // Guardar estado del flag localmente para el frame y reiniciarlo
+        bool isTeleportFrame = justTeleported;
+        if (isTeleportFrame)
         {
-            metrics.distanceTraveled += dist;
+            justTeleported = false;
+        }
+
+        if (hasMovedPhysical)
+        {
+            if (!isTeleportFrame)
+            {
+                metrics.distanceTraveled += dist;
+            }
+            else
+            {
+                // [Metrics] Teleport ignored for distance calculation
+            }
             lastPosition = currentPos;
-            metrics.movementCount++;
-            isMovingLastFrame = true;
+            
             idleTimer = 0f;
+            isCurrentlyIdle = false;
         }
         else
         {
-            if (isMovingLastFrame)
+            idleTimer += Time.deltaTime;
+            if (idleTimer >= 1.0f && !isCurrentlyIdle)
             {
-                idleTimer += Time.deltaTime;
-                if (idleTimer >= 1.0f) // 1 segundo detenido
-                {
-                    metrics.idleCount++;
-                    isMovingLastFrame = false;
-                }
+                metrics.idleCount++;
+                isCurrentlyIdle = true;
+                // Debug.Log($"[Metrics] Idle detected, idleCount={metrics.idleCount}");
             }
         }
 
-        // Registrar exploración del mapa
+        // Registrar exploración del mapa y movementCount
         Vector3 origin = mazeData.MapOrigin;
         Vector2Int cellSize = mazeData.CellSize;
         if (cellSize.x > 0 && cellSize.y > 0)
@@ -139,13 +181,33 @@ public class DifficultyMetricsCollector : MonoBehaviour
             int cellY = Mathf.FloorToInt((currentPos.y - origin.y) / cellSize.y);
             if (cellX >= 0 && cellX < mazeData.Width && cellY >= 0 && cellY < mazeData.Height)
             {
+                Vector2Int currentCell = new Vector2Int(cellX, cellY);
+                
+                // Movement Count
+                if (lastCell == new Vector2Int(-1, -1))
+                {
+                    lastCell = currentCell;
+                }
+                else if (currentCell != lastCell)
+                {
+                    if (!isTeleportFrame)
+                    {
+                        metrics.movementCount++;
+                        // Debug.Log($"[Metrics] Cell changed: {lastCell} -> {currentCell}, movementCount={metrics.movementCount}");
+                    }
+                    lastCell = currentCell;
+                }
+
+                // Exploration Percentage
                 if (mazeData.IsWalkable(cellX, cellY))
                 {
-                    Vector2Int cell = new Vector2Int(cellX, cellY);
-                    if (visitedCells.Add(cell))
+                    if (visitedCells.Add(currentCell))
                     {
-                        int totalWalkable = GetTotalWalkableCellsCount(mazeData);
-                        metrics.explorationPercentage = totalWalkable > 0 ? (float)visitedCells.Count / totalWalkable : 0f;
+                        if (cachedTotalWalkableCells == -1)
+                        {
+                            cachedTotalWalkableCells = GetTotalWalkableCellsCount(mazeData);
+                        }
+                        metrics.explorationPercentage = cachedTotalWalkableCells > 0 ? (float)visitedCells.Count / cachedTotalWalkableCells : 0f;
                     }
                 }
             }
@@ -218,6 +280,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
 
     private void HandleAxeCollected()
     {
+        metrics.axeCollected = true;
         metrics.timeToFindAxe = Time.time - levelStartTime;
         metrics.objectivesCollected++;
         Debug.Log($"[Metrics] Hacha recolectada en {metrics.timeToFindAxe:F2} segundos.");
@@ -225,6 +288,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
 
     private void HandleKeyCollected()
     {
+        metrics.keyCollected = true;
         metrics.timeToFindKey = Time.time - levelStartTime;
         metrics.objectivesCollected++;
         Debug.Log($"[Metrics] Llave recolectada en {metrics.timeToFindKey:F2} segundos.");
@@ -247,6 +311,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
     private void HandleTeleport()
     {
         metrics.cavesUsed++;
+        justTeleported = true;
         Debug.Log($"[Metrics] Cueva utilizada. Total: {metrics.cavesUsed}");
     }
 
@@ -259,14 +324,29 @@ public class DifficultyMetricsCollector : MonoBehaviour
         }
     }
 
-    public void OnLevelCompleted()
+    public void SetTerminationReason(string reason)
+    {
+        if (isCollecting)
+        {
+            metrics.terminationReason = reason;
+        }
+    }
+
+    public void OnLevelEnded(bool success)
     {
         if (!isCollecting) return;
 
         StopCollecting();
         
+        MazeAgent agent = FindAnyObjectByType<MazeAgent>();
+        if (agent != null)
+        {
+            metrics.episodeStepCount = agent.CurrentEpisodeStepCount;
+        }
+        
+        metrics.levelCompleted = success;
         metrics.totalLevelTime = Time.time - levelStartTime;
-        metrics.timeToReachHouse = metrics.totalLevelTime;
+        metrics.timeToReachHouse = success ? metrics.totalLevelTime : 0f;
 
         // Finalizar el tracking de llave→meta y copiar las métricas
         if (KeyToGoalTracker.Instance != null && KeyToGoalTracker.Instance.IsTracking)
@@ -279,11 +359,11 @@ public class DifficultyMetricsCollector : MonoBehaviour
             metrics.keyToGoal = KeyToGoalTracker.Instance.CompletedMetrics;
         }
         
-        Debug.Log($"[MetricsCollector] Nivel completado. Tiempo total: {metrics.totalLevelTime:F2}s. Distancia: {metrics.distanceTraveled:F1}m.");
+        Debug.Log($"[MetricsCollector] Nivel {(success ? "completado" : "fallido/timeout")}. Tiempo total: {metrics.totalLevelTime:F2}s. Distancia: {metrics.distanceTraveled:F1}m.");
         
         if (DifficultyManager.Instance != null)
         {
-            DifficultyManager.Instance.RegisterLevelCompletion(metrics);
+            DifficultyManager.Instance.RegisterLevelEnd(metrics);
         }
         currentSessionRestarts = 0;
     }

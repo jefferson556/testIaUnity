@@ -91,6 +91,7 @@ public class DynamicLevelManager : MonoBehaviour
     public float CurrentLevelTimeLimit => currentLevelTimeLimit;
     public bool IsTimerActive => isTimerActive;
     public bool IsTrainingModeActive => isTrainingModeActive;
+    private bool isMetricsGenerationEnabled;
 
     // La configuración de cuevas opcionales se lee de DifficultySettings.
     // El Inspector local ya no muestra campos separados para travel caves;
@@ -264,6 +265,7 @@ public class DynamicLevelManager : MonoBehaviour
 
         TrainingConfig tConfig = Resources.Load<TrainingConfig>("TrainingConfig");
         isTrainingModeActive = (tConfig != null && tConfig.trainingMode);
+        isMetricsGenerationEnabled = (tConfig != null && tConfig.generateMetrics);
         
         currentLevelTimeLimit = settings.maxTimeLimitInSeconds;
         isTimerActive = false;
@@ -530,7 +532,10 @@ public class DynamicLevelManager : MonoBehaviour
             // Iniciar recopilación de métricas
             if (DifficultyMetricsCollector.Instance != null)
             {
-                DifficultyMetricsCollector.Instance.StartCollecting();
+                if (!isTrainingModeActive || isMetricsGenerationEnabled)
+                {
+                    DifficultyMetricsCollector.Instance.StartCollecting();
+                }
             }
 
             Debug.Log($"[LevelGeneration] Nivel válido en intento {(acceptedSeed - baseSeed)}. Seed: {acceptedSeed}.");
@@ -682,7 +687,7 @@ public class DynamicLevelManager : MonoBehaviour
 
     private void Update()
     {
-        if (isTimerActive && !isTrainingModeActive)
+        if (isTimerActive)
         {
             currentLevelTimeLimit -= Time.deltaTime;
             if (currentLevelTimeLimit <= 0)
@@ -695,12 +700,30 @@ public class DynamicLevelManager : MonoBehaviour
     private void TriggerTimeOut()
     {
         isTimerActive = false;
-        DisablePlayerControl();
-        if (GameUIManager.Instance != null)
+        
+        if (DifficultyMetricsCollector.Instance != null && DifficultyMetricsCollector.Instance.IsCollecting)
         {
-            GameUIManager.Instance.ShowLoadingScreen("Goal not reached. Restarting map...");
+            DifficultyMetricsCollector.Instance.SetTerminationReason("TIMEOUT");
+            DifficultyMetricsCollector.Instance.OnLevelEnded(false);
         }
-        StartCoroutine(TimeOutRestartRoutine());
+
+        if (isTrainingModeActive)
+        {
+            MazeAgent agent = FindAnyObjectByType<MazeAgent>();
+            if (agent != null)
+            {
+                agent.TriggerTimeoutFailure();
+            }
+        }
+        else
+        {
+            DisablePlayerControl();
+            if (GameUIManager.Instance != null)
+            {
+                GameUIManager.Instance.ShowLoadingScreen("Goal not reached. Restarting map...");
+            }
+            StartCoroutine(TimeOutRestartRoutine());
+        }
     }
 
     private IEnumerator TimeOutRestartRoutine()
@@ -2197,7 +2220,8 @@ public class DynamicLevelManager : MonoBehaviour
 
         if (DifficultyMetricsCollector.Instance != null)
         {
-            DifficultyMetricsCollector.Instance.OnLevelCompleted();
+            DifficultyMetricsCollector.Instance.SetTerminationReason("GOAL");
+            DifficultyMetricsCollector.Instance.OnLevelEnded(true);
         }
 
         StartCoroutine(AutoRegenerateLevelRoutine());
