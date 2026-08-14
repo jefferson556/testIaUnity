@@ -45,11 +45,14 @@ public class AxeObstacleBreaker : MonoBehaviour
 
     private void Update()
     {
-        // Detectar pulsación de la tecla E o Espacio mediante el paquete New Input System
-        var kb = UnityEngine.InputSystem.Keyboard.current;
-        if (kb != null && (kb.eKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
+        // Si inputReader no está asignado o no está habilitado, usar fallback manual para evitar llamadas duplicadas
+        if (inputReader == null || !inputReader.enabled)
         {
-            TryBreakObstacle();
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (kb != null && (kb.eKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
+            {
+                TryBreakObstacle();
+            }
         }
     }
 

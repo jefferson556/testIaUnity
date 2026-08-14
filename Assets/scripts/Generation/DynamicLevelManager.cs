@@ -738,9 +738,23 @@ public class DynamicLevelManager : MonoBehaviour
         {
             var mazeAgent = playerTransform.GetComponent<MazeAgent>();
             var movement = playerTransform.GetComponent<CatMovement>();
-            if (movement != null)
+            var inputReader = playerTransform.GetComponent<CatInputReader>();
+
+            if (!isTrainingModeActive)
             {
-                movement.enabled = (mazeAgent == null || !mazeAgent.enabled);
+                if (mazeAgent != null && mazeAgent.enabled)
+                {
+                    mazeAgent.enabled = false;
+                }
+                if (movement != null) movement.enabled = true;
+                if (inputReader != null) inputReader.enabled = true;
+            }
+            else
+            {
+                if (movement != null)
+                {
+                    movement.enabled = (mazeAgent == null || !mazeAgent.enabled);
+                }
             }
 
             var rb = playerTransform.GetComponent<Rigidbody2D>();
@@ -999,42 +1013,33 @@ public class DynamicLevelManager : MonoBehaviour
 
     private void SetupAxe(Vector3 spawnWorldPosition)
     {
-        if (axeTransform != null && !axeTransform.gameObject.scene.IsValid())
+        // 1. Limpiar cualquier instancia previa del nivel anterior
+        if (spawnedAxeInstance != null)
         {
-            axeTransform = null;
+            Destroy(spawnedAxeInstance);
+            spawnedAxeInstance = null;
         }
 
-        if (axeTransform == null)
+        // 2. Determinar la plantilla/prefab a usar (axePrefab o axeTransform de respaldo)
+        GameObject prefabToUse = axePrefab;
+        if (prefabToUse == null && axeTransform != null && axeTransform.gameObject != null)
         {
-            CollectibleItem[] items = FindObjectsByType<CollectibleItem>();
-            foreach (var item in items)
-            {
-                if (item.gameObject.name.ToLower().Contains("hacha") || item.gameObject.name.ToLower().Contains("axe"))
-                {
-                    axeTransform = item.transform;
-                    break;
-                }
-            }
+            prefabToUse = axeTransform.gameObject;
         }
 
-        if (axeTransform != null)
+        // 3. Instanciar un objeto de hacha completamente nuevo para este nivel
+        if (prefabToUse != null)
         {
-            axeTransform.position = spawnWorldPosition;
-            axeTransform.gameObject.SetActive(true);
-        }
-        else if (axePrefab != null)
-        {
-            if (spawnedAxeInstance != null)
-            {
-                Destroy(spawnedAxeInstance);
-            }
-
             Transform parent = itemsContainer != null ? itemsContainer : transform;
-            spawnedAxeInstance = Instantiate(axePrefab, spawnWorldPosition, Quaternion.identity, parent);
+            spawnedAxeInstance = Instantiate(prefabToUse, spawnWorldPosition, Quaternion.identity, parent);
+            spawnedAxeInstance.name = "Mission_Axe";
+            spawnedAxeInstance.SetActive(true);
+            axeTransform = spawnedAxeInstance.transform;
+            Debug.Log($"[DynamicLevelManager] 🪓 Hacha instanciada exitosamente en la posición {spawnWorldPosition} (Mission_Axe).");
         }
         else
         {
-            Debug.LogWarning("DynamicLevelManager: No se asignó ni Axe Transform ni Axe Prefab en el Inspector.", this);
+            Debug.LogWarning("[DynamicLevelManager] ⚠️ No se pudo instanciar el hacha porque no se asignó ni 'Axe Prefab' ni 'Axe Transform' en el Inspector.", this);
         }
     }
 
@@ -1087,6 +1092,7 @@ public class DynamicLevelManager : MonoBehaviour
 
     private void ClearMissionObjects()
     {
+        if (spawnedAxeInstance != null) Destroy(spawnedAxeInstance);
         if (spawnedCuevaAInstance != null) Destroy(spawnedCuevaAInstance);
         if (spawnedCuevaBInstance != null) Destroy(spawnedCuevaBInstance);
         if (spawnedKeyInstance != null) Destroy(spawnedKeyInstance);

@@ -1,7 +1,7 @@
-using UnityEngine;
 using Unity.MLAgents;
-using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
+using Unity.MLAgents.Sensors;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -33,17 +33,18 @@ public class MazeAgent : Agent
     private Vector3 initialPosition;
     private Transform goalTransform;
     private float previousDistanceToGoal;
-
+    private float previousDistanceToKey;
+    private float previousDistanceToCurrentTarget;
     private CatMovement humanMovement;
     private CatInputReader humanInput;
     private CatInventory inventory;
     private Transform keyTransform;
-    private float previousDistanceToKey;
     private Transform caveATransform;
     private Transform caveBTransform;
     private Transform axeTransform;
     private float previousDistanceToAxe;
-    private bool hasTraversedCave = false;
+    private bool hasTraversedCaveA = false;
+    private bool hasTraversedCaveB = false;
     private Vector2 currentMoveDirection = Vector2.down;
 
     public bool IsGenerating { get; private set; } = false;
@@ -81,17 +82,27 @@ public class MazeAgent : Agent
             bp.BrainParameters.ActionSpec = Unity.MLAgents.Actuators.ActionSpec.MakeDiscrete(5, 2);
         }
 
-        // 1. CORRECCIÓN DE CEGUERA: Asegurar que el sensor pueda ver los destructibles
-        var raySensor = GetComponent<Unity.MLAgents.Sensors.RayPerceptionSensorComponent2D>();
-        if (raySensor != null)
+        // Sincronizar MaxStep nativo de ML-Agents con maxStepsPerEpisode
+        if (maxStepsPerEpisode > 0)
         {
-            if (raySensor.DetectableTags != null && !raySensor.DetectableTags.Contains("Desctruct"))
-            {
-                raySensor.DetectableTags.Add("Desctruct");
-                Debug.Log($"[MazeAgent] Etiqueta 'Desctruct' inyectada en el sensor de {gameObject.name}");
-            }
+            MaxStep = maxStepsPerEpisode;
         }
-        
+
+        // 1. CORRECCIÓN DE CEGUERA: Asegurar que el sensor pueda ver destructibles y cuevas
+        var raySensor = GetComponent<Unity.MLAgents.Sensors.RayPerceptionSensorComponent2D>();
+        if (raySensor != null && raySensor.DetectableTags != null)
+        {
+            string[] requiredTags = new string[] { "Desctruct", "Destruct", "Cave", "Portal", "Cueva", "TravelCave" };
+            foreach (var tag in requiredTags)
+            {
+                if (!raySensor.DetectableTags.Contains(tag))
+                {
+                    raySensor.DetectableTags.Add(tag);
+                }
+            }
+            Debug.Log($"[MazeAgent] Etiquetas inyectadas en RaySensor de {gameObject.name}. Total detectables: {raySensor.DetectableTags.Count}");
+        }
+
         // Forzando penalización de tiempo más fuerte ignorando el inspector
         stepPenalty = -0.002f;
 
@@ -137,20 +148,39 @@ public class MazeAgent : Agent
 
     private void HandleTeleport()
     {
-        hasTraversedCave = true;
-        AddReward(0.5f); // Recompensa por tomar el atajo automático de la cueva
-        Debug.Log("[MazeAgent] 🌀 ¡Teletransporte automático por cueva completado!");
-        
-        // Actualizar la distancia de referencia al hacha desde la nueva posición (Cueva B)
-        // para evitar un pico de recompensa negativa por proximidad en el siguiente frame.
-        if (axeTransform != null)
+        bool hasAxe = inventory != null && inventory.HasAxe;
+
+        if (!hasAxe)
         {
-            previousDistanceToAxe = Vector3.Distance(transform.position, axeTransform.position);
+            hasTraversedCaveA = true;
+            AddReward(0.5f); // Recompensa por tomar la Cueva A para entrar al recinto del hacha
+            Debug.Log("[MazeAgent] 🌀 Teletransporte por Cueva_A_Entrance completado (Entrada a zona del hacha)!");
+
+            if (axeTransform != null)
+            {
+                previousDistanceToCurrentTarget = Vector3.Distance(transform.position, axeTransform.position);
+            }
+        }
+        else
+        {
+            hasTraversedCaveB = true;
+            AddReward(0.5f); // Recompensa por tomar la Cueva B para salir del recinto del hacha
+            Debug.Log("[MazeAgent] 🌀 Teletransporte por Cueva_B_Exit completado (Salida de zona del hacha)!");
+
+            if (keyTransform != null)
+            {
+                previousDistanceToKey = Vector3.Distance(transform.position, keyTransform.position);
+            }
         }
     }
 
     private void DisableHumanControls()
     {
+        if (trainingConfig == null || !trainingConfig.trainingMode)
+        {
+            return;
+        }
+
         if (humanMovement == null) humanMovement = GetComponent<CatMovement>();
         if (humanMovement != null && humanMovement.enabled)
         {
@@ -197,7 +227,7 @@ public class MazeAgent : Agent
         // significa que Unity ML-Agents truncó el episodio internamente (ej. por MaxStep).
         if (DifficultyMetricsCollector.Instance != null && DifficultyMetricsCollector.Instance.IsCollecting)
         {
-            if (currentEpisodeStepCount > 0) 
+            if (currentEpisodeStepCount > 0)
             {
                 DifficultyMetricsCollector.Instance.SetTerminationReason("TIMEOUT");
                 DifficultyMetricsCollector.Instance.OnLevelEnded(false);
@@ -207,7 +237,8 @@ public class MazeAgent : Agent
         currentEpisodeStepCount = 0;
 
         DisableHumanControls();
-        hasTraversedCave = false;
+        hasTraversedCaveA = false;
+        hasTraversedCaveB = false;
 
         IsGenerating = true;
 
@@ -282,13 +313,13 @@ public class MazeAgent : Agent
             previousDistanceToKey = Vector3.Distance(transform.position, keyTransform.position);
         }
 
-        if (!hasTraversedCave && caveATransform != null)
+        if (!hasTraversedCaveA && caveATransform != null)
         {
-            previousDistanceToAxe = Vector3.Distance(transform.position, caveATransform.position);
+            previousDistanceToCurrentTarget = Vector3.Distance(transform.position, caveATransform.position);
         }
         else if (axeTransform != null)
         {
-            previousDistanceToAxe = Vector3.Distance(transform.position, axeTransform.position);
+            previousDistanceToCurrentTarget = Vector3.Distance(transform.position, axeTransform.position);
         }
 
         // Reiniciar velocidad
@@ -298,6 +329,13 @@ public class MazeAgent : Agent
             rb.angularVelocity = 0f;
         }
 
+        // Reiniciar estado de animación a Reposo (Cat_Idle)
+        var anim = GetComponentInChildren<Animator>();
+        if (anim != null)
+        {
+            anim.Play("Cat_Idle", 0, 0f);
+        }
+
         IsGenerating = false;
         Debug.Log("[MazeAgent] 🗺️ ¡Laberinto regenerado y configurado correctamente para el nuevo episodio!");
     }
@@ -305,7 +343,7 @@ public class MazeAgent : Agent
     private void FindGoalTransform()
     {
         goalTransform = null;
-        Transform root = transform.parent != null ? transform.parent : transform;
+        Transform root = (levelManager != null) ? levelManager.transform : (transform.parent != null ? transform.parent : transform);
         foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
         {
             if (child != transform && (child.name.Contains("Goal") || child.name.Contains("Meta") || child.name.Contains("Door") || child.CompareTag("Goal")))
@@ -314,17 +352,12 @@ public class MazeAgent : Agent
                 break;
             }
         }
-        if (goalTransform == null)
-        {
-            GameObject goalObj = GameObject.FindWithTag("Goal");
-            if (goalObj != null) goalTransform = goalObj.transform;
-        }
     }
 
     private void FindKeyTransform()
     {
         keyTransform = null;
-        Transform root = transform.parent != null ? transform.parent : transform;
+        Transform root = (levelManager != null) ? levelManager.transform : (transform.parent != null ? transform.parent : transform);
         foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
         {
             if (child != transform && (child.name.Contains("Key") || child.name.Contains("Llave")))
@@ -333,32 +366,40 @@ public class MazeAgent : Agent
                 break;
             }
         }
-        if (keyTransform == null)
-        {
-            GameObject keyObj = GameObject.Find("Mission_Key");
-            if (keyObj != null) keyTransform = keyObj.transform;
-        }
     }
 
     private void FindCaveTransforms()
     {
         caveATransform = null;
         caveBTransform = null;
-        Transform root = transform.parent != null ? transform.parent : transform;
+        Transform root = (levelManager != null) ? levelManager.transform : (transform.parent != null ? transform.parent : transform);
         foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
         {
-            if (child.name.Contains("Cave_A") || child.name.Contains("Cueva_A")) caveATransform = child;
-            if (child.name.Contains("Cave_B") || child.name.Contains("Cueva_B")) caveBTransform = child;
+            if (child != transform)
+            {
+                if (child.name == "Cave_A_Entrance" || (caveATransform == null && (child.name.Contains("Cave_A_Entrance") || child.name.Contains("Cueva_A"))))
+                {
+                    caveATransform = child;
+                }
+                if (child.name == "Cave_B_Exit" || (caveBTransform == null && (child.name.Contains("Cave_B_Exit") || child.name.Contains("Cueva_B"))))
+                {
+                    caveBTransform = child;
+                }
+            }
         }
     }
 
     private void FindAxeTransform()
     {
         axeTransform = null;
-        Transform root = transform.parent != null ? transform.parent : transform;
+        Transform root = (levelManager != null) ? levelManager.transform : (transform.parent != null ? transform.parent : transform);
         foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
         {
-            if (child.name.Contains("Axe") || child.name.Contains("Hacha")) axeTransform = child;
+            if (child != transform && (child.name.Contains("Axe") || child.name.Contains("Hacha") || child.name.Contains("Mission_Axe")))
+            {
+                axeTransform = child;
+                break;
+            }
         }
     }
 
@@ -370,13 +411,15 @@ public class MazeAgent : Agent
             return;
         }
 
+        Transform refRoot = transform.parent != null ? transform.parent : transform;
+
         // Posición relativa del agente (3 valores)
-        sensor.AddObservation(transform.localPosition);
+        sensor.AddObservation(refRoot.InverseTransformPoint(transform.position));
 
         // Meta: posición y dirección (6 valores)
         if (goalTransform != null)
         {
-            sensor.AddObservation(goalTransform.localPosition);
+            sensor.AddObservation(refRoot.InverseTransformPoint(goalTransform.position));
             sensor.AddObservation((goalTransform.position - transform.position).normalized);
         }
         else
@@ -401,10 +444,14 @@ public class MazeAgent : Agent
         sensor.AddObservation(hasKey ? 1f : 0f);
         sensor.AddObservation(hasAxe ? 1f : 0f);
         // Llave: posición y dirección (6 valores)
-        // Ocultar la llave si no tiene el hacha para evitar que se salte el hacha y vaya directo a la llave.
-        if (keyTransform != null && !hasKey && hasAxe)
+        // Ocultar la llave si no tiene el hacha O si todavía está en la zona aislada antes de tomar Cueva B
+        // (Salvo que empiece con el hacha, en cuyo caso no spawnea en la zona aislada y puede ir a la llave directo)
+        bool startWithAxe = trainingConfig != null && trainingConfig.startWithAxe;
+        bool readyForKey = hasAxe && (hasTraversedCaveB || caveBTransform == null || startWithAxe);
+        
+        if (keyTransform != null && !hasKey && readyForKey)
         {
-            sensor.AddObservation(keyTransform.localPosition);
+            sensor.AddObservation(refRoot.InverseTransformPoint(keyTransform.position));
             sensor.AddObservation((keyTransform.position - transform.position).normalized);
         }
         else
@@ -416,7 +463,7 @@ public class MazeAgent : Agent
         Transform relevantTarget = null;
         if (!hasAxe)
         {
-            if (!hasTraversedCave && caveATransform != null)
+            if (!hasTraversedCaveA && caveATransform != null)
             {
                 relevantTarget = caveATransform;
             }
@@ -425,14 +472,17 @@ public class MazeAgent : Agent
                 relevantTarget = axeTransform;
             }
         }
-        else if (hasAxe && caveBTransform != null)
+        else
         {
-            relevantTarget = caveBTransform;
+            if (!hasTraversedCaveB && caveBTransform != null && !startWithAxe)
+            {
+                relevantTarget = caveBTransform;
+            }
         }
 
         if (relevantTarget != null)
         {
-            sensor.AddObservation(relevantTarget.localPosition);
+            sensor.AddObservation(refRoot.InverseTransformPoint(relevantTarget.position));
             sensor.AddObservation((relevantTarget.position - transform.position).normalized);
         }
         else
@@ -501,31 +551,40 @@ public class MazeAgent : Agent
             transform.Translate(dir * moveSpeed * Time.deltaTime);
         }
 
-        // Recompensa de proximidad secuencial de 3 etapas:
-        // Etapa 0: Guiarse a Cueva A / Hacha si no la posee
-        // Etapa 1: Guiarse a la Llave si posee Hacha pero no posee Llave
-        // Etapa 2: Guiarse a la Meta si posee Hacha y Llave
+        // Recompensa de proximidad secuencial de 4 etapas:
+        // Etapa 0: Guiarse a Cueva A / Hacha si no posee el hacha
+        // Etapa 1: Guiarse a Cueva B (salida de zona hacha) tras tomar el hacha
+        // Etapa 2: Guiarse a la Llave tras salir de la zona del hacha
+        // Etapa 3: Guiarse a la Meta tras tomar la Llave
         bool hasKey = inventory != null && inventory.HasKey;
         bool hasAxe = inventory != null && inventory.HasAxe;
 
         Transform targetTransform = null;
         float refDist = 0f;
-        int targetStage = 0; // 0=Axe/CaveA, 1=Key, 2=Goal
+        int targetStage = 0; // 0=Axe/CaveA, 1=CaveB/Key, 2=Goal
+
+        bool startWithAxe = trainingConfig != null && trainingConfig.startWithAxe;
 
         if (!hasAxe)
         {
-            if (!hasTraversedCave && caveATransform != null)
+            if (!hasTraversedCaveA && caveATransform != null)
             {
                 targetTransform = caveATransform;
-                refDist = previousDistanceToAxe;
+                refDist = previousDistanceToCurrentTarget;
                 targetStage = 0;
             }
             else if (axeTransform != null)
             {
                 targetTransform = axeTransform;
-                refDist = previousDistanceToAxe;
+                refDist = previousDistanceToCurrentTarget;
                 targetStage = 0;
             }
+        }
+        else if (!hasTraversedCaveB && caveBTransform != null && !startWithAxe)
+        {
+            targetTransform = caveBTransform;
+            refDist = previousDistanceToKey;
+            targetStage = 1;
         }
         else if (!hasKey && keyTransform != null)
         {
@@ -546,9 +605,9 @@ public class MazeAgent : Agent
             float distDiff = refDist - currentDist;
             // Se restaura la recompensa Euclidiana pero atenuada, el Wall Fear fue eliminado
             // por lo que ahora el agente podrá rodear paredes usando el step penalty como guía.
-            AddReward(distDiff * 0.02f); 
+            AddReward(distDiff * 0.02f);
 
-            if (targetStage == 0) previousDistanceToAxe = currentDist;
+            if (targetStage == 0) previousDistanceToCurrentTarget = currentDist;
             else if (targetStage == 1) previousDistanceToKey = currentDist;
             else previousDistanceToGoal = currentDist;
         }
@@ -592,7 +651,7 @@ public class MazeAgent : Agent
             if (inventory != null && inventory.HasKey)
             {
                 AddReward(goalReward);
-                
+
                 if (DifficultyMetricsCollector.Instance != null && DifficultyMetricsCollector.Instance.IsCollecting)
                 {
                     DifficultyMetricsCollector.Instance.SetTerminationReason("GOAL");
@@ -623,6 +682,17 @@ public class MazeAgent : Agent
 
     private void ExecuteInteractAction()
     {
+        bool hasAxe = inventory != null && inventory.HasAxe;
+
+        // Si la IA intenta presionar E/Ataque sin tener el hacha:
+        if (!hasAxe)
+        {
+            // Penalizar a la IA para que aprenda a NO presionar el botón de ataque hasta recoger el hacha
+            // ELIMINADO: El castigo masivo (-0.03f) provocaba que la red neuronal generara trauma
+            // y nunca volviera a explorar este botón, ni siquiera tras conseguir el hacha.
+            return;
+        }
+
         var breaker = GetComponent<AxeObstacleBreaker>();
         if (breaker == null) breaker = GetComponentInChildren<AxeObstacleBreaker>();
         if (breaker != null)
@@ -631,13 +701,15 @@ public class MazeAgent : Agent
             if (broke)
             {
                 Debug.Log($"[IA Botón E] 🪓 ¡Impacto de hacha exitoso en dirección {currentMoveDirection}!");
-                AddReward(0.08f);
+                // Aumentado a 0.2f para dar un refuerzo positivo mucho más fuerte al lograrlo.
+                AddReward(0.2f);
             }
             else
             {
                 // Penalización para evitar que spamee el hacha al aire o contra paredes normales
-                AddReward(-0.005f);
-                // Debug.Log($"[MazeAgent] Falló el intento de hacha en dirección {currentMoveDirection}. (Posiblemente no hay obstáculo o no lo alcanza)");
+                // ELIMINADO: Castigar el fallo desalienta a la IA a seguir intentando al principio.
+                // Ya existe un stepPenalty que castiga el perder tiempo.
+                // AddReward(-0.005f);
             }
         }
         else

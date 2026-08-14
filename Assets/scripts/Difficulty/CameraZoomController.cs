@@ -84,6 +84,12 @@ public class CameraZoomController : MonoBehaviour
 
     private void Update()
     {
+        if (virtualCamera == null && fallbackCamera == null)
+        {
+            virtualCamera = FindAnyObjectByType<CinemachineCamera>();
+            if (virtualCamera == null) fallbackCamera = Camera.main;
+        }
+
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
@@ -94,8 +100,8 @@ public class CameraZoomController : MonoBehaviour
             if (CooldownTime < 0f) CooldownTime = 0f;
         }
 
-        // 2. Leer Entrada y Determinar Estado Objetivo
-        bool wantZoomOut = keyboard.leftShiftKey.isPressed;
+        // 2. Leer Entrada y Determinar Estado Objetivo (Soporta Shift Izquierdo o Derecho)
+        bool wantZoomOut = keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed;
 
         if (wantZoomOut && !IsCoolingDown && RemainingTime > 0f)
         {

@@ -22,44 +22,29 @@ public class CatMovement : MonoBehaviour
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
-        inputReader = GetComponent<CatInputReader>();
+        EnsureComponents();
+    }
 
-        if (rb == null)
+    private void OnEnable()
+    {
+        EnsureComponents();
+        if (rb != null)
         {
-            Debug.LogError("Falta Rigidbody2D en body.", this);
-            enabled = false;
-            return;
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.simulated = true;
         }
+    }
 
-        if (inputReader == null)
-        {
-            Debug.LogError("Falta CatInputReader en body.", this);
-            enabled = false;
-            return;
-        }
+    private void EnsureComponents()
+    {
+        if (rb == null) rb = GetComponent<Rigidbody2D>();
+        if (inputReader == null) inputReader = GetComponent<CatInputReader>();
+        if (inputReader == null) inputReader = gameObject.AddComponent<CatInputReader>();
 
-        if (animator == null)
-        {
-            Debug.LogError(
-                "Debes asignar el Animator del objeto art en el Inspector.",
-                this
-            );
+        if (animator == null) animator = GetComponentInChildren<Animator>();
+        if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-            enabled = false;
-            return;
-        }
-
-        if (spriteRenderer == null)
-        {
-            Debug.LogError(
-                "Debes asignar el SpriteRenderer del objeto art en el Inspector.",
-                this
-            );
-
-            enabled = false;
-        }
-        else
+        if (spriteRenderer != null)
         {
             spriteRenderer.transform.localPosition = Vector3.zero;
         }
@@ -67,7 +52,11 @@ public class CatMovement : MonoBehaviour
 
     private void Update()
     {
-        movement = inputReader.MoveInput;
+        if (inputReader == null) EnsureComponents();
+        if (inputReader != null)
+        {
+            movement = inputReader.MoveInput;
+        }
 
         UpdateFacingDirection();
         UpdateAnimation();
@@ -76,6 +65,15 @@ public class CatMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (rb == null) EnsureComponents();
+        if (rb == null) return;
+
+        if (rb.bodyType != RigidbodyType2D.Dynamic)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.simulated = true;
+        }
+
         rb.MovePosition(
             rb.position +
             movement * moveSpeed * Time.fixedDeltaTime

@@ -24,6 +24,19 @@ public class NextLevelLoader : MonoBehaviour
         LoadNextSceneByBuildIndex();
     }
 
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player") || 
+            other.GetComponent<CatMovement>() != null || 
+            other.GetComponentInParent<CatMovement>() != null || 
+            other.name.Contains("Cat") || 
+            other.name.Contains("Player"))
+        {
+            Debug.Log($"[NextLevelLoader] Player entered trigger on {gameObject.name}. Loading level...");
+            LoadNextLevel();
+        }
+    }
+
     private void LoadSceneByName()
     {
         if (!Application.CanStreamedLevelBeLoaded(

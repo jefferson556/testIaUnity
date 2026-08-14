@@ -1,0 +1,123 @@
+{
+    "MazeAgent": {
+        "checkpoints": [
+            {
+                "steps": 592052,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-592052.onnx",
+                "reward": null,
+                "creation_time": 1786404006.3347557,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-592052.pt"
+                ]
+            },
+            {
+                "steps": 999972,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-999972.onnx",
+                "reward": null,
+                "creation_time": 1786410699.9796,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-999972.pt"
+                ]
+            },
+            {
+                "steps": 1055812,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-1055812.onnx",
+                "reward": null,
+                "creation_time": 1786411551.700595,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-1055812.pt"
+                ]
+            },
+            {
+                "steps": 1136612,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-1136612.onnx",
+                "reward": null,
+                "creation_time": 1786415613.7220821,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-1136612.pt"
+                ]
+            },
+            {
+                "steps": 1140452,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-1140452.onnx",
+                "reward": null,
+                "creation_time": 1786415752.9901237,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-1140452.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1140452,
+            "file_path": "results\\Entrenamiento_Nuevo_Dos\\MazeAgent.onnx",
+            "reward": null,
+            "creation_time": 1786415752.9901237,
+            "auxillary_file_paths": [
+                "results\\Entrenamiento_Nuevo_Dos\\MazeAgent\\MazeAgent-1140452.pt"
+            ]
+        }
+    },
+    "DifficultyAdapter": {
+        "checkpoints": [
+            {
+                "steps": 0,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-0.onnx",
+                "reward": null,
+                "creation_time": 1786391185.1747282,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-0.pt"
+                ]
+            },
+            {
+                "steps": 0,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-0.onnx",
+                "reward": null,
+                "creation_time": 1786392006.4911687,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-0.pt"
+                ]
+            },
+            {
+                "steps": 128,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-128.onnx",
+                "reward": null,
+                "creation_time": 1786398376.816503,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-128.pt"
+                ]
+            },
+            {
+                "steps": 128,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-128.onnx",
+                "reward": null,
+                "creation_time": 1786399672.2104375,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-128.pt"
+                ]
+            },
+            {
+                "steps": 138,
+                "file_path": "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-138.onnx",
+                "reward": -1.059999978542328,
+                "creation_time": 1786400478.165894,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-138.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 138,
+            "file_path": "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter.onnx",
+            "reward": -1.059999978542328,
+            "creation_time": 1786400478.165894,
+            "auxillary_file_paths": [
+                "results\\Entrenamiento_Nuevo_Dos\\DifficultyAdapter\\DifficultyAdapter-138.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

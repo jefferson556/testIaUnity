@@ -1,0 +1,65 @@
+{
+    "MazeAgent": {
+        "checkpoints": [
+            {
+                "steps": 1079656,
+                "file_path": "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1079656.onnx",
+                "reward": null,
+                "creation_time": 1786562444.8312273,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1079656.pt"
+                ]
+            },
+            {
+                "steps": 1079912,
+                "file_path": "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1079912.onnx",
+                "reward": null,
+                "creation_time": 1786576162.6218631,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1079912.pt"
+                ]
+            },
+            {
+                "steps": 1079976,
+                "file_path": "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1079976.onnx",
+                "reward": null,
+                "creation_time": 1786576463.9529595,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1079976.pt"
+                ]
+            },
+            {
+                "steps": 1092472,
+                "file_path": "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1092472.onnx",
+                "reward": null,
+                "creation_time": 1786576637.7678344,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1092472.pt"
+                ]
+            },
+            {
+                "steps": 1092486,
+                "file_path": "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1092486.onnx",
+                "reward": 0.0,
+                "creation_time": 1786637183.9586391,
+                "auxillary_file_paths": [
+                    "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1092486.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1092486,
+            "file_path": "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent.onnx",
+            "reward": 0.0,
+            "creation_time": 1786637183.9586391,
+            "auxillary_file_paths": [
+                "results\\Entrenamiento_Gato_Nocturno_v1\\MazeAgent\\MazeAgent-1092486.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    }
+}

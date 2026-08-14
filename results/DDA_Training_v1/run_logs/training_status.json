@@ -1,0 +1,123 @@
+{
+    "MazeAgent": {
+        "checkpoints": [
+            {
+                "steps": 1137262,
+                "file_path": "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1137262.onnx",
+                "reward": null,
+                "creation_time": 1786502519.1454723,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1137262.pt"
+                ]
+            },
+            {
+                "steps": 1145078,
+                "file_path": "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1145078.onnx",
+                "reward": null,
+                "creation_time": 1786502944.359788,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1145078.pt"
+                ]
+            },
+            {
+                "steps": 1145092,
+                "file_path": "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1145092.onnx",
+                "reward": 0.0,
+                "creation_time": 1786637135.197318,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1145092.pt"
+                ]
+            },
+            {
+                "steps": 1147204,
+                "file_path": "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1147204.onnx",
+                "reward": null,
+                "creation_time": 1786637342.1920502,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1147204.pt"
+                ]
+            },
+            {
+                "steps": 1149316,
+                "file_path": "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1149316.onnx",
+                "reward": null,
+                "creation_time": 1786637385.819141,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1149316.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 1149316,
+            "file_path": "results\\DDA_Training_v1\\MazeAgent.onnx",
+            "reward": null,
+            "creation_time": 1786637385.819141,
+            "auxillary_file_paths": [
+                "results\\DDA_Training_v1\\MazeAgent\\MazeAgent-1149316.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.2.0.dev0",
+        "torch_version": "2.2.2+cu121"
+    },
+    "DifficultyAdapter": {
+        "checkpoints": [
+            {
+                "steps": 312,
+                "file_path": "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-312.onnx",
+                "reward": -1.1022545337677,
+                "creation_time": 1786485590.4714289,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-312.pt"
+                ]
+            },
+            {
+                "steps": 324,
+                "file_path": "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-324.onnx",
+                "reward": -1.058833325902621,
+                "creation_time": 1786500013.804511,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-324.pt"
+                ]
+            },
+            {
+                "steps": 324,
+                "file_path": "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-324.onnx",
+                "reward": null,
+                "creation_time": 1786500304.4875762,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-324.pt"
+                ]
+            },
+            {
+                "steps": 348,
+                "file_path": "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-348.onnx",
+                "reward": -1.046333317955335,
+                "creation_time": 1786501017.9732318,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-348.pt"
+                ]
+            },
+            {
+                "steps": 366,
+                "file_path": "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-366.onnx",
+                "reward": -0.9671666589048173,
+                "creation_time": 1786502519.223279,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-366.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 366,
+            "file_path": "results\\DDA_Training_v1\\DifficultyAdapter.onnx",
+            "reward": -0.9671666589048173,
+            "creation_time": 1786502519.223279,
+            "auxillary_file_paths": [
+                "results\\DDA_Training_v1\\DifficultyAdapter\\DifficultyAdapter-366.pt"
+            ]
+        }
+    }
+}

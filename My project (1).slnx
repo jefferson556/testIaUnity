@@ -40,6 +40,7 @@
   <Project Path="Unity.Burst.CodeGen.csproj" />
   <Project Path="Unity.InputSystem.csproj" />
   <Project Path="Unity.VisualScripting.Flow.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="UnityEngine.TestRunner.csproj" />
   <Project Path="Unity.2D.Tilemap.Editor.csproj" />
   <Project Path="Unity.Splines.Editor.csproj" />
@@ -77,7 +78,6 @@
   <Project Path="Unity.AI.Generators.UI.csproj" />
   <Project Path="Unity.2D.Animation.Editor.csproj" />
   <Project Path="Unity.2D.Common.Path.Editor.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Unity.Timeline.csproj" />
   <Project Path="Unity.AppUI.MVVM.csproj" />
   <Project Path="UnityEditor.UI.csproj" />
@@ -113,6 +113,7 @@
   <Project Path="Unity.SurfaceCache.Runtime.csproj" />
   <Project Path="Unity.InternalAPIEngineBridge.RenderPipelines.Core.Runtime.Shared.csproj" />
   <Project Path="Unity.Splines.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Unity.CollabProxy.Editor.csproj" />
   <Project Path="Unity.2D.Common.Runtime.csproj" />
   <Project Path="Unity.ML-Agents.Input.csproj" />
@@ -144,7 +145,6 @@
   <Project Path="Unity.AI.Toolkit.Compliance.csproj" />
   <Project Path="Unity.ML-Agents.Editor.Input.csproj" />
   <Project Path="Unity.InternalAPIEngineBridge.001.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Unity.AI.MCP.Runtime.csproj" />
   <Project Path="Unity.ShaderGraph.Utilities.csproj" />
   <Project Path="Unity.RenderPipeline.Universal.ShaderLibrary.csproj" />

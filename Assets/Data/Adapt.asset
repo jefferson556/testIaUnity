@@ -17,7 +17,7 @@ MonoBehaviour:
     mapWidth: 5
     mapHeight: 5
     extraConnections: 2
-    maxTimeLimitInSeconds: 300
+    maxTimeLimitInSeconds: 800
     minPlayerToCaveADistance: 3
     minAxeToStartAndMetaDistance: 4
     minKeyToAxeDistance: 4

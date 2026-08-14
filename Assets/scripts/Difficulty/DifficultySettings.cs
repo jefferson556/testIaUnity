@@ -15,7 +15,7 @@ public class DifficultySettings
 
     [Header("Tiempo Límite (Gameplay)")]
     [Tooltip("Tiempo máximo en segundos antes de reiniciar el mapa si no se alcanza la meta. (Solo afecta al modo jugador)")]
-    public float maxTimeLimitInSeconds = 180f;
+    public float maxTimeLimitInSeconds = 500f;
 
     [Header("Distancias y Posiciones")]
     [Tooltip("Distancia mínima entre el jugador y Cueva A.")]

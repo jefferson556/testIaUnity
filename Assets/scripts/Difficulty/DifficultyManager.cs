@@ -584,6 +584,12 @@ public class DifficultyManager : MonoBehaviour
 
         Debug.Log($"[DifficultyManager] Métricas del nivel {currentLevelNumber} registradas y guardadas en CSV.");
         
+        // Notificar al adaptador de dificultad para procesar métricas y solicitar la siguiente decisión DDA
+        if (DifficultyAdapterAgent.Instance != null && DifficultyAdapterAgent.Instance.enabled)
+        {
+            DifficultyAdapterAgent.Instance.RequestDecisionForNextLevel(metrics);
+        }
+
         currentLevelNumber++;
     }
 

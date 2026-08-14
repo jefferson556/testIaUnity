@@ -186,7 +186,6 @@ public class GameUIManager : MonoBehaviour
         loadingTitleText.fontStyle = FontStyle.Bold;
         loadingTitleText.alignment = TextAnchor.MiddleCenter;
         loadingTitleText.color = new Color(1f, 0.85f, 0.3f); // Dorado brillante
-        loadingTitleText.text = "CARGANDO MAPA PROCEDURAL";
 
         RectTransform titleRect = titleGO.GetComponent<RectTransform>();
         titleRect.anchorMin = new Vector2(0.1f, 0.5f);
@@ -203,7 +202,6 @@ public class GameUIManager : MonoBehaviour
         loadingSubText.fontSize = 16;
         loadingSubText.alignment = TextAnchor.MiddleCenter;
         loadingSubText.color = Color.white;
-        loadingSubText.text = "Generando laberinto y verificando rutas de navegación...";
 
         RectTransform subRect = subGO.GetComponent<RectTransform>();
         subRect.anchorMin = new Vector2(0.1f, 0.35f);
@@ -211,20 +209,48 @@ public class GameUIManager : MonoBehaviour
         subRect.offsetMin = Vector2.zero;
         subRect.offsetMax = Vector2.zero;
 
-        // Inicializar activo por defecto al cargar la escena
-        loadingOverlayGO.SetActive(true);
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (currentScene == "laberinto")
+        {
+            loadingTitleText.text = "CARGANDO LABERINTO";
+            loadingSubText.text = "Preparando mapa del laberinto...";
+        }
+        else
+        {
+            loadingTitleText.text = "CARGANDO MAPA PROCEDURAL";
+            loadingSubText.text = "Generando laberinto y verificando rutas de navegación...";
+        }
+
+        loadingOverlayGO.SetActive(false);
     }
 
     /// <summary>
     /// Muestra la pantalla de carga opaca cubriendo toda la pantalla.
     /// </summary>
-    public void ShowLoadingScreen(string message = "Cargando mapa procedural...")
+    public void ShowLoadingScreen(string message = "Cargando mapa...", string title = "")
     {
         EnsureHUDAndOverlay();
 
         if (loadingOverlayGO == null) return;
 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
+
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (loadingTitleText != null)
+        {
+            if (!string.IsNullOrEmpty(title))
+            {
+                loadingTitleText.text = title;
+            }
+            else if (sceneName == "laberinto")
+            {
+                loadingTitleText.text = "CARGANDO LABERINTO";
+            }
+            else
+            {
+                loadingTitleText.text = "CARGANDO MAPA PROCEDURAL";
+            }
+        }
 
         if (loadingSubText != null && !string.IsNullOrEmpty(message))
         {

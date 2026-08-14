@@ -19,7 +19,9 @@ public class DifficultyMetricsCollector : MonoBehaviour
     private Vector3 lastPosition;
     private float levelStartTime;
     private float idleTimer;
+#pragma warning disable 0414
     private bool isMovingLastFrame;
+#pragma warning restore 0414
     private bool isCollecting;
     private int currentSessionRestarts = 0;
 
@@ -61,7 +63,7 @@ public class DifficultyMetricsCollector : MonoBehaviour
     {
         metrics = new DifficultyMetrics();
         MazeAgent agent = FindAnyObjectByType<MazeAgent>();
-        if (agent != null)
+        if (agent != null && agent.MaxStep > 0)
         {
             metrics.maxTimeLimitInSeconds = agent.MaxStep * Time.fixedDeltaTime;
             metrics.maxEpisodeSteps = agent.MaxStep;
@@ -69,8 +71,10 @@ public class DifficultyMetricsCollector : MonoBehaviour
         }
         else
         {
-            metrics.maxEpisodeSteps = 0;
-            metrics.agentVersion = "Human";
+            DifficultySettings settings = DifficultyManager.Instance != null ? DifficultyManager.Instance.CurrentSettings : null;
+            metrics.maxTimeLimitInSeconds = settings != null && settings.maxTimeLimitInSeconds > 0 ? settings.maxTimeLimitInSeconds : 180f;
+            metrics.maxEpisodeSteps = agent != null ? agent.MaxStep : 0;
+            metrics.agentVersion = agent != null ? "MazeAgent_v2" : "Human";
         }
         
         metrics.episodeId = System.Guid.NewGuid().ToString();
