@@ -26,6 +26,7 @@ public class GameUIManager : MonoBehaviour
     private Text controlsText;
     private Text zoomStatusText;
     private Text timerText;
+    private Text gameModeText; // NUEVO: Texto para Modo de Juego
 
     // Elementos de la Pantalla de Carga
     private GameObject loadingOverlayGO;
@@ -103,7 +104,16 @@ public class GameUIManager : MonoBehaviour
         controlsText.fontSize = 13;
         controlsText.alignment = TextAnchor.MiddleLeft;
         controlsText.color = Color.white;
-        controlsText.text = " CONTROLES: W, A, S, D / Flechas (Moverse)  |  E (Interactuar)  |  SHIFT (Zoom)  |  R (Reintentar)";
+        // Verificación directa de escena (no depender de GameModeManager que puede no existir aún en Awake)
+        bool isTutorial = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "SampleScene";
+        if (isTutorial)
+        {
+            controlsText.text = " CONTROLES: W, A, S, D / Flechas (Moverse)  |  E (Interactuar)  |  SHIFT (Zoom)  |  R (Reintentar)";
+        }
+        else
+        {
+            controlsText.text = " CONTROLES: W, A, S, D / Flechas (Moverse)  |  E (Interactuar)  |  SHIFT (Zoom)  |  R (Reintentar)  |  Q (Alternar IA)";
+        }
 
         RectTransform controlsRect = controlsGO.GetComponent<RectTransform>();
         controlsRect.anchorMin = new Vector2(0.01f, 0.5f);
@@ -144,12 +154,35 @@ public class GameUIManager : MonoBehaviour
 
         RectTransform zoomRect = zoomGO.GetComponent<RectTransform>();
         zoomRect.anchorMin = new Vector2(0.01f, 0.1f);
-        zoomRect.anchorMax = new Vector2(0.99f, 0.5f);
+        zoomRect.anchorMax = new Vector2(0.50f, 0.5f);
         zoomRect.pivot = new Vector2(0f, 0.5f);
         zoomRect.offsetMin = Vector2.zero;
         zoomRect.offsetMax = Vector2.zero;
 
+        // 6. Crear Texto de Modo (Humano/IA) (Solo si no es tutorial)
+        if (!isTutorial)
+        {
+            GameObject modeGO = new GameObject("GameModeLabel");
+            modeGO.transform.SetParent(panelGO.transform, false);
+            
+            gameModeText = modeGO.AddComponent<Text>();
+            gameModeText.font = defaultFont;
+            gameModeText.fontSize = 15;
+            gameModeText.fontStyle = FontStyle.Bold;
+            gameModeText.alignment = TextAnchor.MiddleRight;
+            gameModeText.text = "<color=green>Modo: Jugador</color>";
+            gameModeText.supportRichText = true;
 
+            RectTransform modeRect = modeGO.GetComponent<RectTransform>();
+            modeRect.anchorMin = new Vector2(0.51f, 0.1f);
+            modeRect.anchorMax = new Vector2(0.99f, 0.5f);
+            modeRect.pivot = new Vector2(1f, 0.5f);
+            modeRect.offsetMin = Vector2.zero;
+            modeRect.offsetMax = Vector2.zero;
+
+            // Escuchar cambios de GameModeManager
+            GameModeManager.OnGameModeChanged += HandleGameModeChanged;
+        }
     }
 
     private void CreateLoadingOverlay()
@@ -289,6 +322,26 @@ public class GameUIManager : MonoBehaviour
         loadingCanvasGroup.blocksRaycasts = false;
         loadingOverlayGO.SetActive(false);
         fadeCoroutine = null;
+    }
+
+    private void OnDestroy()
+    {
+        GameModeManager.OnGameModeChanged -= HandleGameModeChanged;
+    }
+
+    private void HandleGameModeChanged(PlayerControlMode mode)
+    {
+        if (gameModeText != null)
+        {
+            if (mode == PlayerControlMode.AI)
+            {
+                gameModeText.text = "<color=#00FFFF>Modo: IA</color>";
+            }
+            else
+            {
+                gameModeText.text = "<color=#00FF00>Modo: Jugador</color>";
+            }
+        }
     }
 
     private void Update()

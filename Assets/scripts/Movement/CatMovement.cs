@@ -20,6 +20,10 @@ public class CatMovement : MonoBehaviour
     private Vector2 movement;
     public Vector2 FacingDirection { get; set; } = Vector2.down;
 
+    // --- Soporte para ML-Agents ---
+    public bool IsAIControlled { get; set; } = false;
+    public Vector2 AIMoveInput { get; set; } = Vector2.zero;
+
     private void Awake()
     {
         EnsureComponents();
@@ -53,7 +57,12 @@ public class CatMovement : MonoBehaviour
     private void Update()
     {
         if (inputReader == null) EnsureComponents();
-        if (inputReader != null)
+
+        if (IsAIControlled)
+        {
+            movement = AIMoveInput;
+        }
+        else if (inputReader != null)
         {
             movement = inputReader.MoveInput;
         }
@@ -65,6 +74,9 @@ public class CatMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Si la IA controla, el MazeAgent se encarga de mover el Rigidbody (linearVelocity)
+        if (IsAIControlled) return;
+
         if (rb == null) EnsureComponents();
         if (rb == null) return;
 

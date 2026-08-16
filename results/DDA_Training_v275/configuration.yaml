@@ -128,8 +128,8 @@ checkpoint_settings:
   run_id: DDA_Training_v275
   initialize_from: null
   load_model: false
-  resume: false
-  force: true
+  resume: true
+  force: false
   train_model: false
   inference: false
   results_dir: results

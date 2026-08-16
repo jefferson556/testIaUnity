@@ -367,6 +367,7 @@ MonoBehaviour:
   generateAccessibleZone: 1
   accessibleZoneSize: {x: 1, y: 1}
   itemsContainer: {fileID: 0}
+  forceLoadLevelFromJSON: 1
   maximumGenerationAttempts: 150
   cavePrefab: {fileID: 6697752899464144905, guid: dc500f3dc9d81a34ab8b66fdd188fd0d, type: 3}
   keyPrefab: {fileID: 8242095866668300498, guid: fdb1e3bbe83b6864390e95cf6a956ce5, type: 3}
@@ -2795,6 +2796,15 @@ MonoBehaviour:
     restartCount: 0
     errorCount: 0
     objectivesCollected: 0
+    levelCompleted: 0
+    maxTimeLimitInSeconds: 0
+    axeCollected: 0
+    keyCollected: 0
+    terminationReason: 
+    maxEpisodeSteps: 0
+    episodeStepCount: 0
+    episodeId: 
+    agentVersion: 
     keyToGoal:
       keyToGoalPathDataValid: 0
       keyToGoalTime: 0
@@ -2842,6 +2852,11 @@ MonoBehaviour:
       maximum: 20
       maximumChangePerLevel: 2
       defaultValue: 2
+    maxTimeLimitInSeconds:
+      minimum: 100
+      maximum: 600
+      maximumChangePerLevel: 50
+      defaultValue: 500
     minPlayerToCaveADistance:
       minimum: 1
       maximum: 15
@@ -2903,10 +2918,10 @@ MonoBehaviour:
       maximumChangePerLevel: 1
       defaultValue: 1
     playerMoveSpeed:
-      minimum: 2
-      maximum: 8
+      minimum: 5
+      maximum: 20
       maximumChangePerLevel: 1
-      defaultValue: 4
+      defaultValue: 5
     hintsAvailable:
       minimum: 0
       maximum: 10
@@ -2934,7 +2949,7 @@ MonoBehaviour:
       defaultValue: 3
     zoomOutSize:
       minimum: 5
-      maximum: 15
+      maximum: 30
       maximumChangePerLevel: 2
       defaultValue: 9
     normalZoomSize:
@@ -2946,6 +2961,7 @@ MonoBehaviour:
     mapWidth: 15
     mapHeight: 15
     extraConnections: 2
+    maxTimeLimitInSeconds: 500
     minPlayerToCaveADistance: 2
     minAxeToStartAndMetaDistance: 8
     minKeyToAxeDistance: 4
@@ -2977,6 +2993,9 @@ MonoBehaviour:
     normalZoomSize: 4
   difficultyScore: 0.335
   history: []
+  enableSessionLimit: 1
+  maxLevelsPerSession: 4
+  endSessionSceneName: SampleScene
 --- !u!4 &1197096180
 Transform:
   m_ObjectHideFlags: 0
@@ -4410,8 +4429,112 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8037219619705750593, guid: d9dd4dc75c130094cb36c09311497f55, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6824376214983795692}
+    - targetCorrespondingSourceObject: {fileID: 8037219619705750593, guid: d9dd4dc75c130094cb36c09311497f55, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6824376214983795691}
+    - targetCorrespondingSourceObject: {fileID: 8037219619705750593, guid: d9dd4dc75c130094cb36c09311497f55, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6824376214983795690}
   m_SourcePrefab: {fileID: 100100000, guid: d9dd4dc75c130094cb36c09311497f55, type: 3}
+--- !u!1 &6824376214983795689 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8037219619705750593, guid: d9dd4dc75c130094cb36c09311497f55, type: 3}
+  m_PrefabInstance: {fileID: 6824376214983795688}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6824376214983795690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6824376214983795689}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dbdfe473a692fc438d04b24e6255131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MazeAgent
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 20000
+  trainingConfig: {fileID: 0}
+  levelManager: {fileID: 0}
+  mazeGenerator: {fileID: 0}
+  mazeRenderer: {fileID: 0}
+  moveSpeed: 4
+  maxStepsPerEpisode: 9000
+  goalReward: 2
+  wallPenalty: -0.01
+  stepPenalty: -0.0005
+--- !u!114 &6824376214983795691
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6824376214983795689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Policies.BehaviorParameters
+  m_BrainParameters:
+    VectorObservationSize: 25
+    NumStackedVectorObservations: 1
+    m_ActionSpec:
+      m_NumContinuousActions: 0
+      BranchSizes: 0500000002000000
+    VectorActionSize: 0500000002000000
+    VectorActionDescriptions: []
+    VectorActionSpaceType: 0
+    hasUpgradedBrainParametersWithActionSpec: 1
+  m_Model: {fileID: 5022602860645237092, guid: 6c4a98d6bfbdd104f850c5f742f2c229, type: 3}
+  m_InferenceDevice: 0
+  m_BehaviorType: 0
+  m_BehaviorName: Comportamiento
+  TeamId: 0
+  m_UseChildSensors: 1
+  m_UseChildActuators: 1
+  m_DeterministicInference: 0
+  m_ObservableAttributeHandling: 0
+--- !u!114 &6824376214983795692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6824376214983795689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f67c7e722ba14acd9153bb4488bff6e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Sensors.RayPerceptionSensorComponent2D
+  m_SensorName: RayPerceptionSensor
+  m_DetectableTags:
+  - Wall
+  - Goal
+  - Desctruct
+  - Destruct
+  - Cave
+  - Portal
+  - Cueva
+  - TravelCave
+  m_RaysPerDirection: 12
+  m_MaxRayDegrees: 180
+  m_SphereCastRadius: 0.1
+  m_RayLength: 5
+  m_RayLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967240
+  m_ObservationStacks: 1
+  m_AlternatingRayOrder: 1
+  m_UseBatchedRaycasts: 0
+  rayHitColor: {r: 1, g: 0, b: 0, a: 1}
+  rayMissColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

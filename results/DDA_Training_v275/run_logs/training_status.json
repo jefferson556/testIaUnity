@@ -9,15 +9,24 @@
                 "auxillary_file_paths": [
                     "results\\DDA_Training_v275\\MazeAgent\\MazeAgent-47176.pt"
                 ]
+            },
+            {
+                "steps": 297117,
+                "file_path": "results\\DDA_Training_v275\\MazeAgent\\MazeAgent-297117.onnx",
+                "reward": null,
+                "creation_time": 1786721699.1895337,
+                "auxillary_file_paths": [
+                    "results\\DDA_Training_v275\\MazeAgent\\MazeAgent-297117.pt"
+                ]
             }
         ],
         "final_checkpoint": {
-            "steps": 47176,
+            "steps": 297117,
             "file_path": "results\\DDA_Training_v275\\MazeAgent.onnx",
             "reward": null,
-            "creation_time": 1786674244.815833,
+            "creation_time": 1786721699.1895337,
             "auxillary_file_paths": [
-                "results\\DDA_Training_v275\\MazeAgent\\MazeAgent-47176.pt"
+                "results\\DDA_Training_v275\\MazeAgent\\MazeAgent-297117.pt"
             ]
         }
     },

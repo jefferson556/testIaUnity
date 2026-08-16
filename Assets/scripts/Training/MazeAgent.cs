@@ -21,6 +21,12 @@ public class MazeAgent : Agent
     [SerializeField] private float moveSpeed = 4f;
     [SerializeField] private int maxStepsPerEpisode = 9000;
 
+    public float MoveSpeed
+    {
+        get => moveSpeed;
+        set => moveSpeed = value;
+    }
+
     [Header("Configuración de Recompensas")]
     [SerializeField] private float goalReward = 2.0f;
     [SerializeField] private float wallPenalty = -0.01f;
@@ -260,17 +266,24 @@ public class MazeAgent : Agent
         if (levelManager == null) levelManager = FindAnyObjectByType<DynamicLevelManager>();
         if (levelManager != null)
         {
-            levelManager.StartGeneration();
+            if (trainingConfig != null && trainingConfig.trainingMode)
+            {
+                levelManager.StartGeneration();
+            }
+            else
+            {
+                // MODO INFERENCIA: El mapa ya está generado, y no queremos regenerarlo.
+                // Directamente refrescamos referencias y quitamos la bandera de IsGenerating.
+                IsGenerating = false;
+                RefreshEnvironmentReferences();
+            }
         }
     }
 
     public void OnGenerationFinished()
     {
         // Buscar referencias de meta, llave y cuevas en la escena ya generada
-        FindGoalTransform();
-        FindKeyTransform();
-        FindCaveTransforms();
-        FindAxeTransform();
+        RefreshEnvironmentReferences();
 
         // Entregar el hacha de entrenamiento después de que la generación finalice (evita race conditions con DynamicLevelManager)
         if (inventory != null)
@@ -338,6 +351,14 @@ public class MazeAgent : Agent
 
         IsGenerating = false;
         Debug.Log("[MazeAgent] 🗺️ ¡Laberinto regenerado y configurado correctamente para el nuevo episodio!");
+    }
+
+    public void RefreshEnvironmentReferences()
+    {
+        FindGoalTransform();
+        FindKeyTransform();
+        FindCaveTransforms();
+        FindAxeTransform();
     }
 
     private void FindGoalTransform()
@@ -524,6 +545,14 @@ public class MazeAgent : Agent
             if (humanMovement != null)
             {
                 humanMovement.FacingDirection = dir;
+                humanMovement.AIMoveInput = dir; // Inject AI input for animations
+            }
+        }
+        else
+        {
+            if (humanMovement != null)
+            {
+                humanMovement.AIMoveInput = Vector2.zero; // Stop moving
             }
         }
 

@@ -17,5 +17,5 @@ public class LevelLoadConfig
     public bool applyImmediately = false;
 
     [Tooltip("Valores personalizados opcionales para sobrescribir sobre el perfil o score base.")]
-    public DifficultyAdjustmentRequest customSettings;
+    public DifficultyAdjustmentRequest customSettings = new DifficultyAdjustmentRequest();
 }

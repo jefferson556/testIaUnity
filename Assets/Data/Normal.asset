@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DifficultyProfile
   profileName: 
   settings:
-    mapWidth: 5
-    mapHeight: 5
+    mapWidth: 15
+    mapHeight: 15
     extraConnections: 2
     maxTimeLimitInSeconds: 300
     minPlayerToCaveADistance: 3
@@ -34,16 +34,16 @@ MonoBehaviour:
     minimumShortcutSaving: 8
     teleportCost: 3
     axeZoneSize: {x: 2, y: 2}
-    destructibleWallsPercentage: 0.111
-    missionDestructiblesHealth: 1
+    destructibleWallsPercentage: 0.3
+    missionDestructiblesHealth: 2
     spawnDestructibles: 1
-    playerMoveSpeed: 8
-    hintsAvailable: 5
+    playerMoveSpeed: 17
+    hintsAvailable: 3
     hintDelaySeconds: 5
     hintIntensity: 1
     highlightObjectives: 1
     showDirectionIndicator: 1
-    zoomOutMaxDuration: 4
-    zoomOutCooldown: 3
-    zoomOutSize: 30
-    normalZoomSize: 4
+    zoomOutMaxDuration: 5
+    zoomOutCooldown: 5
+    zoomOutSize: 25
+    normalZoomSize: 5

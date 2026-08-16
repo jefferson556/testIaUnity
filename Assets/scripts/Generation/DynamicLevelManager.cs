@@ -64,6 +64,10 @@ public class DynamicLevelManager : MonoBehaviour
     private Transform itemsContainer;
 
     [Header("Configuración de Regeneración")]
+    [Tooltip("Fuerza la carga del nivel desde el archivo level_config_request.json (útil para pruebas o cuando ML-Agents dicta el currículum).")]
+    [SerializeField]
+    private bool forceLoadLevelFromJSON = false;
+
     [SerializeField]
     [Min(1)]
     private int maximumGenerationAttempts = 40;
@@ -251,21 +255,25 @@ public class DynamicLevelManager : MonoBehaviour
             yield break;
         }
 
+        TrainingConfig tConfig = Resources.Load<TrainingConfig>("TrainingConfig");
+        isTrainingModeActive = (tConfig != null && tConfig.trainingMode);
+        isMetricsGenerationEnabled = (tConfig != null && tConfig.generateMetrics);
+
         // Obtener dificultad de la autoridad central
         DifficultySettings settings = null;
         if (DifficultyManager.Instance != null)
         {
-            DifficultyManager.Instance.TryLoadConfigFromJSONFile();
+            // Solo forzar la lectura del JSON si la opción del inspector está activa, o si estamos en entrenamiento real
+            if (forceLoadLevelFromJSON || isTrainingModeActive || isMetricsGenerationEnabled)
+            {
+                DifficultyManager.Instance.TryLoadConfigFromJSONFile();
+            }
             settings = DifficultyManager.Instance.CurrentSettings;
         }
         if (settings == null)
         {
             settings = new DifficultySettings();
         }
-
-        TrainingConfig tConfig = Resources.Load<TrainingConfig>("TrainingConfig");
-        isTrainingModeActive = (tConfig != null && tConfig.trainingMode);
-        isMetricsGenerationEnabled = (tConfig != null && tConfig.generateMetrics);
         
         currentLevelTimeLimit = settings.maxTimeLimitInSeconds;
         isTimerActive = false;
@@ -488,6 +496,13 @@ public class DynamicLevelManager : MonoBehaviour
                 if (movement != null)
                 {
                     movement.MoveSpeed = settings.playerMoveSpeed;
+                }
+
+                MazeAgent agent = playerTransform.GetComponent<MazeAgent>();
+                if (agent == null) agent = playerTransform.GetComponentInChildren<MazeAgent>();
+                if (agent != null)
+                {
+                    agent.MoveSpeed = settings.playerMoveSpeed;
                 }
 
                 CatInventory inventory = playerTransform.GetComponent<CatInventory>();

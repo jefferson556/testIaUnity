@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class DifficultyManager : MonoBehaviour
 {
@@ -29,6 +30,16 @@ public class DifficultyManager : MonoBehaviour
     [Header("Historial de Cambios")]
     [SerializeField]
     private List<DifficultyHistoryEntry> history = new List<DifficultyHistoryEntry>();
+
+    [Header("Control de Sesión")]
+    [Tooltip("Activa o desactiva el límite de niveles por sesión antes de recargar la escena principal.")]
+    public bool enableSessionLimit = true;
+
+    [Tooltip("Cantidad máxima de niveles por sesión antes de volver a la escena principal.")]
+    public int maxLevelsPerSession = 4;
+
+    [Tooltip("Nombre de la escena a cargar al terminar la sesión.")]
+    public string endSessionSceneName = "SampleScene";
 
     private int currentLevelNumber = 1;
     private DifficultyMetrics lastLevelMetrics;
@@ -141,6 +152,13 @@ public class DifficultyManager : MonoBehaviour
     public bool ApplyLevelLoadConfig(LevelLoadConfig config)
     {
         if (config == null) return false;
+
+        if (config.customSettings != null && config.customSettings.overrideSessionSettings)
+        {
+            this.enableSessionLimit = config.customSettings.enableSessionLimit;
+            this.maxLevelsPerSession = config.customSettings.maxLevelsPerSession;
+            Debug.Log($"[DifficultyManager] Control de Sesión JSON APLICADO: Habilitado={this.enableSessionLimit}, Máx Niveles={this.maxLevelsPerSession}");
+        }
 
         bool baseApplied = false;
 
@@ -454,6 +472,7 @@ public class DifficultyManager : MonoBehaviour
         if (result.mapHeight % 2 == 0) result.mapHeight++;
 
         result.extraConnections = constraints.extraConnections.Clamp(prev.extraConnections, req.extraConnections, enforceRateLimit);
+        result.maxTimeLimitInSeconds = constraints.maxTimeLimitInSeconds.Clamp(prev.maxTimeLimitInSeconds, req.maxTimeLimitInSeconds, enforceRateLimit);
         result.minPlayerToCaveADistance = constraints.minPlayerToCaveADistance.Clamp(prev.minPlayerToCaveADistance, req.minPlayerToCaveADistance, enforceRateLimit);
         result.minAxeToStartAndMetaDistance = constraints.minAxeToStartAndMetaDistance.Clamp(prev.minAxeToStartAndMetaDistance, req.minAxeToStartAndMetaDistance, enforceRateLimit);
         result.minKeyToAxeDistance = constraints.minKeyToAxeDistance.Clamp(prev.minKeyToAxeDistance, req.minKeyToAxeDistance, enforceRateLimit);
@@ -492,6 +511,7 @@ public class DifficultyManager : MonoBehaviour
         return target.mapWidth != clamped.mapWidth ||
                target.mapHeight != clamped.mapHeight ||
                target.extraConnections != clamped.extraConnections ||
+               Mathf.Abs(target.maxTimeLimitInSeconds - clamped.maxTimeLimitInSeconds) > 0.01f ||
                Mathf.Abs(target.minPlayerToCaveADistance - clamped.minPlayerToCaveADistance) > 0.01f ||
                Mathf.Abs(target.minAxeToStartAndMetaDistance - clamped.minAxeToStartAndMetaDistance) > 0.01f ||
                Mathf.Abs(target.playerMoveSpeed - clamped.playerMoveSpeed) > 0.01f ||
@@ -532,7 +552,8 @@ public class DifficultyManager : MonoBehaviour
         settings.missionDestructiblesHealth = Mathf.RoundToInt(Mathf.Lerp(constraints.missionDestructiblesHealth.minimum, constraints.missionDestructiblesHealth.maximum, score));
         settings.spawnDestructibles = true;
 
-        settings.playerMoveSpeed = Mathf.Lerp(constraints.playerMoveSpeed.maximum, constraints.playerMoveSpeed.minimum, score);
+        settings.maxTimeLimitInSeconds = Mathf.Lerp(constraints.maxTimeLimitInSeconds.maximum, constraints.maxTimeLimitInSeconds.minimum, score);
+        settings.playerMoveSpeed = Mathf.Lerp(constraints.playerMoveSpeed.minimum, constraints.playerMoveSpeed.maximum, score);
 
         // [FUTURO / HINTS]
         settings.hintsAvailable = Mathf.RoundToInt(Mathf.Lerp(constraints.hintsAvailable.maximum, constraints.hintsAvailable.minimum, score));
@@ -560,9 +581,10 @@ public class DifficultyManager : MonoBehaviour
 
         float widthNorm = Mathf.InverseLerp(constraints.mapWidth.minimum, constraints.mapWidth.maximum, currentSettings.mapWidth);
         float heightNorm = Mathf.InverseLerp(constraints.mapHeight.minimum, constraints.mapHeight.maximum, currentSettings.mapHeight);
-        float speedNorm = Mathf.InverseLerp(constraints.playerMoveSpeed.maximum, constraints.playerMoveSpeed.minimum, currentSettings.playerMoveSpeed);
+        float speedNorm = Mathf.InverseLerp(constraints.playerMoveSpeed.minimum, constraints.playerMoveSpeed.maximum, currentSettings.playerMoveSpeed);
+        float timeNorm = Mathf.InverseLerp(constraints.maxTimeLimitInSeconds.maximum, constraints.maxTimeLimitInSeconds.minimum, currentSettings.maxTimeLimitInSeconds);
         
-        difficultyScore = Mathf.Clamp01((widthNorm + heightNorm + speedNorm) / 3f);
+        difficultyScore = Mathf.Clamp01((widthNorm + heightNorm + speedNorm + timeNorm) / 4f);
     }
 
     public void RegisterLevelEnd(DifficultyMetrics metrics)
@@ -591,6 +613,13 @@ public class DifficultyManager : MonoBehaviour
         }
 
         currentLevelNumber++;
+        
+        if (enableSessionLimit && currentLevelNumber > maxLevelsPerSession)
+        {
+            Debug.Log($"[DifficultyManager] Límite de sesión alcanzado ({maxLevelsPerSession} niveles). Regresando a la escena: {endSessionSceneName}");
+            currentLevelNumber = 1; // Reiniciar contador
+            SceneManager.LoadScene(endSessionSceneName);
+        }
     }
 
     private void SaveMetricsToCsvFile(DifficultyMetrics metrics, DifficultySettings settings)

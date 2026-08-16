@@ -54,6 +54,9 @@ public class DifficultyConstraints
     public IntDifficultyConstraint mapHeight = new IntDifficultyConstraint { minimum = 9, maximum = 35, maximumChangePerLevel = 2, defaultValue = 15 };
     public IntDifficultyConstraint extraConnections = new IntDifficultyConstraint { minimum = 0, maximum = 20, maximumChangePerLevel = 2, defaultValue = 2 };
 
+    [Header("Tiempo Límite (Gameplay)")]
+    public FloatDifficultyConstraint maxTimeLimitInSeconds = new FloatDifficultyConstraint { minimum = 100f, maximum = 600f, maximumChangePerLevel = 50f, defaultValue = 500f };
+
     [Header("Distancias y Posiciones")]
     public FloatDifficultyConstraint minPlayerToCaveADistance = new FloatDifficultyConstraint { minimum = 1f, maximum = 15f, maximumChangePerLevel = 2f, defaultValue = 2f };
     public FloatDifficultyConstraint minAxeToStartAndMetaDistance = new FloatDifficultyConstraint { minimum = 3f, maximum = 20f, maximumChangePerLevel = 2f, defaultValue = 8f };

@@ -17,6 +17,7 @@ MonoBehaviour:
     mapWidth: 21
     mapHeight: 21
     extraConnections: 0
+    maxTimeLimitInSeconds: 180
     minPlayerToCaveADistance: 4
     minAxeToStartAndMetaDistance: 10
     minKeyToAxeDistance: 10
@@ -33,16 +34,16 @@ MonoBehaviour:
     minimumShortcutSaving: 8
     teleportCost: 3
     axeZoneSize: {x: 2, y: 2}
-    destructibleWallsPercentage: 0.65
-    missionDestructiblesHealth: 2
+    destructibleWallsPercentage: 0.6
+    missionDestructiblesHealth: 3
     spawnDestructibles: 1
-    playerMoveSpeed: 5
-    hintsAvailable: 2
+    playerMoveSpeed: 18
+    hintsAvailable: 0
     hintDelaySeconds: 10
     hintIntensity: 0.5
     highlightObjectives: 0
     showDirectionIndicator: 0
     zoomOutMaxDuration: 2
-    zoomOutCooldown: 5
-    zoomOutSize: 25
+    zoomOutCooldown: 10
+    zoomOutSize: 20
     normalZoomSize: 4

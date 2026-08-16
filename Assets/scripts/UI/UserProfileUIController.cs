@@ -42,6 +42,14 @@ public class UserProfileUIController : MonoBehaviour
             UserProfileManager.Instance.OnActiveProfileChanged += HandleActiveProfileChanged;
         }
 
+        GameModeManager.OnGameModeChanged += HandleGameModeChanged;
+
+        // Suscribirse al tutorial si estamos en MazeLevel_Train
+        if (MazeTutorialController.Instance != null)
+        {
+            MazeTutorialController.Instance.OnTutorialStepChanged += HandleTutorialStepChanged;
+        }
+
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         bool isSampleScene = (sceneName == "SampleScene");
 
@@ -56,10 +64,8 @@ public class UserProfileUIController : MonoBehaviour
             {
                 UserProfileManager.Instance.SelectProfile(UserProfileManager.Instance.Profiles[UserProfileManager.Instance.Profiles.Count - 1].username);
             }
-            if (UserProfileManager.Instance != null && UserProfileManager.Instance.ActiveProfile != null)
-            {
-                UpdateHUD(UserProfileManager.Instance.ActiveProfile);
-            }
+            var activeProfile = UserProfileManager.Instance != null ? UserProfileManager.Instance.ActiveProfile : null;
+            UpdateHUD(activeProfile);
             CloseModal();
         }
         else
@@ -68,11 +74,46 @@ public class UserProfileUIController : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        GameModeManager.OnGameModeChanged += HandleGameModeChanged;
+        // Fallback: si MazeTutorialController se creó después de Start()
+        if (MazeTutorialController.Instance != null)
+        {
+            MazeTutorialController.Instance.OnTutorialStepChanged -= HandleTutorialStepChanged;
+            MazeTutorialController.Instance.OnTutorialStepChanged += HandleTutorialStepChanged;
+        }
+    }
+
     private void OnDestroy()
     {
         if (UserProfileManager.Instance != null)
         {
             UserProfileManager.Instance.OnActiveProfileChanged -= HandleActiveProfileChanged;
+        }
+        GameModeManager.OnGameModeChanged -= HandleGameModeChanged;
+        if (MazeTutorialController.Instance != null)
+        {
+            MazeTutorialController.Instance.OnTutorialStepChanged -= HandleTutorialStepChanged;
+        }
+    }
+
+    private void HandleGameModeChanged(PlayerControlMode mode)
+    {
+        // No sobreescribir el HUD del tutorial
+        if (GameModeManager.Instance != null && GameModeManager.Instance.IsTutorialScene) return;
+
+        if (UserProfileManager.Instance != null && UserProfileManager.Instance.ActiveProfile != null)
+        {
+            UpdateHUD(UserProfileManager.Instance.ActiveProfile);
+        }
+    }
+
+    private void HandleTutorialStepChanged(MazeTutorialController.TutorialStep step)
+    {
+        if (hubInstructionText != null)
+        {
+            hubInstructionText.text = MazeTutorialController.GetMessageForStep(step);
         }
     }
 
@@ -185,25 +226,53 @@ public class UserProfileUIController : MonoBehaviour
         UpdateHUD(profile);
     }
 
+    public void ForceUpdateTutorialText(string message)
+    {
+        if (hubInstructionText != null)
+        {
+            hubInstructionText.text = message;
+        }
+    }
+
     private void UpdateHUD(UserProfileData profile)
     {
-        if (profile == null) return;
+        string username = profile != null ? profile.username : "Jugador";
 
         if (profileInfoText != null)
         {
-            profileInfoText.text = $"<b>Jugador:</b> {profile.username}  |  <b>Nombre:</b> {profile.GetFullName()}  |  <b>Edad:</b> {profile.age}  |  <b>Educación:</b> {profile.education}";
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            bool isTutorial = sceneName != "SampleScene";
+
+            if (sceneName == "SampleScene" || isTutorial)
+            {
+                profileInfoText.text = $"<b>Jugador:</b> {username}";
+            }
+            else
+            {
+                string modeStatus = GameModeManager.Instance != null && GameModeManager.Instance.CurrentMode == PlayerControlMode.AI 
+                    ? "<color=#5bc0de>Modo: IA</color>" 
+                    : "<color=#5cb85c>Modo: Jugador</color>";
+                    
+                profileInfoText.text = $"<b>Jugador:</b> {username}\n<size=80%>{modeStatus} | Presione Q para alternar</size>";
+            }
         }
 
         if (hubInstructionText != null)
         {
             string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            if (sceneName == "laberinto" || sceneName.Contains("Procedural") || sceneName.Contains("Maze"))
+            bool isTutorial = sceneName != "SampleScene";
+
+            if (isTutorial)
             {
-                hubInstructionText.text = $"<b>{profile.username}</b>, ¡supera el laberinto y encuentra la salida!";
+                MazeTutorialController.EnsureInstanceExists();
+                var step = MazeTutorialController.Instance != null 
+                    ? MazeTutorialController.Instance.CurrentStep 
+                    : MazeTutorialController.TutorialStep.FindCave;
+                hubInstructionText.text = MazeTutorialController.GetMessageForStep(step);
             }
             else
             {
-                hubInstructionText.text = $"<b>{profile.username}</b>, diríjase a la entrada del laberinto para empezar el demo.";
+                hubInstructionText.text = $"<b>{username}</b>, diríjase a la entrada del laberinto para empezar el demo.";
             }
         }
     }

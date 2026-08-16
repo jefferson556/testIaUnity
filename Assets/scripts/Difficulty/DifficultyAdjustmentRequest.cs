@@ -11,6 +11,11 @@ public class DifficultyAdjustmentRequest
 {
     public DifficultyAdjustmentMode mode = DifficultyAdjustmentMode.Absolute;
     
+    [Header("Control de Sesión vía JSON")]
+    public bool overrideSessionSettings;
+    public bool enableSessionLimit = true;
+    public int maxLevelsPerSession = 4;
+
     [Header("Dimensiones y Complejidad")]
     public bool overrideMapWidth;
     public int mapWidth;
