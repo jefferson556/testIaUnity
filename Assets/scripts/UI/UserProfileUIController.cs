@@ -241,7 +241,7 @@ public class UserProfileUIController : MonoBehaviour
         if (profileInfoText != null)
         {
             string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            bool isTutorial = sceneName != "SampleScene";
+            bool isTutorial = sceneName == "MazeLevel_Train" || sceneName == "laberinto";
 
             if (sceneName == "SampleScene" || isTutorial)
             {
@@ -249,9 +249,18 @@ public class UserProfileUIController : MonoBehaviour
             }
             else
             {
-                string modeStatus = GameModeManager.Instance != null && GameModeManager.Instance.CurrentMode == PlayerControlMode.AI 
-                    ? "<color=#5bc0de>Modo: IA</color>" 
-                    : "<color=#5cb85c>Modo: Jugador</color>";
+                string modeStatus = "<color=#5cb85c>Modo: Jugador</color>";
+                if (GameModeManager.Instance != null)
+                {
+                    if (GameModeManager.Instance.IsLoadingAI)
+                    {
+                        modeStatus = "<color=#f0ad4e>Cargando IA...</color>";
+                    }
+                    else if (GameModeManager.Instance.CurrentMode == PlayerControlMode.AI)
+                    {
+                        modeStatus = "<color=#5bc0de>Modo: IA</color>";
+                    }
+                }
                     
                 profileInfoText.text = $"<b>Jugador:</b> {username}\n<size=80%>{modeStatus} | Presione Q para alternar</size>";
             }
@@ -260,7 +269,8 @@ public class UserProfileUIController : MonoBehaviour
         if (hubInstructionText != null)
         {
             string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            bool isTutorial = sceneName != "SampleScene";
+            bool isTutorial = sceneName == "MazeLevel_Train" || sceneName == "laberinto";
+            bool isProcedural = sceneName.Contains("Procedural");
 
             if (isTutorial)
             {
@@ -269,6 +279,21 @@ public class UserProfileUIController : MonoBehaviour
                     ? MazeTutorialController.Instance.CurrentStep 
                     : MazeTutorialController.TutorialStep.FindCave;
                 hubInstructionText.text = MazeTutorialController.GetMessageForStep(step);
+            }
+            else if (isProcedural)
+            {
+                if (GameModeManager.Instance != null && GameModeManager.Instance.IsLoadingAI)
+                {
+                    hubInstructionText.text = $"<b>{username}</b>, cargando modelo de IA... Por favor espere un momento.";
+                }
+                else if (GameModeManager.Instance != null && GameModeManager.Instance.CurrentMode == PlayerControlMode.AI)
+                {
+                    hubInstructionText.text = $"<b>{username}</b>, ¡modo IA activado! (Presione Q para tomar control manual)";
+                }
+                else
+                {
+                    hubInstructionText.text = $"<b>{username}</b>, ¡supera el laberinto! (Usa WASD para moverte | Q para alternar IA)";
+                }
             }
             else
             {

@@ -104,8 +104,8 @@ public class GameUIManager : MonoBehaviour
         controlsText.fontSize = 13;
         controlsText.alignment = TextAnchor.MiddleLeft;
         controlsText.color = Color.white;
-        // Verificación directa de escena (no depender de GameModeManager que puede no existir aún en Awake)
-        bool isTutorial = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "SampleScene";
+        string sName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        bool isTutorial = sName == "MazeLevel_Train" || sName == "laberinto";
         if (isTutorial)
         {
             controlsText.text = " CONTROLES: W, A, S, D / Flechas (Moverse)  |  E (Interactuar)  |  SHIFT (Zoom)  |  R (Reintentar)";
@@ -333,7 +333,11 @@ public class GameUIManager : MonoBehaviour
     {
         if (gameModeText != null)
         {
-            if (mode == PlayerControlMode.AI)
+            if (GameModeManager.Instance != null && GameModeManager.Instance.IsLoadingAI)
+            {
+                gameModeText.text = "<color=#FFA500>Modo: Cargando IA...</color>";
+            }
+            else if (mode == PlayerControlMode.AI)
             {
                 gameModeText.text = "<color=#00FFFF>Modo: IA</color>";
             }

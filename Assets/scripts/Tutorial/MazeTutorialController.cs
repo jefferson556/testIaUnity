@@ -30,6 +30,11 @@ public class MazeTutorialController : MonoBehaviour
     private MazeDoor door;
     private bool subscribedToEvents;
 
+    public static bool IsTutorialSceneName(string name)
+    {
+        return name == "MazeLevel_Train" || name == "laberinto";
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void InitSceneLoadedCallback()
     {
@@ -39,7 +44,7 @@ public class MazeTutorialController : MonoBehaviour
 
     private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
     {
-        if (scene.name != "SampleScene")
+        if (IsTutorialSceneName(scene.name))
         {
             EnsureInstanceExists();
         }
@@ -48,7 +53,7 @@ public class MazeTutorialController : MonoBehaviour
     public static void EnsureInstanceExists()
     {
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        if (sceneName != "SampleScene" && Instance == null && Object.FindAnyObjectByType<MazeTutorialController>() == null)
+        if (IsTutorialSceneName(sceneName) && Instance == null && Object.FindAnyObjectByType<MazeTutorialController>() == null)
         {
             GameObject go = new GameObject("MazeTutorialController");
             go.AddComponent<MazeTutorialController>();
@@ -58,9 +63,9 @@ public class MazeTutorialController : MonoBehaviour
 
     private void Awake()
     {
-        // Solo activarse en escenas de laberinto (no en SampleScene)
+        // Solo activarse en escenas de tutorial (MazeLevel_Train y laberinto)
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        if (sceneName == "SampleScene")
+        if (!IsTutorialSceneName(sceneName))
         {
             Destroy(this);
             return;

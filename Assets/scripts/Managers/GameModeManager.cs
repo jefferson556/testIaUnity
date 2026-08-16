@@ -37,9 +37,15 @@ public class GameModeManager : MonoBehaviour
 
     public PlayerControlMode CurrentMode { get; private set; } = PlayerControlMode.Human;
 
-    /// <summary>True si la escena activa es una escena de laberinto tutorial (no SampleScene).</summary>
-    public bool IsTutorialScene => 
-        UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "SampleScene";
+    /// <summary>True si la escena activa es de tutorial (MazeLevel_Train o laberinto). En otras como MazeLevel_Procedural la IA sí está permitida.</summary>
+    public bool IsTutorialScene
+    {
+        get
+        {
+            string s = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            return s == "MazeLevel_Train" || s == "laberinto";
+        }
+    }
     
     public static event System.Action<PlayerControlMode> OnGameModeChanged;
 
@@ -118,8 +124,13 @@ public class GameModeManager : MonoBehaviour
         }
     }
 
+    public bool IsLoadingAI { get; private set; } = false;
+
     public void EnableHumanControl()
     {
+        StopAllCoroutines();
+        IsLoadingAI = false;
+
         if (playerObject == null) return;
 
         CurrentMode = PlayerControlMode.Human;
@@ -154,37 +165,46 @@ public class GameModeManager : MonoBehaviour
     public void EnableAIControl()
     {
         if (!ValidateComponents()) return;
+        if (IsLoadingAI) return;
 
-        CurrentMode = PlayerControlMode.AI;
-        Debug.Log("[GameModeManager] MODO IA ACTIVADO.");
+        StartCoroutine(EnableAIControlRoutine());
+    }
 
-        // 1. Desactivar Input Humano
+    private System.Collections.IEnumerator EnableAIControlRoutine()
+    {
+        IsLoadingAI = true;
+        Debug.Log("[GameModeManager] ⏳ Cargando modelo de IA...");
+
+        // 1. Desactivar Input Humano inmediatamente y detener al jugador
         if (catInputReader != null) catInputReader.enabled = false;
-
-        // 2. Avisar a CatMovement que la IA tiene el control (evita físicas duplicadas)
         if (catMovement != null)
         {
             catMovement.IsAIControlled = true;
-            catMovement.AIMoveInput = Vector2.zero; // Reset inicial
+            catMovement.AIMoveInput = Vector2.zero;
         }
 
-        // 3. Limpiar velocidades residuales del humano
-        Rigidbody2D rb = playerObject.GetComponent<Rigidbody2D>();
+        Rigidbody2D rb = playerObject != null ? playerObject.GetComponent<Rigidbody2D>() : null;
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
         }
 
-        // 4. Activar IA y solicitar reset de episodio interno
+        // Notificar a la UI para mostrar "Cargando IA..."
+        UpdateUI();
+        OnGameModeChanged?.Invoke(PlayerControlMode.AI);
+
+        // Esperar 1 segundo para la inicialización completa del modelo de inferencia
+        yield return new UnityEngine.WaitForSeconds(1.0f);
+
+        // 2. Activar IA
+        CurrentMode = PlayerControlMode.AI;
+        IsLoadingAI = false;
+
         if (mazeAgent != null)
         {
             mazeAgent.enabled = true;
-            
-            // Si el nivel ya está generado, el agente necesita recolectar los objetivos del mapa actual
             mazeAgent.RefreshEnvironmentReferences();
-            
-            // Forzamos el inicio de episodio lógico (no regenerará el mapa si trainingMode == false)
             mazeAgent.EndEpisode(); 
         }
 
@@ -224,8 +244,16 @@ public class GameModeManager : MonoBehaviour
     {
         if (modeStatusText != null)
         {
-            modeStatusText.text = CurrentMode == PlayerControlMode.Human ? "Modo: Jugador" : "Modo: IA";
-            modeStatusText.color = CurrentMode == PlayerControlMode.Human ? Color.green : Color.blue;
+            if (IsLoadingAI)
+            {
+                modeStatusText.text = "Modo: Cargando IA...";
+                modeStatusText.color = new Color(1.0f, 0.75f, 0.0f); // Amarillo dorado
+            }
+            else
+            {
+                modeStatusText.text = CurrentMode == PlayerControlMode.Human ? "Modo: Jugador" : "Modo: IA";
+                modeStatusText.color = CurrentMode == PlayerControlMode.Human ? Color.green : Color.blue;
+            }
         }
     }
 }
