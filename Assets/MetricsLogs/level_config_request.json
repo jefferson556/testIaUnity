@@ -1,11 +1,46 @@
 {
-    "takeDifficultyScore": false,
-    "difficultyScore": 0.5,
-    "nameLevel": "Easy",
-    "applyImmediately": false,
-    "customSettings": {
-       "overrideSessionSettings": true,
-       "enableSessionLimit": true,
-       "maxLevelsPerSession": 2
-    }
+  "takeDifficultyScore": false,
+  "difficultyScore": 0.5,
+  "nameLevel": "Easy",
+  "applyImmediately": false,
+  "customSettings": {
+    "overrideSessionSettings": true,
+    "enableSessionLimit": true,
+    "maxLevelsPerSession": 4,
+    "overrideMapWidth": true,
+    "mapWidth": 10,
+    "overrideMapHeight": true,
+    "mapHeight": 10,
+    "overrideExtraConnections": true,
+    "extraConnections": 2,
+    "overrideMinPlayerToCaveADistance": true,
+    "minPlayerToCaveADistance": 3.0,
+    "overrideMinAxeToStartAndMetaDistance": true,
+    "minAxeToStartAndMetaDistance": 4.0,
+    "overrideMinKeyToAxeDistance": true,
+    "minKeyToAxeDistance": 4.0,
+    "overrideMinKeyToMetaDistance": true,
+    "minKeyToMetaDistance": 4.0,
+    "overrideMinPlayerToMetaDistance": true,
+    "minPlayerToMetaDistance": 5.0,
+    "overrideEnableTravelCaves": true,
+    "enableTravelCaves": true,
+    "overrideMaximumTravelCavePairs": true,
+    "maximumTravelCavePairs": 1,
+    "overrideAxeZoneSize": true,
+    "axeZoneSize": {
+      "x": 2,
+      "y": 2
+    },
+    "overrideDestructibleWallsPercentage": true,
+    "destructibleWallsPercentage": 0.2,
+    "overrideMissionDestructiblesHealth": true,
+    "missionDestructiblesHealth": 2,
+    "overridePlayerMoveSpeed": true,
+    "playerMoveSpeed": 17.0,
+    "overrideHintsAvailable": true,
+    "hintsAvailable": 3,
+    "overrideHintDelaySeconds": true,
+    "hintDelaySeconds": 5.0
+  }
 }

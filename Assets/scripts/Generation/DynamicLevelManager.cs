@@ -266,7 +266,7 @@ public class DynamicLevelManager : MonoBehaviour
             // Solo forzar la lectura del JSON si la opción del inspector está activa, o si estamos en entrenamiento real
             if (forceLoadLevelFromJSON || isTrainingModeActive || isMetricsGenerationEnabled)
             {
-                DifficultyManager.Instance.TryLoadConfigFromJSONFile();
+                DifficultyManager.Instance.TryLoadConfigFromJSONFile(false);
             }
             settings = DifficultyManager.Instance.CurrentSettings;
         }
@@ -274,7 +274,7 @@ public class DynamicLevelManager : MonoBehaviour
         {
             settings = new DifficultySettings();
         }
-        
+
         currentLevelTimeLimit = settings.maxTimeLimitInSeconds;
         isTimerActive = false;
 
@@ -715,7 +715,7 @@ public class DynamicLevelManager : MonoBehaviour
     private void TriggerTimeOut()
     {
         isTimerActive = false;
-        
+
         if (DifficultyMetricsCollector.Instance != null && DifficultyMetricsCollector.Instance.IsCollecting)
         {
             DifficultyMetricsCollector.Instance.SetTerminationReason("TIMEOUT");

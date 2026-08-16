@@ -68,10 +68,9 @@ public class UserProfileManager : MonoBehaviour
         {
             activeProfile = profiles.LastOrDefault();
         }
-        else if (activeProfile == null && profiles.Count == 0)
+        else if (profiles.Count == 0)
         {
-            activeProfile = new UserProfileData("Gatito", "Jeff P", 14, "Sec", "Gatito");
-            profiles.Add(activeProfile);
+            activeProfile = null;
         }
     }
 
@@ -148,6 +147,33 @@ public class UserProfileManager : MonoBehaviour
         if (profile != null)
         {
             activeProfile = profile;
+            OnActiveProfileChanged?.Invoke(activeProfile);
+            return true;
+        }
+        return false;
+    }
+
+    public bool DeleteActiveProfile()
+    {
+        if (activeProfile == null) return false;
+        return DeleteProfileByUsername(activeProfile.username);
+    }
+
+    public bool DeleteProfileByUsername(string username)
+    {
+        UserProfileData profile = SearchProfileByUsername(username);
+        if (profile != null)
+        {
+            string deletedName = profile.username;
+            profiles.Remove(profile);
+
+            if (activeProfile == profile)
+            {
+                activeProfile = profiles.LastOrDefault();
+            }
+
+            SaveProfiles();
+            Debug.Log($"[UserProfileManager] 🗑️ Perfil '{deletedName}' eliminado. Nuevo perfil activo: {activeProfile?.username ?? "Ninguno"}");
             OnActiveProfileChanged?.Invoke(activeProfile);
             return true;
         }

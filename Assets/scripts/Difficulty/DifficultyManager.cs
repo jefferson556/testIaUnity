@@ -45,6 +45,15 @@ public class DifficultyManager : MonoBehaviour
     private DifficultyMetrics lastLevelMetrics;
 
     public string CurrentDifficultyName { get; private set; } = "Custom";
+    public string CurrentLevelName { get; private set; } = "Normal";
+    public bool IsCustomSettingsActive { get; private set; } = false;
+
+    public string GetFormattedLevelName()
+    {
+        string baseName = !string.IsNullOrWhiteSpace(CurrentLevelName) ? CurrentLevelName : (!string.IsNullOrWhiteSpace(CurrentDifficultyName) ? CurrentDifficultyName : "Normal");
+        return IsCustomSettingsActive ? $"{baseName} (personalizado)" : $"{baseName} (base)";
+    }
+
     public DifficultySettings CurrentSettings => currentSettings != null ? currentSettings.Clone() : null;
     public float DifficultyScore => difficultyScore;
     public IReadOnlyList<DifficultyHistoryEntry> History => history;
@@ -71,15 +80,29 @@ public class DifficultyManager : MonoBehaviour
 
     private void InitializeDifficulty()
     {
+        // Auto-cargar perfiles de dificultad desde la carpeta Resources en tiempo de ejecución/Build
+        DifficultyProfile[] resProfiles = Resources.LoadAll<DifficultyProfile>("");
+        if (resProfiles != null && resProfiles.Length > 0)
+        {
+            foreach (var p in resProfiles)
+            {
+                if (p != null && !availableProfiles.Contains(p))
+                {
+                    availableProfiles.Add(p);
+                }
+            }
+        }
+
         if (defaultProfile == null && availableProfiles != null && availableProfiles.Count > 0)
         {
-            defaultProfile = availableProfiles[0];
+            defaultProfile = availableProfiles.Find(p => p != null && string.Equals(p.name, "Normal", StringComparison.OrdinalIgnoreCase)) ?? availableProfiles[0];
         }
 
         if (defaultProfile != null)
         {
             currentSettings = defaultProfile.Settings.Clone();
             CurrentDifficultyName = defaultProfile.ProfileName;
+            CurrentLevelName = defaultProfile.ProfileName;
             CalculateScoreFromSettings();
             Debug.Log($"[DifficultyManager] Inicializado con el perfil: {defaultProfile.ProfileName}. Score: {difficultyScore:F2}");
         }
@@ -94,7 +117,7 @@ public class DifficultyManager : MonoBehaviour
     /// <summary>
     /// Intenta leer la configuración enviada externamente desde el archivo JSON level_config_request.json.
     /// </summary>
-    public bool TryLoadConfigFromJSONFile()
+    public bool TryLoadConfigFromJSONFile(bool triggerGeneration = true)
     {
         try
         {
@@ -122,7 +145,7 @@ public class DifficultyManager : MonoBehaviour
             if (config != null)
             {
                 Debug.Log($"[DifficultyManager] 📄 Leyendo y aplicando configuración desde archivo JSON: {filePath}");
-                bool result = ApplyLevelLoadConfig(config);
+                bool result = ApplyLevelLoadConfig(config, triggerGeneration);
 
                 if (result)
                 {
@@ -149,7 +172,7 @@ public class DifficultyManager : MonoBehaviour
     /// <summary>
     /// Aplica la configuración dual de nivel (Por Score vs Por Nombre de Perfil) y luego sus overrides personalizados.
     /// </summary>
-    public bool ApplyLevelLoadConfig(LevelLoadConfig config)
+    public bool ApplyLevelLoadConfig(LevelLoadConfig config, bool triggerGeneration = true)
     {
         if (config == null) return false;
 
@@ -161,6 +184,11 @@ public class DifficultyManager : MonoBehaviour
         }
 
         bool baseApplied = false;
+
+        if (!string.IsNullOrWhiteSpace(config.nameLevel))
+        {
+            CurrentLevelName = config.nameLevel;
+        }
 
         // 1. Establecer la Dificultad Base (Por Score o Por Nombre)
         if (config.takeDifficultyScore)
@@ -180,12 +208,17 @@ public class DifficultyManager : MonoBehaviour
         // 2. Aplicar Ajustes Personalizados (si vienen en customSettings)
         if (config.customSettings != null)
         {
+            IsCustomSettingsActive = true;
             config.customSettings.reason = $"Ajustes personalizados desde JSON sobre base (Score={config.takeDifficultyScore}, Name='{config.nameLevel}')";
             config.customSettings.requesterId = "JSON_Config";
             ApplyAdjustment(config.customSettings, enforceRateLimit: false);
         }
+        else
+        {
+            IsCustomSettingsActive = false;
+        }
 
-        if (config.applyImmediately)
+        if (config.applyImmediately && triggerGeneration)
         {
             DynamicLevelManager levelManager = UnityEngine.Object.FindAnyObjectByType<DynamicLevelManager>();
             if (levelManager != null)
@@ -214,7 +247,7 @@ public class DifficultyManager : MonoBehaviour
         if (string.IsNullOrWhiteSpace(profileName)) return false;
 
         DifficultyProfile profile = availableProfiles.Find(p => p != null && string.Equals(p.ProfileName, profileName, StringComparison.OrdinalIgnoreCase));
-        
+
         if (profile == null)
         {
             profile = availableProfiles.Find(p => p != null && string.Equals(p.name, profileName, StringComparison.OrdinalIgnoreCase));
@@ -223,6 +256,33 @@ public class DifficultyManager : MonoBehaviour
         if (profile == null && defaultProfile != null && (string.Equals(defaultProfile.ProfileName, profileName, StringComparison.OrdinalIgnoreCase) || string.Equals(defaultProfile.name, profileName, StringComparison.OrdinalIgnoreCase)))
         {
             profile = defaultProfile;
+        }
+
+        if (profile == null)
+        {
+            // Intentar cargar desde Resources (funciona tanto en Editor como en la Build final)
+            DifficultyProfile resProfile = Resources.Load<DifficultyProfile>(profileName);
+            if (resProfile != null)
+            {
+                profile = resProfile;
+                if (!availableProfiles.Contains(resProfile)) availableProfiles.Add(resProfile);
+            }
+            else
+            {
+                DifficultyProfile[] resProfiles = Resources.LoadAll<DifficultyProfile>("");
+                if (resProfiles != null && resProfiles.Length > 0)
+                {
+                    foreach (var p in resProfiles)
+                    {
+                        if (p != null && (string.Equals(p.ProfileName, profileName, StringComparison.OrdinalIgnoreCase) || string.Equals(p.name, profileName, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            profile = p;
+                            if (!availableProfiles.Contains(p)) availableProfiles.Add(p);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
 #if UNITY_EDITOR
@@ -447,7 +507,7 @@ public class DifficultyManager : MonoBehaviour
         int totalArea = settings.mapWidth * settings.mapHeight;
         int estimatedWalkable = totalArea / 2;
         int requiredArea = 1 + (settings.axeZoneSize.x * settings.axeZoneSize.y) + 4;
-        
+
         if (requiredArea >= estimatedWalkable)
         {
             errors.Add($"El mapa de {settings.mapWidth}x{settings.mapHeight} es demasiado pequeño para acomodar las zonas y objetivos obligatorios.");
@@ -478,11 +538,11 @@ public class DifficultyManager : MonoBehaviour
         result.minKeyToAxeDistance = constraints.minKeyToAxeDistance.Clamp(prev.minKeyToAxeDistance, req.minKeyToAxeDistance, enforceRateLimit);
         result.minKeyToMetaDistance = constraints.minKeyToMetaDistance.Clamp(prev.minKeyToMetaDistance, req.minKeyToMetaDistance, enforceRateLimit);
         result.minPlayerToMetaDistance = constraints.minPlayerToMetaDistance.Clamp(prev.minPlayerToMetaDistance, req.minPlayerToMetaDistance, enforceRateLimit);
-        
+
         result.minimumPathDistanceBetweenTravelCaves = constraints.minimumPathDistanceBetweenTravelCaves.Clamp(prev.minimumPathDistanceBetweenTravelCaves, req.minimumPathDistanceBetweenTravelCaves, enforceRateLimit);
         result.minimumShortcutSaving = constraints.minimumShortcutSaving.Clamp(prev.minimumShortcutSaving, req.minimumShortcutSaving, enforceRateLimit);
         result.maximumTravelCavePairs = constraints.maximumTravelCavePairs.Clamp(prev.maximumTravelCavePairs, req.maximumTravelCavePairs, enforceRateLimit);
-        
+
         result.axeZoneSize = new Vector2Int(
             constraints.axeZoneSizeX.Clamp(prev.axeZoneSize.x, req.axeZoneSize.x, enforceRateLimit),
             constraints.axeZoneSizeY.Clamp(prev.axeZoneSize.y, req.axeZoneSize.y, enforceRateLimit)
@@ -490,7 +550,7 @@ public class DifficultyManager : MonoBehaviour
 
         result.destructibleWallsPercentage = constraints.destructibleWallsPercentage.Clamp(prev.destructibleWallsPercentage, req.destructibleWallsPercentage, enforceRateLimit);
         result.missionDestructiblesHealth = constraints.missionDestructiblesHealth.Clamp(prev.missionDestructiblesHealth, req.missionDestructiblesHealth, enforceRateLimit);
-        
+
         result.playerMoveSpeed = constraints.playerMoveSpeed.Clamp(prev.playerMoveSpeed, req.playerMoveSpeed, enforceRateLimit);
 
         // [FUTURO / HINTS]
@@ -523,10 +583,10 @@ public class DifficultyManager : MonoBehaviour
     public DifficultySettings GetSettingsFromScore(float score)
     {
         DifficultySettings settings = new DifficultySettings();
-        
+
         settings.mapWidth = Mathf.RoundToInt(Mathf.Lerp(constraints.mapWidth.minimum, constraints.mapWidth.maximum, score));
         if (settings.mapWidth % 2 == 0) settings.mapWidth++;
-        
+
         settings.mapHeight = Mathf.RoundToInt(Mathf.Lerp(constraints.mapHeight.minimum, constraints.mapHeight.maximum, score));
         if (settings.mapHeight % 2 == 0) settings.mapHeight++;
 
@@ -542,7 +602,7 @@ public class DifficultyManager : MonoBehaviour
         settings.minimumPathDistanceBetweenTravelCaves = Mathf.RoundToInt(Mathf.Lerp(constraints.minimumPathDistanceBetweenTravelCaves.minimum, constraints.minimumPathDistanceBetweenTravelCaves.maximum, score));
         settings.minimumShortcutSaving = Mathf.RoundToInt(Mathf.Lerp(constraints.minimumShortcutSaving.minimum, constraints.minimumShortcutSaving.maximum, score));
         settings.maximumTravelCavePairs = Mathf.Max(1, Mathf.RoundToInt(Mathf.Lerp(constraints.maximumTravelCavePairs.minimum, constraints.maximumTravelCavePairs.maximum, score)));
-        
+
         settings.axeZoneSize = new Vector2Int(
             Mathf.RoundToInt(Mathf.Lerp(constraints.axeZoneSizeX.minimum, constraints.axeZoneSizeX.maximum, score)),
             Mathf.RoundToInt(Mathf.Lerp(constraints.axeZoneSizeY.minimum, constraints.axeZoneSizeY.maximum, score))
@@ -583,7 +643,7 @@ public class DifficultyManager : MonoBehaviour
         float heightNorm = Mathf.InverseLerp(constraints.mapHeight.minimum, constraints.mapHeight.maximum, currentSettings.mapHeight);
         float speedNorm = Mathf.InverseLerp(constraints.playerMoveSpeed.minimum, constraints.playerMoveSpeed.maximum, currentSettings.playerMoveSpeed);
         float timeNorm = Mathf.InverseLerp(constraints.maxTimeLimitInSeconds.maximum, constraints.maxTimeLimitInSeconds.minimum, currentSettings.maxTimeLimitInSeconds);
-        
+
         difficultyScore = Mathf.Clamp01((widthNorm + heightNorm + speedNorm + timeNorm) / 4f);
     }
 
@@ -605,7 +665,7 @@ public class DifficultyManager : MonoBehaviour
         SaveMetricsToCsvFile(metrics, current);
 
         Debug.Log($"[DifficultyManager] Métricas del nivel {currentLevelNumber} registradas y guardadas en CSV.");
-        
+
         // Notificar al adaptador de dificultad para procesar métricas y solicitar la siguiente decisión DDA
         if (DifficultyAdapterAgent.Instance != null && DifficultyAdapterAgent.Instance.enabled)
         {
@@ -613,7 +673,7 @@ public class DifficultyManager : MonoBehaviour
         }
 
         currentLevelNumber++;
-        
+
         if (enableSessionLimit && currentLevelNumber > maxLevelsPerSession)
         {
             Debug.Log($"[DifficultyManager] Límite de sesión alcanzado ({maxLevelsPerSession} niveles). Regresando a la escena: {endSessionSceneName}");
@@ -644,17 +704,17 @@ public class DifficultyManager : MonoBehaviour
                 }
 
                 var culture = System.Globalization.CultureInfo.InvariantCulture;
-                
+
                 string s_timeToFindAxe = metrics.axeCollected ? metrics.timeToFindAxe.ToString(culture) : "";
                 string s_timeToFindKey = metrics.keyCollected ? metrics.timeToFindKey.ToString(culture) : "";
-                
+
                 bool pValid = metrics.keyToGoal.keyToGoalPathDataValid;
                 string s_kgTime = pValid ? metrics.keyToGoal.keyToGoalTime.ToString(culture) : "";
                 string s_kgOptDist = pValid ? metrics.keyToGoal.keyToGoalOptimalDistance.ToString(culture) : "";
                 string s_kgExtDist = pValid ? metrics.keyToGoal.keyToGoalExtraDistance.ToString(culture) : "";
                 string s_kgEff = pValid ? metrics.keyToGoal.keyToGoalEfficiency.ToString(culture) : "";
                 string s_kgNav = pValid ? metrics.keyToGoal.keyToGoalNavigationState.ToString() : "";
-                
+
                 string s_episodeStepCount = metrics.agentVersion == "Human" ? "" : metrics.episodeStepCount.ToString(culture);
                 string s_maxEpisodeSteps = metrics.agentVersion == "Human" ? "" : metrics.maxEpisodeSteps.ToString(culture);
 
@@ -676,15 +736,15 @@ public class DifficultyManager : MonoBehaviour
                     settings.minKeyToMetaDistance.ToString(culture),
                     settings.playerMoveSpeed.ToString(culture),
                     settings.hintsAvailable.ToString(culture),
-                    
+
                     metrics.totalLevelTime.ToString(culture),
-                    
+
                     metrics.axeCollected.ToString(),
                     s_timeToFindAxe,
-                    
+
                     metrics.keyCollected.ToString(),
                     s_timeToFindKey,
-                    
+
                     metrics.movementCount.ToString(culture),
                     metrics.idleCount.ToString(culture),
                     metrics.destructibleHits.ToString(culture),
@@ -694,7 +754,7 @@ public class DifficultyManager : MonoBehaviour
                     metrics.hintsUsed.ToString(culture),
                     metrics.restartCount.ToString(culture),
                     metrics.errorCount.ToString(culture),
-                    
+
                     metrics.keyToGoal.keyToGoalPathDataValid.ToString(),
                     s_kgTime,
                     metrics.keyToGoal.keyToGoalActualDistance.ToString(culture),
@@ -707,7 +767,7 @@ public class DifficultyManager : MonoBehaviour
                     metrics.keyToGoal.keyToGoalUsefulCaveUses.ToString(culture),
                     metrics.keyToGoal.keyToGoalNeutralCaveUses.ToString(culture),
                     metrics.keyToGoal.keyToGoalUnproductiveCaveUses.ToString(culture),
-                    
+
                     metrics.levelCompleted.ToString(),
                     metrics.terminationReason ?? "OTHER"
                 };

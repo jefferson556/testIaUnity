@@ -71,6 +71,18 @@ public class MazeTutorialController : MonoBehaviour
             return;
         }
 
+        // Si el perfil activo ya completó el tutorial previamente, omitirlo y redirigir directamente al mapa procedural
+        if (UserProfileManager.Instance != null && UserProfileManager.Instance.ActiveProfile != null && UserProfileManager.Instance.ActiveProfile.hasCompletedTutorial)
+        {
+            Debug.Log("[MazeTutorial] 🎓 El perfil activo ya completó el tutorial. Redirigiendo a MazeLevel_Procedural.");
+            if (Application.CanStreamedLevelBeLoaded("MazeLevel_Procedural"))
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene("MazeLevel_Procedural");
+                Destroy(gameObject);
+                return;
+            }
+        }
+
         if (Instance == null) Instance = this;
         else { Destroy(this); return; }
     }
@@ -230,6 +242,17 @@ public class MazeTutorialController : MonoBehaviour
     {
         CurrentStep = nextStep;
         Debug.Log($"[MazeTutorial] Avanzando a paso: {nextStep}");
+
+        if (nextStep == TutorialStep.Completed)
+        {
+            if (UserProfileManager.Instance != null && UserProfileManager.Instance.ActiveProfile != null)
+            {
+                UserProfileManager.Instance.ActiveProfile.hasCompletedTutorial = true;
+                UserProfileManager.Instance.SaveProfiles();
+                Debug.Log($"[MazeTutorial] 🎓 ¡Tutorial completado! Registrado exitosamente en el perfil: {UserProfileManager.Instance.ActiveProfile.username}");
+            }
+        }
+
         OnTutorialStepChanged?.Invoke(nextStep);
         PushCurrentMessageToHUD();
     }

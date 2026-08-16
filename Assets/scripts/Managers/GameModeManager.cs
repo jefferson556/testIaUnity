@@ -14,13 +14,25 @@ public class GameModeManager : MonoBehaviour
 {
     public static GameModeManager Instance { get; private set; }
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void AutoInitialize()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void InitSceneLoadedCallback()
     {
-        if (Instance == null && FindAnyObjectByType<GameModeManager>() == null)
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        EnsureInstanceExists();
+    }
+
+    public static void EnsureInstanceExists()
+    {
+        if (Instance == null && Object.FindAnyObjectByType<GameModeManager>() == null)
         {
             GameObject go = new GameObject("GameModeManager");
             go.AddComponent<GameModeManager>();
+            Debug.Log("[GameModeManager] Creado automáticamente para escena: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         }
     }
 
@@ -51,34 +63,23 @@ public class GameModeManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void Start()
     {
-        if (playerObject == null)
-        {
-            var cat = FindAnyObjectByType<CatMovement>();
-            if (cat != null)
-            {
-                playerObject = cat.gameObject;
-            }
-            else
-            {
-                Debug.LogWarning("[GameModeManager] No se pudo encontrar el Player automáticamente (CatMovement no encontrado).");
-                return;
-            }
-        }
+        EnsurePlayerReferences();
 
-        catMovement = playerObject.GetComponent<CatMovement>();
-        catInputReader = playerObject.GetComponent<CatInputReader>();
-        mazeAgent = playerObject.GetComponent<MazeAgent>();
-        decisionRequester = playerObject.GetComponent<DecisionRequester>();
+        Debug.Log("[GameModeManager] Inicializado correctamente en escena: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
 
-        Debug.Log("[GameModeManager] Inicializado correctamente con el jugador: " + playerObject.name);
-
-        // En MazeLevel_Train (tutorial) siempre modo humano, sin importar trainingMode
+        // En MazeLevel_Train y laberinto (tutorial) siempre modo humano, sin importar trainingMode
         if (IsTutorialScene)
         {
             Debug.Log("[GameModeManager] Escena de tutorial detectada. IA deshabilitada. Modo humano forzado.");
@@ -86,7 +87,7 @@ public class GameModeManager : MonoBehaviour
             return;
         }
 
-        // En otras escenas, respetar trainingMode
+        // En otras escenas (ej. MazeLevel_Procedural), respetar trainingMode o iniciar en modo humano por defecto
         TrainingConfig config = Resources.Load<TrainingConfig>("TrainingConfig");
         if (config != null && config.trainingMode)
         {
@@ -96,6 +97,26 @@ public class GameModeManager : MonoBehaviour
         else
         {
             EnableHumanControl();
+        }
+    }
+
+    public void EnsurePlayerReferences()
+    {
+        if (playerObject == null)
+        {
+            var cat = Object.FindAnyObjectByType<CatMovement>();
+            if (cat != null)
+            {
+                playerObject = cat.gameObject;
+            }
+        }
+
+        if (playerObject != null)
+        {
+            if (catMovement == null) catMovement = playerObject.GetComponent<CatMovement>();
+            if (catInputReader == null) catInputReader = playerObject.GetComponent<CatInputReader>();
+            if (mazeAgent == null) mazeAgent = playerObject.GetComponent<MazeAgent>();
+            if (decisionRequester == null) decisionRequester = playerObject.GetComponent<DecisionRequester>();
         }
     }
 
@@ -217,6 +238,11 @@ public class GameModeManager : MonoBehaviour
 
     private bool ValidateComponents()
     {
+        if (playerObject == null || mazeAgent == null)
+        {
+            EnsurePlayerReferences();
+        }
+
         if (playerObject == null) return false;
 
         if (mazeAgent == null)

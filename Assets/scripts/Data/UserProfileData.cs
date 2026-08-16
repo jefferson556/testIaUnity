@@ -9,6 +9,7 @@ public class UserProfileData
     public string education;
     public string username; // Apodo / Username (Cómo quiere que su personaje sea llamado)
     public string creationDate;
+    public bool hasCompletedTutorial;
 
     public UserProfileData()
     {
@@ -18,6 +19,7 @@ public class UserProfileData
         education = "";
         username = "";
         creationDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        hasCompletedTutorial = false;
     }
 
     public UserProfileData(string firstName, string lastName, int age, string education, string username)
@@ -28,6 +30,7 @@ public class UserProfileData
         this.education = education;
         this.username = username;
         this.creationDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        this.hasCompletedTutorial = false;
     }
 
     public string GetFullName()

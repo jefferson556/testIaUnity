@@ -180,6 +180,7 @@ public static class SetupSampleSceneHub
         uiSO.FindProperty("profileInfoText").objectReferenceValue = topHudTransform.Find("ProfileInfoText")?.GetComponent<TextMeshProUGUI>();
         uiSO.FindProperty("hubInstructionText").objectReferenceValue = topHudTransform.Find("InstructionText")?.GetComponent<TextMeshProUGUI>();
         uiSO.FindProperty("changeProfileButton").objectReferenceValue = topHudTransform.Find("ChangeProfileButton")?.GetComponent<Button>();
+        uiSO.FindProperty("deleteProfileButton").objectReferenceValue = topHudTransform.Find("DeleteProfileButton")?.GetComponent<Button>();
 
         uiSO.FindProperty("profileModalPanel").objectReferenceValue = modalTransform.gameObject;
 

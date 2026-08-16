@@ -15,6 +15,20 @@ public class NextLevelLoader : MonoBehaviour
     {
         Time.timeScale = 1f;
 
+        // Si el perfil activo ya completó el tutorial, redirigir directamente al mapa procedural
+        if (UserProfileManager.Instance != null && UserProfileManager.Instance.ActiveProfile != null && UserProfileManager.Instance.ActiveProfile.hasCompletedTutorial)
+        {
+            if (nextSceneName == "laberinto" || nextSceneName == "MazeLevel_Train" || string.IsNullOrWhiteSpace(nextSceneName))
+            {
+                if (Application.CanStreamedLevelBeLoaded("MazeLevel_Procedural"))
+                {
+                    Debug.Log("[NextLevelLoader] 🎓 El perfil activo ya completó el tutorial. Cargando 'MazeLevel_Procedural' directamente.");
+                    SceneManager.LoadScene("MazeLevel_Procedural");
+                    return;
+                }
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(nextSceneName))
         {
             LoadSceneByName();

@@ -25,6 +25,7 @@ public class GameUIManager : MonoBehaviour
     private Canvas hudCanvas;
     private Text controlsText;
     private Text zoomStatusText;
+    private Text levelNameText; // Texto para Nivel (base / personalizado)
     private Text timerText;
     private Text gameModeText; // NUEVO: Texto para Modo de Juego
 
@@ -141,23 +142,42 @@ public class GameUIManager : MonoBehaviour
         timerRect.offsetMin = Vector2.zero;
         timerRect.offsetMax = Vector2.zero;
 
-        // 5. Crear Texto de Zoom Status
+        // 5. Crear Texto de Zoom Status (Lado Izquierdo)
         GameObject zoomGO = new GameObject("ZoomStatusLabel");
         zoomGO.transform.SetParent(panelGO.transform, false);
         
         zoomStatusText = zoomGO.AddComponent<Text>();
         zoomStatusText.font = defaultFont;
-        zoomStatusText.fontSize = 14;
+        zoomStatusText.fontSize = 13;
         zoomStatusText.alignment = TextAnchor.MiddleLeft;
         zoomStatusText.color = Color.cyan;
         zoomStatusText.text = " Zoom: Listo (Mantén Shift)";
 
         RectTransform zoomRect = zoomGO.GetComponent<RectTransform>();
         zoomRect.anchorMin = new Vector2(0.01f, 0.1f);
-        zoomRect.anchorMax = new Vector2(0.50f, 0.5f);
+        zoomRect.anchorMax = new Vector2(0.42f, 0.5f);
         zoomRect.pivot = new Vector2(0f, 0.5f);
         zoomRect.offsetMin = Vector2.zero;
         zoomRect.offsetMax = Vector2.zero;
+
+        // 5.5. Crear Texto de Nombre de Nivel (Al lado del Zoom)
+        GameObject levelGO = new GameObject("LevelNameLabel");
+        levelGO.transform.SetParent(panelGO.transform, false);
+
+        levelNameText = levelGO.AddComponent<Text>();
+        levelNameText.font = defaultFont;
+        levelNameText.fontSize = 14;
+        levelNameText.fontStyle = FontStyle.Bold;
+        levelNameText.alignment = TextAnchor.MiddleCenter;
+        levelNameText.color = new Color(1f, 0.85f, 0.3f, 1f); // Dorado / Naranja brillante
+        levelNameText.text = "Nivel: Normal (base)";
+
+        RectTransform levelRect = levelGO.GetComponent<RectTransform>();
+        levelRect.anchorMin = new Vector2(0.43f, 0.1f);
+        levelRect.anchorMax = new Vector2(0.72f, 0.5f);
+        levelRect.pivot = new Vector2(0.5f, 0.5f);
+        levelRect.offsetMin = Vector2.zero;
+        levelRect.offsetMax = Vector2.zero;
 
         // 6. Crear Texto de Modo (Humano/IA) (Solo si no es tutorial)
         if (!isTutorial)
@@ -174,7 +194,7 @@ public class GameUIManager : MonoBehaviour
             gameModeText.supportRichText = true;
 
             RectTransform modeRect = modeGO.GetComponent<RectTransform>();
-            modeRect.anchorMin = new Vector2(0.51f, 0.1f);
+            modeRect.anchorMin = new Vector2(0.73f, 0.1f);
             modeRect.anchorMax = new Vector2(0.99f, 0.5f);
             modeRect.pivot = new Vector2(1f, 0.5f);
             modeRect.offsetMin = Vector2.zero;
@@ -380,6 +400,18 @@ public class GameUIManager : MonoBehaviour
                 float elapsed = DifficultyMetricsCollector.Instance.CurrentLevelElapsedTime;
                 timerText.text = $"ELAPSED: {Mathf.FloorToInt(elapsed)}s";
                 timerText.color = Color.yellow;
+            }
+        }
+
+        if (levelNameText != null)
+        {
+            if (DifficultyManager.Instance != null)
+            {
+                levelNameText.text = $"Nivel: {DifficultyManager.Instance.GetFormattedLevelName()}";
+            }
+            else
+            {
+                levelNameText.text = "Nivel: Normal (base)";
             }
         }
 

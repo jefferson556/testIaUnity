@@ -9,6 +9,7 @@ public class UserProfileUIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI profileInfoText;
     [SerializeField] private TextMeshProUGUI hubInstructionText;
     [SerializeField] private Button changeProfileButton;
+    [SerializeField] private Button deleteProfileButton; // Botón opcional para eliminar el perfil actual
 
     [Header("Profile Modal Panel")]
     [SerializeField] private GameObject profileModalPanel;
@@ -35,6 +36,7 @@ public class UserProfileUIController : MonoBehaviour
 
     private void Start()
     {
+        EnsureDeleteProfileButton();
         SetupButtonListeners();
 
         if (UserProfileManager.Instance != null)
@@ -133,6 +135,85 @@ public class UserProfileUIController : MonoBehaviour
 
         if (changeProfileButton != null)
             changeProfileButton.onClick.AddListener(OpenModal);
+
+        if (deleteProfileButton != null)
+            deleteProfileButton.onClick.AddListener(OnDeleteProfileClicked);
+    }
+
+    private void EnsureDeleteProfileButton()
+    {
+        if (deleteProfileButton != null) return;
+
+        if (changeProfileButton != null)
+        {
+            Transform parent = changeProfileButton.transform.parent;
+            if (parent != null)
+            {
+                // Re-ajustar ancho del botón original "Perfil / Buscar"
+                RectTransform changeRt = changeProfileButton.GetComponent<RectTransform>();
+                if (changeRt != null)
+                {
+                    changeRt.anchorMin = new Vector2(0.68f, 0.2f);
+                    changeRt.anchorMax = new Vector2(0.83f, 0.8f);
+                }
+
+                // Crear botón rojo "Eliminar Perfil Actual"
+                GameObject deleteBtnGO = new GameObject("DeleteProfileButton");
+                deleteBtnGO.transform.SetParent(parent, false);
+
+                RectTransform delRt = deleteBtnGO.AddComponent<RectTransform>();
+                delRt.anchorMin = new Vector2(0.84f, 0.2f);
+                delRt.anchorMax = new Vector2(0.99f, 0.8f);
+                delRt.anchoredPosition = Vector2.zero;
+                delRt.sizeDelta = Vector2.zero;
+
+                Image btnBg = deleteBtnGO.AddComponent<Image>();
+                btnBg.color = new Color(0.85f, 0.25f, 0.25f, 1f); // Rojo elegante
+
+                deleteProfileButton = deleteBtnGO.AddComponent<Button>();
+
+                GameObject btnTxtGO = new GameObject("Text");
+                btnTxtGO.transform.SetParent(deleteBtnGO.transform, false);
+                RectTransform btnTxtRt = btnTxtGO.AddComponent<RectTransform>();
+                btnTxtRt.anchorMin = Vector2.zero;
+                btnTxtRt.anchorMax = Vector2.one;
+                btnTxtRt.sizeDelta = Vector2.zero;
+
+                TextMeshProUGUI btnTMP = btnTxtGO.AddComponent<TextMeshProUGUI>();
+                btnTMP.fontSize = 14;
+                btnTMP.alignment = TextAlignmentOptions.Center;
+                btnTMP.color = Color.white;
+                btnTMP.text = "Eliminar Perfil Actual";
+
+                deleteProfileButton.onClick.AddListener(OnDeleteProfileClicked);
+            }
+        }
+    }
+
+    public void OnDeleteProfileClicked()
+    {
+        if (UserProfileManager.Instance == null || UserProfileManager.Instance.ActiveProfile == null)
+        {
+            OpenModal();
+            SwitchTab(true);
+            return;
+        }
+
+        string deletedName = UserProfileManager.Instance.ActiveProfile.username;
+        UserProfileManager.Instance.DeleteActiveProfile();
+
+        // Limpiar inputs del formulario
+        if (firstNameInput != null) firstNameInput.text = "";
+        if (lastNameInput != null) lastNameInput.text = "";
+        if (ageInput != null) ageInput.text = "";
+        if (educationInput != null) educationInput.text = "";
+        if (usernameInput != null) usernameInput.text = "";
+
+        // Abrir inmediatamente la ventana modal en la pestaña de Crear Perfil
+        OpenModal();
+        SwitchTab(true);
+
+        SetStatus(createStatusText, $"<color=yellow>Perfil '{deletedName}' eliminado. Por favor complete los datos del nuevo perfil.</color>");
     }
 
     public void OpenModal()
@@ -297,7 +378,15 @@ public class UserProfileUIController : MonoBehaviour
             }
             else
             {
-                hubInstructionText.text = $"<b>{username}</b>, diríjase a la entrada del laberinto para empezar el demo.";
+                bool hasCompleted = profile != null && profile.hasCompletedTutorial;
+                if (hasCompleted)
+                {
+                    hubInstructionText.text = $"<b>{username}</b>, diríjase al portal para jugar en el mapa procedural.";
+                }
+                else
+                {
+                    hubInstructionText.text = $"<b>{username}</b>, diríjase a la entrada del laberinto para empezar el demo.";
+                }
             }
         }
     }
