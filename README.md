@@ -1,3 +1,32 @@
+## 🕹️ Tabla de Mapeo de Teclas y Funcionalidades
+
+| Tecla / Control | Acción | Descripción | Escena / Contexto |
+|---|---|---|---|
+| `W` `A` `S` `D` o `Flechas` | Movimiento | Desplaza al personaje (Gato) en las 4 direcciones cardinales: arriba, abajo, izquierda y derecha. | Todas las escenas de laberinto |
+| `E` | Interactuar | Permite entrar a las cuevas de viaje rápido y teletransportarse entre portales cuando el personaje se encuentra sobre ellas. | Tutorial y `MazeLevel_Procedural` |
+| `SHIFT` (mantener) | Vista Panorámica / Zoom | Aleja temporalmente la cámara para visualizar una mayor parte del mapa. La duración y el tiempo de recarga dependen de la dificultad activa. | Tutorial y `MazeLevel_Procedural` |
+| `Q` | Alternar modo Jugador / IA | Alterna en tiempo real entre el control manual del jugador y el control autónomo mediante el agente de Inteligencia Artificial entrenado con PPO. | `MazeLevel_Procedural` |
+| `R` | Reintentar / Reiniciar | Reinicia inmediatamente el laberinto actual, cancela la partida en curso y genera una nueva instancia del nivel. | `MazeLevel_Procedural` |
+| `Clic Izquierdo` | Navegación UI / Formularios | Permite interactuar con botones, formularios, registro de perfil, selección de usuario y otros elementos de la interfaz. | Menú Principal y HUD |
+
+### 🎮 Resumen rápido de controles
+
+```text
+W / A / S / D  → Movimiento
+Flechas        → Movimiento
+E              → Usar cueva / Interactuar
+SHIFT          → Vista panorámica
+Q              → Alternar Jugador / IA
+R              → Reiniciar nivel
+Clic Izquierdo → Interfaz y formularios
+```
+
+ **Nota:** 
+>La opción de alternar entre Jugador e IA está disponible únicamente en la escena principal procedural. En la escena de tutorial, el control permanece enfocado en el jugador.
+
+> La opción para salir una ves se ingresa a llenar los datos y no se quiere llenar nada pq ya se tiene un perfil no se la agrego buscar el perfil de nuevo.
+> Puede suceder que el mapa no se genere correctamente ya que existen mejoras que hacer al algoritmo de generacion automatica.en tal caso tendria que volver a reiniciar.
+---
 # 🧠 Laberinto Procedural Adaptativo con Unity ML-Agents
 
 Proyecto desarrollado en **Unity** que combina generación procedural de laberintos, recopilación de métricas de juego y aprendizaje por refuerzo mediante **Unity ML-Agents**.
